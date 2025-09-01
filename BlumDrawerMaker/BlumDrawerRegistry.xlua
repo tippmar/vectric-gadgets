@@ -180,10 +180,10 @@ function RegistryReset() -- Reset All Settings
     DialogWindow.ScreenScale = "100%" -- Added by Sharkcutup 7/10/2025
     Milling.JointStyleName = "Dog Bone"
     Milling.LNBackPocket = "BackPocketProfile"
-    Milling.LNBlume = "BlumeMilling"
+    Milling.LNBlum = "BlumMilling"
     Milling.DrawerStyleName = [[Captive Bottom (Dado)]]
-    Milling.BlumeSoftClose = "Yes"
-    Milling.BlumeHole = "Yes"
+    Milling.BlumSoftClose = "Yes"
+    Milling.BlumHole = "Yes"
     Milling.LNBackProfile = "BackPanelProfile"
     Milling.LNBottomProfile = "Bottom Profile"
     Milling.LNDrawNotes = "Drawing Notes"
@@ -196,7 +196,7 @@ function RegistryReset() -- Reset All Settings
     Milling.LNSideProfile = "Side Panel Profile"
     Milling.LNSideBlind = "Side Panel Blind"
     Milling.LNBackPocketColor = "Blue"
-    Milling.LNBlumeColor = "Black"
+    Milling.LNBlumColor = "Black"
     Milling.LNBackProfileColor = "Black"
     Milling.LNBottomProfileColor = "Black"
     Milling.LNDrawNotesColor = "Blue"
@@ -419,10 +419,10 @@ function RegistryRead() -- Read from Registry values
     end -- if end
     Milling.JointStyleName = RegistryRead:GetString("Milling.JointStyleName", "Dog Bone")
     Milling.LNBackPocket = RegistryRead:GetString("Milling.LNBackPocket", "BackPocketProfile")
-    Milling.LNBlume = RegistryRead:GetString("Milling.LNBlume", "BlumeMilling")
+    Milling.LNBlum = RegistryRead:GetString("Milling.LNBlum", "BlumMilling")
     Milling.DrawerStyleName = RegistryRead:GetString("Milling.DrawerStyleName", [[Captive Bottom (Dado)]])
-    Milling.BlumeSoftClose = RegistryRead:GetString("Milling.BlumeSoftClose", "Yes")
-    Milling.BlumeHole = RegistryRead:GetString("Milling.BlumeHole", "Yes")
+    Milling.BlumSoftClose = RegistryRead:GetString("Milling.BlumSoftClose", "Yes")
+    Milling.BlumHole = RegistryRead:GetString("Milling.BlumHole", "Yes")
     Milling.LNBackProfile = RegistryRead:GetString("Milling.LNBackProfile", "BackPanelProfile")
     Milling.LNBottomProfile = RegistryRead:GetString("Milling.LNBottomProfile", "Bottom Profile")
     Milling.LNDrawNotes = RegistryRead:GetString("Milling.LNDrawNotes", "Drawing Notes")
@@ -435,7 +435,7 @@ function RegistryRead() -- Read from Registry values
     Milling.LNSideProfile = RegistryRead:GetString("Milling.LNSideProfile", "Side Panel Profile")
     Milling.LNSideBlind = RegistryRead:GetString("Milling.LNSideBlind", "Side Panel Blind")
     Milling.LNBackPocketColor = RegistryRead:GetString("Milling.LNBackPocketColor", "Blue")
-    Milling.LNBlumeColor = RegistryRead:GetString("Milling.LNBlumeColor", "Black")
+    Milling.LNBlumColor = RegistryRead:GetString("Milling.LNBlumColor", "Black")
     Milling.LNBackProfileColor = RegistryRead:GetString("Milling.LNBackProfileColor", "Black")
     Milling.LNBottomProfileColor = RegistryRead:GetString("Milling.LNBottomProfileColor", "Black")
     Milling.LNDrawNotesColor = RegistryRead:GetString("Milling.LNDrawNotesColor", "Blue")
@@ -485,15 +485,15 @@ end -- function end
 -- =====================================================]]
 function RegistryWriter() -- Write to Registry values
     local RegistryWrite = Registry(Project.RegName)
-    local RegValue = RegistryWrite:SetString("Milling.BlumeHole", Milling.BlumeHole)
-    RegValue = RegistryWrite:SetString("Milling.BlumeSoftClose", Milling.BlumeSoftClose)
+    local RegValue = RegistryWrite:SetString("Milling.BlumHole", Milling.BlumHole)
+    RegValue = RegistryWrite:SetString("Milling.BlumSoftClose", Milling.BlumSoftClose)
     RegValue = RegistryWrite:SetString("Milling.JointStyleName", Milling.JointStyleName)
     RegValue = RegistryWrite:SetString("Milling.LNBackPocket", Milling.LNBackPocket)
     RegValue = RegistryWrite:SetString("Milling.LNBackPocketColor", Milling.LNBackPocketColor)
     RegValue = RegistryWrite:SetString("Milling.LNBackProfile", Milling.LNBackProfile)
     RegValue = RegistryWrite:SetString("Milling.LNBackProfileColor", Milling.LNBackProfileColor)
-    RegValue = RegistryWrite:SetString("Milling.LNBlume", Milling.LNBlume) -- Yes or No
-    RegValue = RegistryWrite:SetString("Milling.LNBlumeColor", Milling.LNBlumeColor)
+    RegValue = RegistryWrite:SetString("Milling.LNBlum", Milling.LNBlum) -- Yes or No
+    RegValue = RegistryWrite:SetString("Milling.LNBlumColor", Milling.LNBlumColor)
     RegValue = RegistryWrite:SetString("Milling.LNBottomProfile", Milling.LNBottomProfile)
     RegValue = RegistryWrite:SetString("Milling.LNBottomProfileColor", Milling.LNBottomProfileColor)
     RegValue = RegistryWrite:SetString("Milling.LNDrawNotes", Milling.LNDrawNotes)
@@ -673,8 +673,8 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.TopGap = tonumber("]] .. ExD2S(Drawer.TopGap) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Width = tonumber("]] .. ExD2S(Drawer.Width) .. [[") ]] .. "\n")
     fileW:write([[Milling.BlindTabThickness = tonumber("]] .. ExD2S(Milling.BlindTabThickness) .. [[") ]] .. "\n")
-    fileW:write([[Milling.BlumeHole = "]] .. Milling.BlumeHole .. [[" ]] .. "\n")
-    fileW:write([[Milling.BlumeSoftClose = "]] .. Milling.BlumeSoftClose .. [[" ]] .. "\n")
+    fileW:write([[Milling.BlumHole = "]] .. Milling.BlumHole .. [[" ]] .. "\n")
+    fileW:write([[Milling.BlumSoftClose = "]] .. Milling.BlumSoftClose .. [[" ]] .. "\n")
     fileW:write([[Milling.DadoClearance = tonumber("]] .. ExD2S(Milling.DadoClearance) .. [[") ]] .. "\n")
     fileW:write([[Milling.DadoHeight = tonumber("]] .. ExD2S(Milling.DadoHeight) .. [[") ]] .. "\n")
     fileW:write([[Milling.DrawerStyleName = "]] .. Milling.DrawerStyleName .. [[" ]] .. "\n")
@@ -685,8 +685,8 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Milling.LNBackPocketColor = "]] .. Milling.LNBackPocketColor .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBackProfile = "]] .. Milling.LNBackProfile .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBackProfileColor = "]] .. Milling.LNBackProfileColor .. [[" ]] .. "\n")
-    fileW:write([[Milling.LNBlume = "]] .. Milling.LNBlume .. [[" ]] .. "\n")
-    fileW:write([[Milling.LNBlumeColor = "]] .. Milling.LNBlumeColor .. [[" ]] .. "\n")
+    fileW:write([[Milling.LNBlum = "]] .. Milling.LNBlum .. [[" ]] .. "\n")
+    fileW:write([[Milling.LNBlumColor = "]] .. Milling.LNBlumColor .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBottomProfile = "]] .. Milling.LNBottomProfile .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBottomProfileColor = "]] .. Milling.LNBottomProfileColor .. [[" ]] .. "\n")
     fileW:write([[Milling.LNDrawNotes = "]] .. Milling.LNDrawNotes .. [[" ]] .. "\n")

@@ -1480,7 +1480,7 @@ function LayerClear() --  Calling MyLayerClear
     MyLayerClear(Milling.LNFrontPocket)
     MyLayerClear(Milling.LNDrawNotes)
     MyLayerClear(Milling.LNPartLabels)
-    MyLayerClear(Milling.LNBlume)
+    MyLayerClear(Milling.LNBlum)
     MyLayerClear(Milling.LNSideBlind)
     MyLayerClear(Milling.LNFrontBlind)
     return true
@@ -1534,8 +1534,8 @@ function MakeLayers()
     layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNPartLabels)
     Red, Green, Blue = GetColor(Milling.LNPartLabelsColor)
     layer:SetColor(Red, Green, Blue)
-    layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBlume)
-    Red, Green, Blue = GetColor(Milling.LNBlumeColor)
+    layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBlum)
+    Red, Green, Blue = GetColor(Milling.LNBlumColor)
     layer:SetColor(Red, Green, Blue)
     layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNSideBlind)
     Red, Green, Blue = GetColor(Milling.LNSideBlindColor)
@@ -1595,9 +1595,9 @@ function ToolCheck() -- Checks if tooling was selected
         Milling.FingerClear = true
     end -- if end
     if MillTool6.Name == "Tool Not Selected" then
-        Milling.Blume = false
+        Milling.Blum = false
     else
-        Milling.Blume = true
+        Milling.Blum = true
     end -- if end
 end
 -- =====================================================]]
@@ -1641,17 +1641,17 @@ function Drawer_Math() -- All the math for Wall Cabinet
         Drawer.FrontFingerCount = math.floor(Drawer.SideFingerCount * 0.5) + 1
     end
     if Drawer.Unit then -- These should come from a user input screen not hard-coded
-        Drawer.BlumeMax = 13.0
-        Drawer.BlumeDia = 6.0
-        Drawer.BlumeWide = 33.0
-        Drawer.BlumeDown = 11.0
-        Drawer.BlumeIn = 7.0
+        Drawer.BlumMax = 13.0
+        Drawer.BlumDia = 6.0
+        Drawer.BlumWide = 33.0
+        Drawer.BlumDown = 11.0
+        Drawer.BlumIn = 7.0
     else
-        Drawer.BlumeMax = 0.511811
-        Drawer.BlumeDia = 0.236220
-        Drawer.BlumeWide = 1.299213
-        Drawer.BlumeDown = 0.433071
-        Drawer.BlumeIn = 0.275591
+        Drawer.BlumMax = 0.511811
+        Drawer.BlumDia = 0.236220
+        Drawer.BlumWide = 1.299213
+        Drawer.BlumDown = 0.433071
+        Drawer.BlumIn = 0.275591
     end -- if end
     -- Bit and Milling Default Values
     Milling.PocketToolDia = Milling.ProfileToolDia
@@ -1704,8 +1704,8 @@ function StringChecks() --- "Checks and Balances"
     elseif Milling.LNPartLabels == "" then
         PresentMessage("Error", "Unable to Proceed!", "Part Labels layer name cannot be blank.")
         OnLuaButton_InquiryLayers()
-    elseif Milling.LNBlume == "" then
-        PresentMessage("Error", "Unable to Proceed!", "Blume layer name cannot be blank.")
+    elseif Milling.LNBlum == "" then
+        PresentMessage("Error", "Unable to Proceed!", "Blum layer name cannot be blank.")
         OnLuaButton_InquiryLayers()
     elseif Project.ProjectName == "" then
         PresentMessage("Error", "Unable to Proceed!", "Project Name cannot be blank.")

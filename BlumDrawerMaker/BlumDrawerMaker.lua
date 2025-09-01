@@ -132,7 +132,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
                 DialogLoop = 1 -- Nope do it again
             elseif (MillTool6.InMM ~= Drawer.Unit) then
                 PresentMessage("Unable to Proceed!", "Error",
-                    "Blume Operation bit units do not match the drawing units. Select a bit in the drawing units")
+                    "Blum Operation bit units do not match the drawing units. Select a bit in the drawing units")
                 DialogLoop = 1 -- Nope do it again
             elseif (Drawer.SideWidth / Drawer.SideFingerCount) < (Milling.FingerToolDia / 0.70) then
                 PresentMessage("Unable to Proceed!", "Error",
@@ -162,9 +162,9 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
                         string.format(Drawer.SideFingerWidth))
                     DialogLoop = 1 -- Nope do it again
                 end
-                if (MillTool6.ToolDia > Drawer.BlumeDia) then
+                if (MillTool6.ToolDia > Drawer.BlumDia) then
                     PresentMessage("Unable to Proceed!", "Error",
-                        "Bit for Blume Operation is too large Max Dia = " .. string.format(Drawer.BlumeDia))
+                        "Bit for Blum Operation is too large Max Dia = " .. string.format(Drawer.BlumDia))
                     DialogLoop = 1 -- Nope do it again
                 end -- if end
             else
@@ -213,7 +213,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             SheetThick = Sheets[i]
             DrawWriter("Material Thickness " .. tostring(SheetThick) .. " Thk.",
                 Polar2D(Point2D(0, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal, Milling.LNDrawNotes, 0.0)
-            -- Reordered so back (and its Blume pockets) are processed before sides or front
+            -- Reordered so back (and its Blum pockets) are processed before sides or front
             if SheetThick == Drawer.BackThickness then
                 ProcessBack()
             end

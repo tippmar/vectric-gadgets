@@ -3,8 +3,7 @@
 ╦ ╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦╔╗╔  ╔╦╗╔═╗╔╗╔╦ ╦
 ╠═╣║╣ ║  ╠═╝  ║║║╠═╣║║║║  ║║║║╣ ║║║║ ║
 ╩ ╩╚═╝╩═╝╩    ╩ ╩╩ ╩╩╝╚╝  ╩ ╩╚═╝╝╚╝╚═╝
---]]
--- ==============================================================================
+--]] -- ==============================================================================
 --  Gadgets are an entirely optional add-in to Vectric's core software products.
 --  They are provided 'as-is', without any express or implied warranty, and you
 --  make use of them entirely at your own risk.
@@ -25,7 +24,7 @@
 -- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
 -- ====================================================]]
 function HTMLHelp00()
-  DialogWindow.Help00 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
+    DialogWindow.Help00 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
   <body><div class="layout">
     <div class="h3-lP">
       <label>Main Menu Help</label>
@@ -104,7 +103,7 @@ function HTMLHelp00()
           <li class="h1-help"><strong>Finger Bit - </strong> Select a bit for cutting the fingers, Select a bit that best works with the type of finger design selected. (Note: A small diameter down cut it will provide the best finish results).</li>
           <li class="h1-help"><strong>Finger Clearing Bit - </strong> Select a bit larger than the Finger bit for clear finger area (A down cut it will provide the best finish results).
                                       This bit cannot have a larger diameter than the finger physical size. A warning will be presented if the bit diameter is too large</li>
-          <li class="h1-help"><strong>Blume Circle Bit - </strong>This is an optional toolpath. Used when Balaam under drawer slides are used. Warning, if used a whole will
+          <li class="h1-help"><strong>Blum Circle Bit - </strong>This is an optional toolpath. Used when Balaam under drawer slides are used. Warning, if used a whole will
                                                                     be cut through the back of the drawer panel.</li>
           <li class="h1-help"><strong>Clear Button - </strong> This will clear all of the toolpaths and set them as No Tool Selected.</li>
           <li class="h1-help"><strong>X Button - </strong> Will clear the tool selection for the single item as No Tool Selected.</li>
@@ -114,7 +113,8 @@ function HTMLHelp00()
       </div>
     </div>
     <div><hr /></div>
-      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[\Help\Images\Footer.png" width="80" height="20" alt="Page Footer"></span>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
+                              [[\Help\Images\Footer.png" width="80" height="20" alt="Page Footer"></span>
       </div>
      <div class="foot" id="FooterBox">
     <div><hr /></div>
@@ -124,11 +124,11 @@ function HTMLHelp00()
   </div>
 </body>
 </html>]]
-return true
+    return true
 end -- Function End
 --  ================================================================]]
 function Style03()
-  return [[<style>
+    return [[<style>
 	.FormButton {
 		font-family: Arial, Helvetica, sans-serif;
 		font-weight: bold;

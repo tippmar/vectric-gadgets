@@ -393,19 +393,19 @@ table {
         </tr>
         <tr>
             <td class="h1-rP">
-                <label title="Add milling for the Blume under drawer soft close hardware?">Blume Soft Close</label>
+                <label title="Add milling for the Blum under drawer soft close hardware?">Blum Soft Close</label>
             </td>
             <td>
-                <Select type="text" class="h1-l" id="Milling.BlumeSoftClose" size="1">
+                <Select type="text" class="h1-l" id="Milling.BlumSoftClose" size="1">
                     <option selected>Yes</option>
                     <option>No</option>
                 </Select>
             </td>
             <td class="h1-rP">
-                <label title="Add the through hole in the back panel for the Blume hardware?">Blume Hole</label>
+                <label title="Add the through hole in the back panel for the Blum hardware?">Blum Hole</label>
             </td>
             <td>
-                <Select type="text" class="h1-l" id="Milling.BlumeHole" size="1">
+                <Select type="text" class="h1-l" id="Milling.BlumHole" size="1">
                     <option selected>Yes</option>
                     <option>No</option>
                 </Select>
@@ -591,10 +591,10 @@ table {
     <td class="h2-c">Color</td>
   </tr>
   <tr>
-    <td class="h1-rP"><label>Blume Milling</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBlume" size="30" maxlength="50"/></td>
+    <td class="h1-rP"><label>Blum Milling</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBlum" size="30" maxlength="50"/></td>
     <td class="h1-l">
-      <select id="Milling.LNBlumeColor">
+      <select id="Milling.LNBlumColor">
         <option>Black</option>
         <option>Red</option>
         <option>Blue</option>
@@ -874,7 +874,7 @@ table {
                      <input id="Clear5" class="LuaButton" type="button" value="X"></td>
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Bit for milling the Blume holes">Blume Circle Bit:</label></td>
+    <td class="h1-rP"><label title="Bit for milling the Blum holes">Blum Circle Bit:</label></td>
     <td bgcolor="#FFFF" class="ToolNameLabel"><span id = "ToolNameLabel6">-</span></td>
     <td class="h1-l"><input id = "ToolChooseButton6" class = "ToolPicker" type = "button" value = "Tool">
                      <input id="Clear6" class="LuaButton" type="button" value="X"></td>
@@ -1014,7 +1014,7 @@ function InquiryDrawer(Header) -- Main Menu
             MillTool5 = Drawer.dialog:GetTool("ToolChooseButton5") -- Finger Clearing
         end -- if tool 5 end
         if Drawer.dialog:GetTool("ToolChooseButton6") then
-            MillTool6 = Drawer.dialog:GetTool("ToolChooseButton6") -- Blume Circles
+            MillTool6 = Drawer.dialog:GetTool("ToolChooseButton6") -- Blum Circles
         end -- if tool 6 end
 
         DialogWindow.DrawerXY = tostring(Drawer.dialog.WindowWidth) .. " x " .. tostring(Drawer.dialog.WindowHeight)
@@ -1074,8 +1074,8 @@ function OnLuaButton_InquiryLayers() -- "Layers" Button
     dialog:AddTextField("Milling.LNBackPocket", Milling.LNBackPocket)
     dialog:AddTextField("Milling.LNDrawNotes", Milling.LNDrawNotes)
     dialog:AddTextField("Milling.LNPartLabels", Milling.LNPartLabels)
-    dialog:AddTextField("Milling.LNBlume", Milling.LNBlume)
-    dialog:AddDropDownList("Milling.LNBlumeColor", Milling.LNBlumeColor)
+    dialog:AddTextField("Milling.LNBlum", Milling.LNBlum)
+    dialog:AddDropDownList("Milling.LNBlumColor", Milling.LNBlumColor)
     dialog:AddDropDownList("Milling.LNBottomProfileColor", Milling.LNBottomProfileColor)
     dialog:AddDropDownList("Milling.LNSideProfileColor", Milling.LNSideProfileColor)
     dialog:AddDropDownList("Milling.LNSidePocketColor", Milling.LNSidePocketColor)
@@ -1099,8 +1099,8 @@ function OnLuaButton_InquiryLayers() -- "Layers" Button
         Milling.LNBackPocket = All_Trim(dialog:GetTextField("Milling.LNBackPocket"))
         Milling.LNDrawNotes = All_Trim(dialog:GetTextField("Milling.LNDrawNotes"))
         Milling.LNPartLabels = All_Trim(dialog:GetTextField("Milling.LNPartLabels"))
-        Milling.LNBlume = All_Trim(dialog:GetTextField("Milling.LNBlume"))
-        Milling.LNBlumeColor = dialog:GetDropDownListValue("Milling.LNBlumeColor")
+        Milling.LNBlum = All_Trim(dialog:GetTextField("Milling.LNBlum"))
+        Milling.LNBlumColor = dialog:GetDropDownListValue("Milling.LNBlumColor")
         Milling.LNBottomProfileColor = dialog:GetDropDownListValue("Milling.LNBottomProfileColor")
         Milling.LNSideProfileColor = dialog:GetDropDownListValue("Milling.LNSideProfileColor")
         Milling.LNSidePocketColor = dialog:GetDropDownListValue("Milling.LNSidePocketColor")
@@ -1170,8 +1170,8 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
     dialog:AddDoubleField("Milling.FingerToolDia", Milling.FingerToolDia)
     dialog:AddDoubleField("Drawer.BottomDadoInset", Drawer.BottomDadoInset) -- 5.1 Loads this value
     dialog:AddDoubleField("Milling.BlindTabThickness", Milling.BlindTabThickness)
-    dialog:AddDropDownList("Milling.BlumeSoftClose", Milling.BlumeSoftClose)
-    dialog:AddDropDownList("Milling.BlumeHole", Milling.BlumeHole)
+    dialog:AddDropDownList("Milling.BlumSoftClose", Milling.BlumSoftClose)
+    dialog:AddDropDownList("Milling.BlumHole", Milling.BlumHole)
     dialog:AddDropDownList("Milling.JointStyleName", Milling.JointStyleName)
     dialog:AddDropDownList("Milling.DrawerStyleName", Milling.DrawerStyleName) -- 5.1  Loads the Dropdown list
     if dialog:ShowDialog() then
@@ -1183,8 +1183,8 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
         Milling.FingerToolDia = math.abs(dialog:GetDoubleField("Milling.FingerToolDia"))
         Milling.BlindTabThickness = math.abs(dialog:GetDoubleField("Milling.BlindTabThickness"))
         Drawer.BottomDadoInset = math.abs(dialog:GetDoubleField("Drawer.BottomDadoInset")) -- 5.1 Reads the user value
-        Milling.BlumeSoftClose = dialog:GetDropDownListValue("Milling.BlumeSoftClose")
-        Milling.BlumeHole = dialog:GetDropDownListValue("Milling.BlumeHole")
+        Milling.BlumSoftClose = dialog:GetDropDownListValue("Milling.BlumSoftClose")
+        Milling.BlumHole = dialog:GetDropDownListValue("Milling.BlumHole")
         Milling.JointStyleName = dialog:GetDropDownListValue("Milling.JointStyleName")
         Milling.DrawerStyleName = dialog:GetDropDownListValue("Milling.DrawerStyleName") -- 5.1  Reads value from the Dropdown list
         DialogWindow.MillingXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)

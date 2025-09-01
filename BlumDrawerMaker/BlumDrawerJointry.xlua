@@ -101,9 +101,9 @@ function ProcessBack() -- Process Back
         Drawer_Back()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
     end
-    -- Reordered: Blume pockets first (if any), then dados, then profile
-    if (Milling.BlumeHole == "Yes") or (Milling.BlumeSoftClose == "Yes") then
-        CreateLayerBlumeToolpath("Blume Pockets", Milling.LNBlume, 0.0, Drawer.BackThickness)
+    -- Reordered: Blum pockets first (if any), then dados, then profile
+    if (Milling.BlumHole == "Yes") or (Milling.BlumSoftClose == "Yes") then
+        CreateLayerBlumToolpath("Blum Pockets", Milling.LNBlum, 0.0, Drawer.BackThickness)
         Push()
     end
     if "Rabbeted Bottom" == Milling.DrawerStyleName then
@@ -341,33 +341,33 @@ function Drawer_Back() -- Drawer Back
     local pt3 = Polar2D(pt2, 0.0, Drawer.BackWidth)
     local pt4 = Polar2D(pt3, 270.0, Drawer.BackLength)
     -- Draw Rear Profile
-    if (Milling.BlumeSoftClose == "No") or (Milling.DrawerStyleName == [[Mount Flat On Bottom]]) or
-        ((Milling.BlumeSoftClose == "Yes") and (Milling.DrawerStyleName == [[Rabbeted Bottom]])) then
+    if (Milling.BlumSoftClose == "No") or (Milling.DrawerStyleName == [[Mount Flat On Bottom]]) or
+        ((Milling.BlumSoftClose == "Yes") and (Milling.DrawerStyleName == [[Rabbeted Bottom]])) then
         DrawBox(pt1, pt2, pt3, pt4, Milling.LNBackProfile)
-        if Milling.BlumeHole == "Yes" then
-            local pt13 = Polar2D(Polar2D(Polar2D(pt1, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumeDown), 90.0,
-                Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
-            local pt14 = Polar2D(Polar2D(Polar2D(pt2, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumeDown), 270.0,
-                Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
-            DrawCircle(pt13, Drawer.BlumeDia * 0.5, Milling.LNBlume)
-            DrawCircle(pt14, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+        if Milling.BlumHole == "Yes" then
+            local pt13 = Polar2D(Polar2D(Polar2D(pt1, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumDown), 90.0,
+                Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
+            local pt14 = Polar2D(Polar2D(Polar2D(pt2, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumDown), 270.0,
+                Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
+            DrawCircle(pt13, Drawer.BlumDia * 0.5, Milling.LNBlum)
+            DrawCircle(pt14, Drawer.BlumDia * 0.5, Milling.LNBlum)
         end -- if end
-        Milling.BlumeSoftClose = "No"
+        Milling.BlumSoftClose = "No"
     else
         local pt5 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
         local pt10 = Polar2D(pt2, 0.0, Drawer.BottomDadoInset)
-        local pt6 = Polar2D(pt5, 90.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumeWide)
+        local pt6 = Polar2D(pt5, 90.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
         local pt6a = Polar2D(pt6, 270.0, Bit)
         local pt6b = Polar2D(pt6, 180.0, Bit)
         local pt7 = Polar2D(pt6, 180.0, Drawer.BottomDadoInset)
-        local pt9 = Polar2D(pt10, 270.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumeWide)
+        local pt9 = Polar2D(pt10, 270.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
         local pt8 = Polar2D(pt9, 180.0, Drawer.BottomDadoInset)
         local pt9a = Polar2D(pt9, 180.0, Bit)
         local pt9b = Polar2D(pt9, 90.0, Bit)
-        local pt11 = Polar2D(Polar2D(pt5, 0.0, Drawer.BlumeDown), 90.0,
-            Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
-        local pt12 = Polar2D(Polar2D(pt10, 0.0, Drawer.BlumeDown), 270.0,
-            Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
+        local pt11 = Polar2D(Polar2D(pt5, 0.0, Drawer.BlumDown), 90.0,
+            Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
+        local pt12 = Polar2D(Polar2D(pt10, 0.0, Drawer.BlumDown), 270.0,
+            Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
         local layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBackProfile)
         local line = Contour(0.0)
         line:AppendPoint(pt5);
@@ -383,9 +383,9 @@ function Drawer_Back() -- Drawer Back
         line:LineTo(pt5)
         layer:AddObject(CreateCadContour(line), true)
 
-        if Milling.BlumeHole == "Yes" then
-            DrawCircle(pt11, Drawer.BlumeDia * 0.5, Milling.LNBlume)
-            DrawCircle(pt12, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+        if Milling.BlumHole == "Yes" then
+            DrawCircle(pt11, Drawer.BlumDia * 0.5, Milling.LNBlum)
+            DrawCircle(pt12, Drawer.BlumDia * 0.5, Milling.LNBlum)
         end -- if end
     end -- if end
 
@@ -963,8 +963,8 @@ function FingerBoxFront(pta, ptb) -- Finger Box Front
     return true
 end -- function end
 -- =====================================================]]
-function CreateLayerBlumeToolpath(name, layer_name, start_depth, cut_depth)
-    if (Milling.Blume) and (Milling.BlumeHole == "Yes") then
+function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
+    if (Milling.Blum) and (Milling.BlumHole == "Yes") then
         local selection = Milling.job.Selection -- clear current selection
         selection:Clear()
         -- get layer
