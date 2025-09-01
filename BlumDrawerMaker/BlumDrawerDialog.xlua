@@ -309,10 +309,7 @@ table {
        <td colspan="2" class="h1-c"><a href="https://forum.vectric.com" class="webLink-c">Vectric User Forum</a></td></p></td>
       </tr>
       <tr>
-       <td colspan="2" class="h3-c">JimAndi Gadgets</td>
-      </tr>
-      <tr>
-       <td colspan="2" class="h1-c">Houston, TX.</td>
+       <td colspan="2" class="h2-c">Based on EasyDrawerMaker by JimAndi Gadgets</td>
       </tr>
     </table>
     <table>
@@ -1196,7 +1193,28 @@ end -- function End
 function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
     local Wx, Wy = DialogSize(DialogWindow.ImportSettingsXY)
     local dialog = HTML_Dialog(true, DialogWindow.ImportSettings, Wx, Wy, "Import Drawer Settings  ")
-    dialog:AddTextField("ReadFile", Project.ProjectPath .. "/")
+    -- Use Windows style backslashes only, ensure exactly one trailing backslash if path not empty
+    local basePath = Project.ProjectPath or ""
+    if basePath == "Default" then
+        basePath = ""
+    end
+    -- Replace any forward slashes with backslashes
+    basePath = string.gsub(basePath, "/", "\\")
+    -- Collapse duplicate backslashes (but preserve leading UNC \\ if user supplies it)
+    if string.sub(basePath, 1, 2) == "\\\\" then
+        local uncPrefix = "\\\\"
+        local rest = string.sub(basePath, 3)
+        rest = string.gsub(rest, "\\+", "\\")
+        basePath = uncPrefix .. rest
+    else
+        basePath = string.gsub(basePath, "\\+", "\\")
+    end
+    -- Remove any trailing backslashes then add one back (unless empty)
+    basePath = string.gsub(basePath, "\\+$", "")
+    if basePath ~= "" then
+        basePath = basePath .. "\\"
+    end
+    dialog:AddTextField("ReadFile", basePath)
     dialog:AddFilePicker(true, "FilePickerButton", "ReadFile", true)
     local ImportFile
     if dialog:ShowDialog() then

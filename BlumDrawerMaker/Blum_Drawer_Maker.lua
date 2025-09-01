@@ -177,7 +177,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
     if DialogLoop == 2 then
         Sheet.ProgressBar = ProgressBar("Drawing Parts", ProgressBar.LINEAR) -- Setup Type of progress bar
         Sheet.ProgressBar:SetPercentProgress(0) -- Sets progress bar to zero
-        Project.ProjectPath = string.gsub(Project.ProjectPath, "\\", "/")
+        -- Project.ProjectPath = string.gsub(Project.ProjectPath, "\\", "/")
         R1, R2, R3 = os.rename(Project.ProjectPath, Project.ProjectPath)
         -- How many sheets do we need
         Sheets = {Drawer.BackThickness, Drawer.BottomThickness, Drawer.SideThickness, Drawer.FrontThickness}

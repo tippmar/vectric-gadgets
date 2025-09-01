@@ -1603,8 +1603,8 @@ end
 -- =====================================================]]
 function Drawer_Math() -- All the math for Wall Cabinet
     Project.DrawerID = StartDate()
-    Project.ProjectPath = string.gsub(Project.ProjectPath, "\\", "/")
-    Project.DatFile = Project.ProjectPath .. "/" .. Project.CabinetName .. "-" .. Project.DrawerID
+    -- Keep Windows style backslashes for paths
+    Project.DatFile = Project.ProjectPath .. "\\" .. Project.CabinetName .. "-" .. Project.DrawerID
     Drawer.PlacementStep = math.max(Drawer.OpeningDepth, Drawer.OpeningHeight, Drawer.OpeningWidth)
     Drawer.Height = Drawer.OpeningHeight - (Drawer.TopGap + Drawer.BottomGap)
     Drawer.Width = Drawer.OpeningWidth - (Drawer.SideGap * 2.0)
