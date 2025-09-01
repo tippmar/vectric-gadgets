@@ -66,7 +66,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
     Tools = assert(loadfile(script_path .. "\\BlumDrawerImages.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BlumDrawerRegistry.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BlumDrawerTools.xlua"))(Tools)
-    Tools = assert(loadfile(script_path .. "\\BlumDrawerJointry.xlua"))(Tools)
+    Tools = assert(loadfile(script_path .. "\\BlumDrawerJoinery.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BlumDrawerDialog.xlua"))(Tools)
     Images()
     HTML()
