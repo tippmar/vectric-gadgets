@@ -1,0 +1,1406 @@
+-- ====================================================================================================================================
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
+-- =====================================================]]
+function HTML()
+
+    -- =====================================================]] -- Style
+    DialogWindow.Style = [[<style>
+html {
+    overflow: hidden
+    }
+
+.DirectoryPicker {
+ font-weight: 700;
+ font-size: 12px;
+ white-space: nowrap;
+ background-color: #630;
+ color: #FFFFFF;
+}
+
+.FilePicker {
+ font-weight: 700;
+ font-size: 12px;
+ white-space: nowrap;
+ background-color: #630;
+ color: #FFFFFF;
+}
+
+.FormButton {
+	font-weight: bold;
+	width: 75px;
+	font-size: 12px;
+	white-space: nowrap;
+	background-color: #630;
+	color: #FFFFFF;
+}
+
+.FormButton-Help {
+	font-weight: bold;
+	width: 75px;
+	font-size: 12px;
+	white-space: nowrap;
+	background-color: #663300;
+	color: #FFFFFF;
+	padding-left: 10;
+	padding-right: 10;
+}
+
+.LuaButton {
+	font-weight: bold;
+	font-size: 12px;
+	background-color: #663300;
+	color: #FFFFFF;
+}
+
+.ToolNameLabel {
+	font-weight: bolder;
+	font-size: 12px;
+	text-align: left;
+	color: #000;
+	width: 70%;
+}
+
+.ToolPicker {
+	font-weight: bold;
+	text-align: center;
+	font-size: 12px;
+	text-align: center;
+	width: 50px;
+	background-color: #663300;
+	color: #FFFFFF;
+}
+
+h2 {
+   width: 100%;
+   color: #ABD4D9;
+   text-align: left;
+   font-size: 14px;
+   border-bottom: 1px solid;
+   line-height: 1.0em;
+   margin: 1px 0 2px;
+}
+
+h2 span {
+    padding:0 10px;
+}
+
+.error {
+	font-size: 18px;
+	font-weight: bold;
+	color: #FF0000;
+	text-align: left;
+	white-space: nowrap;
+	padding-right: 4px;
+	padding-left: 10px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.errorMessage {
+	font-size: 12px;
+	color: #000;
+	font-weight: bold;
+	text-align: left;
+	white-space: nowrap;
+	padding-right: 4px;
+	padding-left: 10px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.errorTable {
+	background-color: #FFFFFF;
+	white-space: nowrap;
+}
+
+.p1-l {
+	font-size: 12px;
+	text-align: left;
+}
+
+.h1-c {
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.h1-l {
+	font-size: 12px;
+	font-weight: bold;
+	text-align: left;
+	white-space: nowrap;
+}
+
+.h1-r {
+	font-size: 12px;
+	font-weight: bold;
+	text-align: right;
+	white-space: nowrap;
+}
+
+.h1-rP {
+	font-size: 12px;
+	font-weight: bold;
+	text-align: right;
+	white-space: nowrap;
+	padding-right: 4px;
+	padding-left: 4px;
+}
+
+.h2-c {
+	font-size: 14px;
+	font-weight: bold;
+	text-align: center;
+	white-space: nowrap;
+	text-shadow: 2px 2px white;
+}
+
+.h2-l {
+	font-size: 14px;
+	font-weight: bold;
+	text-align: left;
+	white-space: nowrap;
+	text-shadow: 2px 2px white;
+}
+
+.h2-r {
+	font-size: 14px;
+	font-weight: bold;
+	text-align: right;
+	white-space: nowrap;
+	text-shadow: 2px 2px white;
+}
+
+.h3-c {
+	font-size: 16px;
+	font-weight: bold;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.helplabel-r{
+	white-space: nowrap;
+	text-align: right;
+}
+
+.ver-c {
+	font-size: 10px;
+	font-weight: bold;
+	text-align: center;
+	white-space: nowrap;
+	color: #ffd9b3;
+}
+
+.webLink-c {
+	font-size: 16px;
+	font-weight: bold;
+	background-color: yellow;
+	text-align: center;
+	white-space: nowrap;
+}
+
+#InquiryImportSettings{
+  width: 80px;
+}
+
+#InquiryMilling{
+  width: 80px;
+}
+
+#InquiryAbout{
+  width: 80px;
+}
+
+#InquiryHelpMain{
+  width: 80px;
+}
+
+#InquiryProjectInfo{
+  width: 80px;
+}
+
+#InquiryLayers{
+  width: 80px;
+}
+
+#InquiryMilling{
+  width: 80px;
+}
+
+body {
+	background-color: #3a4660;
+	overflow: hidden;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 12px;
+	color: #FFFFFF;
+	
+}
+
+html {
+	overflow: hidden
+}
+
+table {
+	width: 100%;
+	border: 0;
+}
+</style>]]
+    -- =====================================================]] -- About Dialog
+    DialogWindow.About = [[<html>
+  <head>
+   <title>About</title> ]] .. DialogWindow.Style .. [[
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td class="h1-l">                                                                              <!-- Added by Sharkcutup 7/10/2025 -->
+        </td>
+        <td class="h1-r">
+        <input type="button" title="Caution: This Action will Reset all Gadget Defaults and User Settings to Original Gadget Set Up Settings. (This Action Cannot Be Undone!) " id="InquiryReset"  class="LuaButton" value="Gadget Reset">
+        </td>
+      </tr>
+      <tr>
+            <td colspan="2">
+              <hr>
+            </td>
+          </tr> 
+      <tr>
+          <td colspan="2" class="h3-c" id="SysName">Blum Drawer Maker</td>
+      </tr>
+      <tr>
+       <td colspan="2" id="Version" class="ver-c">Version</td>
+      </tr>   
+      <tr>
+         <td colspan="2"><hr></td>
+      </tr>
+      <tr>
+       <td colspan="2" class="h2-c">Disclaimer</td>
+      </tr>
+      <tr>
+        <td colspan="2" class="p1-l"><p>The ]] .. DialogWindow.ProgramName ..
+                             [[ Gadget is a plugin for Vectric software, V-Carve Pro and Aspire.<br>
+           Gadgets are an entirely optional add-in to Vectric's core software products.<br>
+           They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.<br>
+           In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.<br>
+          <br>
+           Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it
+           and redistribute it freely, subject to the following restrictions:<br>
+          <br>
+           1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.<br>
+           *** If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.<br>
+           2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.<br>
+           3. This notice may not be removed or altered from any source distribution.<br>
+          <br>
+          </td>
+      </tr>
+      <tr>
+       <td colspan="2" class="h1-c"><a href="https://forum.vectric.com" class="webLink-c">Vectric User Forum</a></td></p></td>
+      </tr>
+      <tr>
+       <td colspan="2" class="h3-c">JimAndi Gadgets</td>
+      </tr>
+      <tr>
+       <td colspan="2" class="h1-c">Houston, TX.</td>
+      </tr>
+    </table>
+    <table>
+      <tr>
+        <td colspan="2"><hr></td>
+      </tr>
+
+      <tr>
+       <td class="h1-l"><input id = "InquiryHelp01" class="LuaButton" type = "button" value = "Help"></td>
+       <td class="h1-r"><input id = "ButtonOK" class = "FormButton" name = "ButtonOK" type = "button" value = "Close"></td>
+      </tr>
+    </table>
+  </body>
+</html>]]
+    -- =====================================================]] -- Milling
+    DialogWindow.Milling = [[<html>
+<head>
+<title>Milling Information</title>
+]] .. DialogWindow.Style .. [[
+</head>
+<body onLoad="BottomMill(); JointType()">
+    <table>
+        <tr>
+            <td colspan="4">
+                <h2>
+                    <span>Bit Defaults</span>
+                </h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="Diameter of the default bit for milling the finger. This value is only used for calculations when tooling is Not Selected">Finger Bit Diameter</label>
+            </td>
+            <td nowrap width="50">
+                <input type="text" class="h1-l" id="Milling.FingerToolDia" size="10" maxlength="10" />
+            </td>
+            <td class="h1-rP">
+                <label title="Diameter of the default bit for milling the profile. This value is only used for calculations when tooling is Not Selected">Profile Bit Diameter</label>
+            </td>
+            <td width="50">
+                <input type="text" class="h1-l" id="Milling.ProfileToolDia" size="10" maxlength="10" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h2>
+                    <span>Part Milling</span>
+                </h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="The amount of space between parts on the drawing. (Cannot be Zero or smaller than profile bit)">Part Placement Gap</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.PartGap" size="10" maxlength="10" />
+            </td>
+            <td class="h1-rP">
+                <label title="The amount of space for finger clearance. (Can be + or - value)">Finger Clearance</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.FingerClearance" size="10" maxlength="10" />
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="The amount of space for dado fit clearance. (Can be + or - value)">Dado Width Clearance</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.DadoClearance" size="10" maxlength="10" />
+            </td>
+            <td class="h1-rP">
+                <label title="The thickness of the material from the bottom of the dado to the back of the material. (Cannot be zero)">Dado Height</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.DadoHeight" size="10" maxlength="10" />
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="Add milling for the Blume under drawer soft close hardware?">Blume Soft Close</label>
+            </td>
+            <td>
+                <Select type="text" class="h1-l" id="Milling.BlumeSoftClose" size="1">
+                    <option selected>Yes</option>
+                    <option>No</option>
+                </Select>
+            </td>
+            <td class="h1-rP">
+                <label title="Add the through hole in the back panel for the Blume hardware?">Blume Hole</label>
+            </td>
+            <td>
+                <Select type="text" class="h1-l" id="Milling.BlumeHole" size="1">
+                    <option selected>Yes</option>
+                    <option>No</option>
+                </Select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h2>
+                    <span>Drawer Styling</span>
+                </h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="Select the joint style for the drawer">Joint Style</label>
+            </td>
+            <td>
+                <Select type="text" class="h1-l" id="Milling.JointStyleName" onChange = JointType() size="1">
+                    <option value=1 selected>Dog Bone</option>
+                    <option value=2 >Blind Dog Bone</option>
+                    <option value=3 >T-Bone Joint</option>
+                    <option value=4 >Blind T-Bone</option>
+                    <option value=5 >Sniglet Joint</option>
+                    <option value=6 >Blind Sniglet</option>
+                </Select>
+            </td>
+            <td class="h1-rP">
+                <label id="Milling.BlindTabThicknessLabel"  title="The thickness of the material to cover the blind area.">Blind Tab Thickness</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.BlindTabThickness" size="10" maxlength="10" />
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-rP">
+                <label title="Select the bottom construction style.">Bottom Style</label>
+            </td>
+            <td>
+                <select type="text" class="h1-l" id="Milling.DrawerStyleName" onChange = BottomMill() size="1">
+                    <option value=1 selected="selected">Captive Bottom (Dado)</option>
+                    <option value=2 >Rabbeted Bottom</option>
+                    <option value=3 >Mount Flat On Bottom</option>
+                </select>
+            </td>
+            <td class="h1-rP">
+                <label id="Drawer.BottomDadoInsetLabel" title="The vertical distance the bottom panel is inset from the bottom of the side and in panels. (Cannot be zero)" >Bottom Dado Inset</label>
+            </td>
+            <td nowrap width="50">
+                <input type="text" class="h1-l" id="Drawer.BottomDadoInset" size="10" maxlength="10" />
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td colspan="3" nowrap class="h2">
+                <hr />
+            </td>
+        </tr>
+        <tr>
+            <td class="h1-l"><input id = "InquiryHelp04" class="LuaButton" type = "button" value = "Help"></td>
+            <td class="alert" id="GadgetName.Alert"></td>
+            <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="OK">
+                             <input id="ButtonCancel" class="FormButton" type="button" value="Cancel">
+            </td>
+        </tr>
+    </table>
+
+<script type="text/javascript">
+    function JointType() {
+       var x = document.getElementById("Milling.JointStyleName").value;
+       if (x == 1){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "hidden";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "hidden";
+       }
+       if (x == 2){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "visible";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "visible";
+       }
+       if (x == 3){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "hidden";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "hidden";
+       }
+       if (x == 4){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "visible";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "visible";
+       }
+       if (x == 5){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "hidden";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "hidden";
+       }
+       if (x == 6){
+         document.getElementById("Milling.BlindTabThickness").style.visibility       = "visible";
+         document.getElementById("Milling.BlindTabThicknessLabel").style.visibility  = "visible";
+       }
+    }
+    JointType()
+
+    function BottomMill() {
+       var x = document.getElementById("Milling.DrawerStyleName").value;
+       if (x == 1){
+         document.getElementById("Drawer.BottomDadoInset").style.visibility       = "visible";
+         document.getElementById("Drawer.BottomDadoInsetLabel").style.visibility  = "visible";
+       }
+       if (x == 2){
+         document.getElementById("Drawer.BottomDadoInset").style.visibility        = "hidden";
+         document.getElementById("Drawer.BottomDadoInsetLabel").style.visibility   = "hidden";
+       }
+       if (x == 3){
+         document.getElementById("Drawer.BottomDadoInset").style.visibility        = "hidden";
+         document.getElementById("Drawer.BottomDadoInsetLabel").style.visibility   = "hidden";
+       }
+    }
+    BottomMill()
+    </script>
+</body>
+</html>]]
+    -- =====================================================]] -- Project
+    DialogWindow.Project = [[<html>
+<head>
+<meta content="text/html ; charset = iso-8859-1" http-equiv="Content-Type">
+<title>Layer Setup</title>
+]] .. DialogWindow.Style .. [[
+</head>
+<body>
+<table>
+  <tr>
+    <td class="h1-rP"><label title="Provide a name for the project. (Cannot be blank)">Project Name</label></td>
+    <td><input type="text" class="h2" id="Project.ProjectName" size="50" maxlength="50" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a name for the contact. (Cannot be blank)">Contact Name</label></td>
+    <td><input type="text" class="h2" id="Project.ContactName" size="50" maxlength="50" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a email for the contact. (Cannot be blank)">Contact Email</label></td>
+    <td><input type="text" class="h2" id="Project.ContactEmail" size="50" maxlength="50" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a phone number for the contact. (Cannot be blank)">Phone Number</label></td>
+    <td><input type="text" class="h2" id="Project.ContactPhoneNumber" size="50" maxlength="50" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Read Only">Drawer ID</label></td>
+    <td ><input type="text" class="h1-l" id="Project.DrawerID" size="10" maxlength="12" readonly /></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a project path for the Bill of Materials. (Cannot be blank)">Project Path</label></td>
+    <td><input type="text" class="h2" id="Project.ProjectPath" size="60" valign="middle" maxlength="250" /></td>
+    <td><input id="DirectoryPicker" class="DirectoryPicker" type="button" value="Path"></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3" class="h2-r"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id = "InquiryHelp02" class="LuaButton" type = "button" value = "Help"></td>
+    <td class="alert" id="GadgetName.Alert"></td>
+    <td class="h1-r"><input id="ButtonOK"     class="FormButton" type="button" value="OK">
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel">
+    </td>
+  </tr>
+</table>
+</body>
+</html>]]
+    -- =====================================================]] -- Layers
+    DialogWindow.Layers = [[<html>
+<head>
+<title>Layer Names</title>
+]] .. DialogWindow.Style .. [[
+</head>
+<body>
+
+<table>
+  <tr class="h1-c">
+    <td class="h2-c">Name</td>
+    <td class="h2-c">Layer Name</td>
+    <td class="h2-c">Color</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Blume Milling</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBlume" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNBlumeColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Bottom Panel Profile</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBottomProfile" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNBottomProfileColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Side Panel Profile</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNSideProfile" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNSideProfileColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Side Panel Pocket (Dado)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNSidePocket" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNSidePocketColor">
+        <option selected="selected">Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+    <tr>
+    <td class="h1-rP"><label>Side Panel Blind</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNSideBlind" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNSideBlindColor">
+        <option selected="selected">Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Front Panel Profile</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNFrontProfile" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNFrontProfileColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Front Panel Pocket (Dado)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNFrontPocket" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNFrontPocketColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+    <tr>
+    <td class="h1-rP"><label>Front Panel Blind</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNFrontBlind" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNFrontBlindColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Back Panel Profile</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBackProfile" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNBackProfileColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Back Panel Pocket (Dado)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNBackPocket" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNBackPocketColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Drawer Notes</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNDrawNotes" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNDrawNotesColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Part Labels</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.LNPartLabels" size="30" maxlength="50"/></td>
+    <td class="h1-l">
+      <select id="Milling.LNPartLabelsColor">
+        <option>Black</option>
+        <option>Red</option>
+        <option>Blue</option>
+        <option>Yellow</option>
+        <option>Cyan</option>
+        <option>Magenta</option>
+        <option>Green</option>
+      </select></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td colspan="3" nowrap class="h2-r"><hr /></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id ="InquiryHelp03" class="LuaButton" type = "button" value = "Help"></td>
+    <td class="alert" id="GadgetName.Alert"></td>
+    <td class="h1-r"><input id="ButtonOK"     class="FormButton" type="button" value="OK">
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></td>
+  </tr>
+</table>
+</body>
+</html>]]
+
+    -- =====================================================]] -- Drawer Main Menu
+    DialogWindow.Main = [[<html>
+<head>
+<title>Drawer Maker</title>
+]] .. DialogWindow.Style .. [[
+</head>
+<body>
+<table>
+  <tr>
+    <td class="h1-c"><input title="Displays the Main Help Dialog." id="InquiryHelpMain" class="LuaButton" type="button" value="Main Help"></td>
+    <td class="h1-c"><input title="Displays the About Dialog." id="InquiryAbout" class="LuaButton" type="button" value="About"></td>
+    <td class="h1-c"><input title="Displays the Project Setup Dialog." id="InquiryProjectInfo" class="LuaButton" type="button" value="Project"></td>
+    <td class="h1-c"><input title="Displays the Layer Setting Dialog." id="InquiryLayers" class="LuaButton" type="button" value="Layers"></td>
+    <td class="h1-c"><input title="Displays the Milling Setting Dialog." id="InquiryMilling" class="LuaButton" type="button" value="Milling"></td>
+    <td class="h1-c"><input title="Displays the Import Dialog." id="InquiryImportSettings" class="LuaButton" type="button" value="Import"></td>
+  </tr>
+  <tr>
+    <td colspan="6"><hr></td>
+  </tr>
+</table>
+
+<table>
+  <tr class="h1-c">
+    <td colspan="2" class="h2-c">Drawer Opening</td>
+    <td colspan="2" class="h2-c">Material Thickness</td>
+    <td colspan="2" class="h2-c">Drawer Clearance</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a drawer face frame opening height. (Cannot be blank)">Height</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningHeight" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Side material thickness. (Cannot be zero)">Side</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideThickness" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Side clearance for hardware. (Cannot be zero)">Sides</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideGap" size="10" maxlength="10" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a drawer face frame opening width. (Cannot be blank)">Width</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningWidth" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Rear/Back panel material thickness. (Cannot be zero)">Back</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.BackThickness" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Top space clearance amount. (Cannot be zero)">Tops</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.TopGap" size="10" maxlength="10" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Provide a drawer depth from the face frame to the cabinet back. (Cannot be blank)">Depth</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningDepth" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label>Front</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.FrontThickness" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Bottom clearance amount for hardware. (Cannot be zero)">Bottoms</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomGap" size="10" maxlength="10" /></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.Count" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Bottom material thickness. (Cannot be zero)">Bottom</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomThickness" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2)">Finger Count</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SideFingerCount" size="10" maxlength="10" /></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3" align="right" nowrap class="h1-r"><hr></td>
+  </tr>
+    <tr class="h1-l">
+    <td class="h1-rP"><label title="Provide a drawer ID or Name. (Cannot be blank)">Cabinet Name</label></td>
+    <td><input type="text" class="h1-l" id="Project.CabinetName" size="30" maxlength="60" /></td>
+    <td><input id="InquiryTooling" class="LuaButton" type="button" value="Clear"></td>
+  </tr>
+  <tr class="h1-l">
+    <td class="h1-rP"><label title="Bit for profile milling">Profile Bit:</label></td>
+    <td bgcolor="#33FFFF" class="ToolNameLabel"><span id = "ToolNameLabel1">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton1" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear1" class="LuaButton" type="button" value="X"></td>
+  </tr>
+  <tr class="h1-l">
+    <td class="h1-rP"><label title="Bit for dado and rabbet detail milling">Dado Pocket Bit:</label></td>
+    <td bgcolor="#FFFF33" class="ToolNameLabel"><span id = "ToolNameLabel2">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton2" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear2" class="LuaButton" type="button" value="X"></td>
+  </tr>
+  <tr class="h1-l">
+    <td class="h1-rP"><label title="Bit for dado and rabbet material clearing">Dado Clearing Bit:</label></td>
+    <td bgcolor="#FFFF33" class="ToolNameLabel"><span id = "ToolNameLabel3">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton3" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear3" class="LuaButton" type="button" value="X"></td>
+  </tr>
+  <tr class="h1-l">
+    <td class="h1-rP"><label title="Bit for finger joint detail milling">Finger Bit:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id = "ToolNameLabel4">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton4" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear4" class="LuaButton" type="button" value="X"></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for finger joint material clearing">Finger Clearing Bit:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id = "ToolNameLabel5">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton5" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear5" class="LuaButton" type="button" value="X"></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for milling the Blume holes">Blume Circle Bit:</label></td>
+    <td bgcolor="#FFFF" class="ToolNameLabel"><span id = "ToolNameLabel6">-</span></td>
+    <td class="h1-l"><input id = "ToolChooseButton6" class = "ToolPicker" type = "button" value = "Tool">
+                     <input id="Clear6" class="LuaButton" type="button" value="X"></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3" nowrap class="h2"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id = "InquiryHelp00" class="LuaButton" type ="button" value ="Help"></td>
+    <td class="alert" id="GadgetName.Alert"></td>
+    <td class="h1-r"><input id="ButtonOK"     class="FormButton" type="button" value="Run">
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></td>
+  </tr>
+</table>
+</body>
+</html>]]
+
+    -- =====================================================]] -- Import Dialog
+    DialogWindow.ImportSettings = [[<head>
+<title>Drawer Settings Import</title>
+    ]] .. DialogWindow.Style .. [[
+</head>
+  <body>
+    <table>
+      <tr>
+        <td class="h2-l"><strong>Select File to Import Saved Settings</strong></td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td> <input name = "ReadFile" type = "text" id="ReadFile" size = "100%"></td>
+        <td>
+          <input id="FilePickerButton" title="Select File to Import" class = "FilePicker" type = "button" value = "  File  ">
+          </span></td>
+      </tr>
+    </table>
+    <table>
+      <tr>
+        <td class="h1-l"><input id = "InquiryHelp05" class="LuaButton" type ="button" value ="Help"></td>
+        <td class="alert" id="GadgetName.Alert"></td>
+        <td class="h1-r">
+        <input id="ButtonOK" class="FormButton" type="button" value="Import">
+        <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></td>
+      </tr>
+    </table>
+  </body>
+</html>]]
+    -- =====================================================]]
+    return true
+end -- Function End
+-- =====================================================]]
+function OnLuaButton_InquiryTooling() -- Clear All Button
+    MillTool1.Name = "Tool Not Selected"
+    MillTool2.Name = "Tool Not Selected"
+    MillTool3.Name = "Tool Not Selected"
+    MillTool4.Name = "Tool Not Selected"
+    MillTool5.Name = "Tool Not Selected"
+    MillTool6.Name = "Tool Not Selected"
+    Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
+    Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
+    Drawer.dialog:UpdateLabelField("ToolNameLabel3", MillTool3.Name)
+    Drawer.dialog:UpdateLabelField("ToolNameLabel4", MillTool4.Name)
+    Drawer.dialog:UpdateLabelField("ToolNameLabel5", MillTool5.Name)
+    Drawer.dialog:UpdateLabelField("ToolNameLabel6", MillTool6.Name)
+    RegistryWriter()
+    return true
+end -- function End
+-- =====================================================]]
+function InquiryDrawer(Header) -- Main Menu
+    HTML() -- Added by Sharkcutup 7/10/2025
+    local Wx, Wy = DialogSize(DialogWindow.DrawerXY)
+    Drawer.dialog = HTML_Dialog(true, DialogWindow.Main, Wx, Wy, Header)
+    if Project.ProjectPath == "Default" then
+        Drawer.dialog:AddLabelField("Alert", "Project Path is Required")
+    else
+        Drawer.dialog:AddLabelField("Alert", "")
+    end
+    Drawer.dialog:AddIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+    Drawer.dialog:AddDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
+    Drawer.dialog:AddDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+    Drawer.dialog:AddDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
+    Drawer.dialog:AddDoubleField("Drawer.SideThickness", Drawer.SideThickness)
+    Drawer.dialog:AddDoubleField("Drawer.BackThickness", Drawer.BackThickness)
+    Drawer.dialog:AddDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
+    Drawer.dialog:AddDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
+    Drawer.dialog:AddDoubleField("Drawer.SideGap", Drawer.SideGap)
+    Drawer.dialog:AddDoubleField("Drawer.TopGap", Drawer.TopGap)
+    Drawer.dialog:AddDoubleField("Drawer.BottomGap", Drawer.BottomGap)
+    Drawer.dialog:AddDoubleField("Drawer.Count", Drawer.Count)
+    Drawer.dialog:AddTextField("Project.CabinetName", Project.CabinetName)
+    Drawer.dialog:AddLabelField("ToolNameLabel1", MillTool1.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton1", "ToolNameLabel1", Tool_ID1) -- Profile
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton1", Tool.END_MILL)
+    Drawer.dialog:AddLabelField("ToolNameLabel2", MillTool2.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton2", "ToolNameLabel2", Tool_ID2) -- Dados
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton2", Tool.END_MILL)
+    Drawer.dialog:AddLabelField("ToolNameLabel3", MillTool3.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton3", "ToolNameLabel3", Tool_ID3) -- Dado Clearing
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton3", Tool.END_MILL)
+    Drawer.dialog:AddLabelField("ToolNameLabel4", MillTool4.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton4", "ToolNameLabel4", Tool_ID4) -- Finger
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton4", Tool.END_MILL)
+    Drawer.dialog:AddLabelField("ToolNameLabel5", MillTool5.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton5", "ToolNameLabel5", Tool_ID5) -- Finger Clearing
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton5", Tool.END_MILL)
+    Drawer.dialog:AddLabelField("ToolNameLabel6", MillTool6.Name)
+    Drawer.dialog:AddToolPicker("ToolChooseButton6", "ToolNameLabel6", Tool_ID6) -- Blum Circle
+    Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton6", Tool.END_MILL)
+    if Drawer.dialog:ShowDialog() then
+        Drawer.SideFingerCount = math.abs(Drawer.dialog:GetIntegerField("Drawer.SideFingerCount"))
+        Drawer.OpeningHeight = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningHeight"))
+        Drawer.OpeningDepth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningDepth"))
+        Drawer.OpeningWidth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningWidth"))
+        Drawer.SideThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.SideThickness"))
+        Drawer.BackThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BackThickness"))
+        Drawer.FrontThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.FrontThickness"))
+        Drawer.BottomThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BottomThickness"))
+        Drawer.SideGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.SideGap"))
+        Drawer.TopGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.TopGap"))
+        Drawer.BottomGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.BottomGap"))
+        Drawer.Count = math.abs(Drawer.dialog:GetDoubleField("Drawer.Count"))
+        Project.CabinetName = All_Trim(Drawer.dialog:GetTextField("Project.CabinetName"))
+        if Drawer.dialog:GetTool("ToolChooseButton1") then
+            MillTool1 = Drawer.dialog:GetTool("ToolChooseButton1") -- Profile
+        end -- if tool 1 end
+        if Drawer.dialog:GetTool("ToolChooseButton2") then
+            MillTool2 = Drawer.dialog:GetTool("ToolChooseButton2") -- Dados
+        end -- if tool 2 end
+        if Drawer.dialog:GetTool("ToolChooseButton3") then
+            MillTool3 = Drawer.dialog:GetTool("ToolChooseButton3") -- Dado Clearing
+        end -- if tool 3 end
+        if Drawer.dialog:GetTool("ToolChooseButton4") then
+            MillTool4 = Drawer.dialog:GetTool("ToolChooseButton4") -- Finger
+        end -- if tool 4 end
+        if Drawer.dialog:GetTool("ToolChooseButton5") then
+            MillTool5 = Drawer.dialog:GetTool("ToolChooseButton5") -- Finger Clearing
+        end -- if tool 5 end
+        if Drawer.dialog:GetTool("ToolChooseButton6") then
+            MillTool6 = Drawer.dialog:GetTool("ToolChooseButton6") -- Blume Circles
+        end -- if tool 6 end
+
+        DialogWindow.DrawerXY = tostring(Drawer.dialog.WindowWidth) .. " x " .. tostring(Drawer.dialog.WindowHeight)
+        if Drawer.SideFingerCount < 3 then
+            Drawer.SideFingerCount = 3
+        end
+        if Drawer.Count == 0 then
+            Drawer.Count = 1
+        end
+        Drawer_Math()
+        RegistryWriter()
+        return true
+    else
+        return false
+    end
+end -- function End
+-- =====================================================]]
+function OnLuaButton_InquiryProjectInfo() -- "Project" Setup Info
+    local Wx, Wy = DialogSize(DialogWindow.ProjectXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Project, Wx, Wy, "Project  Setup " .. Drawer.Units)
+    dialog:AddTextField("Project.ProjectName", Project.ProjectName)
+    dialog:AddTextField("Project.ContactEmail", Project.ContactEmail)
+    dialog:AddTextField("Project.ContactName", Project.ContactName)
+    dialog:AddTextField("Project.ContactPhoneNumber", Project.ContactPhoneNumber)
+    dialog:AddTextField("Project.DrawerID", StartDate())
+    dialog:AddTextField("Project.ProjectPath", Project.ProjectPath)
+    dialog:AddDirectoryPicker("DirectoryPicker", "Project.ProjectPath", true)
+    if dialog:ShowDialog() then
+        Project.ProjectName = All_Trim(dialog:GetTextField("Project.ProjectName"))
+        Project.ContactEmail = All_Trim(dialog:GetTextField("Project.ContactEmail"))
+        Project.ContactName = All_Trim(dialog:GetTextField("Project.ContactName"))
+        Project.ContactPhoneNumber = All_Trim(dialog:GetTextField("Project.ContactPhoneNumber"))
+        Project.DrawerID = All_Trim(dialog:GetTextField("Project.DrawerID"))
+        Project.ProjectPath = All_Trim(dialog:GetTextField("Project.ProjectPath"))
+        DialogWindow.ProjectXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+        RegistryWriter()
+        if not (Project.ProjectPath == "Default") then
+            Drawer.dialog:UpdateLabelField("Alert", "")
+        else
+            Drawer.dialog:UpdateLabelField("Alert", "Error: Project Path is Set to Default")
+        end -- if end
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function OnLuaButton_InquiryLayers() -- "Layers" Button
+    local Wx, Wy = DialogSize(DialogWindow.LayersXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Layers, Wx, Wy, "Layer Setup " .. Drawer.Units)
+    dialog:AddTextField("Milling.LNBottomProfile", Milling.LNBottomProfile)
+    dialog:AddTextField("Milling.LNSideProfile", Milling.LNSideProfile)
+    dialog:AddTextField("Milling.LNSidePocket", Milling.LNSidePocket)
+    dialog:AddTextField("Milling.LNSideBlind", Milling.LNSideBlind)
+    dialog:AddTextField("Milling.LNFrontProfile", Milling.LNFrontProfile)
+    dialog:AddTextField("Milling.LNFrontPocket", Milling.LNFrontPocket)
+    dialog:AddTextField("Milling.LNFrontBlind", Milling.LNFrontBlind)
+    dialog:AddTextField("Milling.LNBackProfile", Milling.LNBackProfile)
+    dialog:AddTextField("Milling.LNBackPocket", Milling.LNBackPocket)
+    dialog:AddTextField("Milling.LNDrawNotes", Milling.LNDrawNotes)
+    dialog:AddTextField("Milling.LNPartLabels", Milling.LNPartLabels)
+    dialog:AddTextField("Milling.LNBlume", Milling.LNBlume)
+    dialog:AddDropDownList("Milling.LNBlumeColor", Milling.LNBlumeColor)
+    dialog:AddDropDownList("Milling.LNBottomProfileColor", Milling.LNBottomProfileColor)
+    dialog:AddDropDownList("Milling.LNSideProfileColor", Milling.LNSideProfileColor)
+    dialog:AddDropDownList("Milling.LNSidePocketColor", Milling.LNSidePocketColor)
+    dialog:AddDropDownList("Milling.LNSideBlindColor", Milling.LNSideBlindColor)
+    dialog:AddDropDownList("Milling.LNFrontProfileColor", Milling.LNFrontProfileColor)
+    dialog:AddDropDownList("Milling.LNFrontPocketColor", Milling.LNFrontPocketColor)
+    dialog:AddDropDownList("Milling.LNFrontBlindColor", Milling.LNFrontBlindColor)
+    dialog:AddDropDownList("Milling.LNBackProfileColor", Milling.LNBackProfileColor)
+    dialog:AddDropDownList("Milling.LNBackPocketColor", Milling.LNBackPocketColor)
+    dialog:AddDropDownList("Milling.LNDrawNotesColor", Milling.LNDrawNotesColor)
+    dialog:AddDropDownList("Milling.LNPartLabelsColor", Milling.LNPartLabelsColor)
+    if dialog:ShowDialog() then
+        Milling.LNBottomProfile = All_Trim(dialog:GetTextField("Milling.LNBottomProfile"))
+        Milling.LNSideProfile = All_Trim(dialog:GetTextField("Milling.LNSideProfile"))
+        Milling.LNSidePocket = All_Trim(dialog:GetTextField("Milling.LNSidePocket"))
+        Milling.LNSideBlind = All_Trim(dialog:GetTextField("Milling.LNSideBlind"))
+        Milling.LNFrontProfile = All_Trim(dialog:GetTextField("Milling.LNFrontProfile"))
+        Milling.LNFrontPocket = All_Trim(dialog:GetTextField("Milling.LNFrontPocket"))
+        Milling.LNFrontBlind = All_Trim(dialog:GetTextField("Milling.LNFrontBlind"))
+        Milling.LNBackProfile = All_Trim(dialog:GetTextField("Milling.LNBackProfile"))
+        Milling.LNBackPocket = All_Trim(dialog:GetTextField("Milling.LNBackPocket"))
+        Milling.LNDrawNotes = All_Trim(dialog:GetTextField("Milling.LNDrawNotes"))
+        Milling.LNPartLabels = All_Trim(dialog:GetTextField("Milling.LNPartLabels"))
+        Milling.LNBlume = All_Trim(dialog:GetTextField("Milling.LNBlume"))
+        Milling.LNBlumeColor = dialog:GetDropDownListValue("Milling.LNBlumeColor")
+        Milling.LNBottomProfileColor = dialog:GetDropDownListValue("Milling.LNBottomProfileColor")
+        Milling.LNSideProfileColor = dialog:GetDropDownListValue("Milling.LNSideProfileColor")
+        Milling.LNSidePocketColor = dialog:GetDropDownListValue("Milling.LNSidePocketColor")
+        Milling.LNSideBlindColor = dialog:GetDropDownListValue("Milling.LNSideBlindColor")
+        Milling.LNFrontProfileColor = dialog:GetDropDownListValue("Milling.LNFrontProfileColor")
+        Milling.LNFrontPocketColor = dialog:GetDropDownListValue("Milling.LNFrontPocketColor")
+        Milling.LNFrontBlindColor = dialog:GetDropDownListValue("Milling.LNFrontBlindColor")
+        Milling.LNBackProfileColor = dialog:GetDropDownListValue("Milling.LNBackProfileColor")
+        Milling.LNBackPocketColor = dialog:GetDropDownListValue("Milling.LNBackPocketColor")
+        Milling.LNDrawNotesColor = dialog:GetDropDownListValue("Milling.LNDrawNotesColor")
+        Milling.LNPartLabelsColor = dialog:GetDropDownListValue("Milling.LNPartLabelsColor")
+        DialogWindow.LayersXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+        RegistryWriter()
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function OnLuaButton_InquiryAbout() -- "About" Button
+    local Wx, Wy = DialogSize(DialogWindow.AboutXY)
+    local dialog = HTML_Dialog(true, DialogWindow.About, Wx, Wy, "About " .. Drawer.Units)
+    dialog:AddLabelField("SysName", Project.ProgramName)
+    dialog:AddLabelField("Version", "Version: " .. Project.ProgramVersion)
+
+    dialog:ShowDialog()
+
+    HTML() -- Added by Sharkcutup 7/10/2025
+    DialogWindow.AboutXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end -- function End
+-- =====================================================]]
+function OnLuaButton_InquiryReset() -- "Factory/Gadget Reset" Button
+    if InquiryAreYouSureYesNo("Full Settings Reset",
+        "Reset Variables Back To Factory Settings With the Current Drawing Units?") then
+        RegistryReset()
+        Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
+        Drawer.dialog:UpdateDoubleField("Drawer.BottomGap", Drawer.BottomGap)
+        Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
+        Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
+        Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
+        Drawer.dialog:UpdateDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+        Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
+        Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
+        Drawer.dialog:UpdateDoubleField("Drawer.SideGap", Drawer.SideGap)
+        Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
+        Drawer.dialog:UpdateDoubleField("Drawer.TopGap", Drawer.TopGap)
+        Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+        Drawer.dialog:UpdateTextField("Project.CabinetName", Project.CabinetName)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel3", MillTool3.Name)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel4", MillTool4.Name)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel5", MillTool5.Name)
+        Drawer.dialog:UpdateLabelField("ToolNameLabel6", MillTool6.Name)
+    end
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryMilling() -- "Milling" Button
+    local Wx, Wy = DialogSize(DialogWindow.MillingXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Milling, Wx, Wy, "Milling Setting " .. Drawer.Units)
+    dialog:AddDoubleField("Milling.DadoClearance", Milling.DadoClearance)
+    dialog:AddDoubleField("Milling.DadoHeight", Milling.DadoHeight)
+    dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
+    dialog:AddDoubleField("Milling.FingerClearance", Milling.FingerClearance)
+    dialog:AddDoubleField("Milling.ProfileToolDia", Milling.ProfileToolDia)
+    dialog:AddDoubleField("Milling.FingerToolDia", Milling.FingerToolDia)
+    dialog:AddDoubleField("Drawer.BottomDadoInset", Drawer.BottomDadoInset) -- 5.1 Loads this value
+    dialog:AddDoubleField("Milling.BlindTabThickness", Milling.BlindTabThickness)
+    dialog:AddDropDownList("Milling.BlumeSoftClose", Milling.BlumeSoftClose)
+    dialog:AddDropDownList("Milling.BlumeHole", Milling.BlumeHole)
+    dialog:AddDropDownList("Milling.JointStyleName", Milling.JointStyleName)
+    dialog:AddDropDownList("Milling.DrawerStyleName", Milling.DrawerStyleName) -- 5.1  Loads the Dropdown list
+    if dialog:ShowDialog() then
+        Milling.DadoClearance = dialog:GetDoubleField("Milling.DadoClearance")
+        Milling.FingerClearance = dialog:GetDoubleField("Milling.FingerClearance")
+        Milling.DadoHeight = math.abs(dialog:GetDoubleField("Milling.DadoHeight"))
+        Milling.PartGap = math.abs(dialog:GetDoubleField("Milling.PartGap"))
+        Milling.ProfileToolDia = math.abs(dialog:GetDoubleField("Milling.ProfileToolDia"))
+        Milling.FingerToolDia = math.abs(dialog:GetDoubleField("Milling.FingerToolDia"))
+        Milling.BlindTabThickness = math.abs(dialog:GetDoubleField("Milling.BlindTabThickness"))
+        Drawer.BottomDadoInset = math.abs(dialog:GetDoubleField("Drawer.BottomDadoInset")) -- 5.1 Reads the user value
+        Milling.BlumeSoftClose = dialog:GetDropDownListValue("Milling.BlumeSoftClose")
+        Milling.BlumeHole = dialog:GetDropDownListValue("Milling.BlumeHole")
+        Milling.JointStyleName = dialog:GetDropDownListValue("Milling.JointStyleName")
+        Milling.DrawerStyleName = dialog:GetDropDownListValue("Milling.DrawerStyleName") -- 5.1  Reads value from the Dropdown list
+        DialogWindow.MillingXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+        RegistryWriter()
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
+    local Wx, Wy = DialogSize(DialogWindow.ImportSettingsXY)
+    local dialog = HTML_Dialog(true, DialogWindow.ImportSettings, Wx, Wy, "Import Drawer Settings  ")
+    dialog:AddTextField("ReadFile", Project.ProjectPath .. "/")
+    dialog:AddFilePicker(true, "FilePickerButton", "ReadFile", true)
+    local ImportFile
+    if dialog:ShowDialog() then
+        local fName = dialog:GetTextField("ReadFile")
+        if string.upper(string.sub(fName, -7)) == ".EXPORT" then -- check the file for the correct extension
+            ImportFile = assert(loadfile(fName))(ImportFile) -- Import Data Function
+            Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
+            Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
+            Drawer.dialog:UpdateDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+            Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
+            Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
+            Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
+            Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
+            Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+            Drawer.dialog:UpdateDoubleField("Drawer.TopGap", Drawer.TopGap)
+            Drawer.dialog:UpdateDoubleField("Drawer.SideGap", Drawer.SideGap)
+            Drawer.dialog:UpdateDoubleField("Drawer.BottomGap", Drawer.BottomGap)
+            Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel3", MillTool3.Name)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel4", MillTool4.Name)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel5", MillTool5.Name)
+            Drawer.dialog:UpdateLabelField("ToolNameLabel6", MillTool6.Name)
+            DialogWindow.ImportSettingsXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+            RegistryWriter()
+        else
+            PresentMessage("Export Settings", "Error",
+                [[The selected file is incorrect. You must select a file with an ".Export" extension]], 164)
+        end -- if end
+    end -- if end
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_InquiryHelpMain() -- Main Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/HelpMain.xlua"))(Helper)
+    HTMLHelpMain()
+    local Wx, Wy = DialogSize(DialogWindow.HelpMainXY)
+    local dialog = HTML_Dialog(true, DialogWindow.HelpMain, Wx, Wy,
+        "Application Help Version: " .. string.format(Project.ProgramVersion))
+    dialog:ShowDialog()
+    DialogWindow.HelpMain = nil
+    DialogWindow.HelpMainXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp00() -- Main Sub Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help00.xlua"))(Helper)
+    HTMLHelp00()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help00, Wx, Wy, "Main Gadget Menu Help")
+    dialog:ShowDialog()
+    DialogWindow.Help00 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp01() -- About Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help01.xlua"))(Helper)
+    HTMLHelp01()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help01, Wx, Wy, "About Menu Help")
+    dialog:ShowDialog()
+    DialogWindow.Help01 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp02() -- Project Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help02.xlua"))(Helper)
+    HTMLHelp02()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help02, Wx, Wy, "Project Menu Help")
+    dialog:ShowDialog()
+    DialogWindow.Help02 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp03() -- Layer Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help03.xlua"))(Helper)
+    HTMLHelp03()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help03, Wx, Wy, "Layer Menu Help")
+    dialog:ShowDialog()
+    DialogWindow.Help03 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp04() -- Milling Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help04.xlua"))(Helper)
+    HTMLHelp04()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help04, Wx, Wy, "Milling Menu Help")
+    dialog:ShowDialog()
+    DialogWindow.Help04 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp05() -- Import Job Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help05.xlua"))(Helper)
+    HTMLHelp05()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help05, Wx, Wy, "Import Job")
+    dialog:ShowDialog()
+    DialogWindow.Help05 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp06() -- Bill of Materials Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help06.xlua"))(Helper)
+    HTMLHelp06()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help06, Wx, Wy, "Bill of Materials")
+    dialog:ShowDialog()
+    DialogWindow.Help06 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp07() -- Definitions Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help07.xlua"))(Helper)
+    HTMLHelp07()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help07, Wx, Wy, "Definitions")
+    dialog:ShowDialog()
+    DialogWindow.Help07 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_InquiryHelp08() -- Overview Help
+    local Helper
+    Helper = assert(loadfile(Project.AppPath .. "/Help/Help08.xlua"))(Helper)
+    HTMLHelp08()
+    local Wx, Wy = DialogSize(DialogWindow.HelpSubXY)
+    local dialog = HTML_Dialog(true, DialogWindow.Help08, Wx, Wy, "Start Here!")
+    dialog:ShowDialog()
+    DialogWindow.Help08 = nil
+    DialogWindow.HelpSubXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
+    RegistryWriter()
+    return true
+end
+-- =====================================================]]
+function OnLuaButton_Clear1(Pdialog) -- "X" Button 1
+    MillTool1.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_Clear2(Pdialog) -- "X" Button 2
+    MillTool2.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_Clear3(Pdialog) -- "X" Button 3
+    MillTool3.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel3", MillTool3.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_Clear4(Pdialog) -- "X" Button 4
+    MillTool4.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel4", MillTool4.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_Clear5(Pdialog) -- "X" Button 5
+    MillTool5.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel5", MillTool5.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =====================================================]]
+function OnLuaButton_Clear6(Pdialog) -- "X" Button 6
+    MillTool6.Name = "No Tool Selected"
+    Pdialog:UpdateLabelField("ToolNameLabel6", MillTool6.Name)
+    RegistryWriter()
+    return true
+end -- function end
+-- =============== End of File =========================]]

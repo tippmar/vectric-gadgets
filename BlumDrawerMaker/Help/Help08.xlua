@@ -1,0 +1,194 @@
+-- ==============================================================================
+--[[
+╦ ╦╔═╗╦  ╔═╗  ╔═╗╦═╗╦═╗╔═╗╦═╗  ╦  ╔═╗╔═╗  ╔╦╗╔═╗╔╗╔╦ ╦
+╠═╣║╣ ║  ╠═╝  ║╣ ╠╦╝╠╦╝║ ║╠╦╝  ║  ║ ║║ ╦  ║║║║╣ ║║║║ ║
+╩ ╩╚═╝╩═╝╩    ╚═╝╩╚═╩╚═╚═╝╩╚═  ╩═╝╚═╝╚═╝  ╩ ╩╚═╝╝╚╝╚═╝
+--]]
+-- ==============================================================================
+--  Gadgets are an entirely optional add-in to Vectric's core software products.
+--  They are provided 'as-is', without any express or implied warranty, and you
+--  make use of them entirely at your own risk.
+--  In no event will the author(s) or Vectric Ltd. be held liable for any damages
+--  arising from their use.
+--  Permission is granted to anyone to use this software for any purpose,
+--  including commercial applications, and to alter it and redistribute it freely,
+--  subject to the following restrictions:
+--  1. The origin of this software must not be misrepresented;
+--     you must not claim that you wrote the original software.
+--     If you use this software in a product, an acknowledgement in the product
+--     documentation would be appreciated but is not required.
+--  2. Altered source versions must be plainly marked as such, and
+--     must not be misrepresented as being the original software.
+--  3. This notice may not be removed or altered from any source distribution.
+-- ==============================================================================
+-- Easy MDF Door Maker Gadget was written by JimAndi Gadgets of Houston Texas
+-- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- ====================================================]]
+function HTMLHelp08()
+  DialogWindow.Help08 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>]] .. Style08() .. [[
+  <body>
+    <div class="layout">
+      <label class="h3-lP">General Overview</label>
+        <p class="h2-help-w">For success, it is imperative to become familiarized with all the different aspects of the Blum Drawer Maker gadget.
+                             Do not hesitate to experiment with the default settings, the gadget is equipped with a builtin factory reset
+                             function. The reset button is located on the About Page. Click the Restart Gadget button and all settings will be reset
+                             back to the original default settings.</p>
+        <p class="h2-help-w">Once familiarized with the gadget and the settings, proceed to creating a drawer design of your own.
+                             Having a particular drawer design style in mind helps with assigning tooling for toolpaths for the milling operation.
+                             A good place to start is in the <strong>Milling Settings</strong> dialogue where the Default Bits, Clearances, Drawer Slide (Yes/No),
+                             Joint and Bottom Styles for the Drawer are configured.</p>
+        <p class="h2-help-w">Next is assigning tooling for toolpaths for the milling operation. To select tooling from the tool database, begin by pressing the
+                             <strong>'Tool'</strong> button adjacent the tool name lable. <strong>Note:</strong> A toolpath will <strong>NOT</strong>
+                              be created if <strong>Tool Not Selected</strong> is displayed. To unselected a tool, use the <strong>'X'</strong> button to the right of
+                              the Tool button to clear the tool name label and/or select another tool.</p>
+        <p class="h2-help-w">Next, select Project Setup to Setup a Save Path for the gadget created files to be saved. Also add any contact information that
+                            may be required for the drawer creation. Now Select the <strong>Run</strong> button to create the drawer based on the inputed design. When the
+                            gadget has completed. The drawing will deplay the drawer parts in the Drawing Window.</p>
+        <p class="h2-help-w"><strong>Note:</strong> After the Drawer Design Vectors have been drawn, a popup menu will be display, it will provide guidance to correctly
+                                                    adjust for varying material thicknesses. On the <strong>'Sheets Tab'</strong> to match the drawing note on Material
+                                                    Thhickness to the Sheet Thickness.</p>
+       <p class="h2-help-w">"We hope you find value in using the Blum Drawer Maker gadget with the multiple design capabilities in the various Joint and Bottom Styles"</p>
+
+
+      <div><hr /></div>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+    </div>
+    <div class="foot" id="FooterBox">
+      <div><hr /></div>
+      <div align="center">
+        <input id="ButtonOK" class="FormButton" name="ButtonOK" type="button" value="Close"  />
+      </div>
+    </div>
+    </div>
+  </body>
+</html>]]
+  return true
+end
+-- ====================================================]]
+function Style08()
+  return [[<style>
+	.FormButton {
+		font-family: Arial, Helvetica, sans-serif;
+		font-weight: bold;
+		font-size: 12px;
+		white-space: nowrap;
+		background-color: #663300;
+		color: #FFFFFF;
+	}
+	.h1-help {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 12px;
+		text-align: left;
+    width: 400px;
+		padding-right: 8px;
+		padding-left: 30px;
+	}
+	.h2-help {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 14px;
+		text-align: left;
+    width: 400px;
+		padding-right: 4px;
+		padding-left: 15px;
+	}
+	.h1-help-w {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 12px;
+		text-align: left;
+    width: 650px;
+		padding-right: 8px;
+		padding-left: 30px;
+	}
+  .h2-help-w {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 14px;
+		text-align: left;
+    width: 650px;
+		padding-right: 4px;
+		padding-left: 15px;
+	}
+	.h2-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 16px;
+		font-weight: bold;
+		text-align: left;
+    width: 400px;
+		white-space: nowrap;
+		padding-top: 8px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+  .h2-lP-w {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 16px;
+		font-weight: bold;
+		text-align: left;
+    width: 650px;
+		white-space: nowrap;
+		padding-top: 8px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+  .h3-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 18px;
+		font-weight: bold;
+		text-align: left;
+		white-space: nowrap;
+		padding-top: 18px;
+		padding-right: 8px;
+		padding-left: 18px;
+	}
+	.layout {
+		background-color: white;
+		color: #000000;
+		overflow: auto;
+		width: 99.5%;
+    height: 44em;
+	}
+	.pad-05 {
+    padding-bottom: 1em;
+	}
+	.pad-10 {
+    padding-bottom: 2em;
+	}
+	.pad-20 {
+    padding-bottom: 5em;
+	}
+	.pad-30 {
+    padding-bottom: 8em;
+	}
+	.foot {
+		position: absolute;
+		bottom: 1em;
+		width: 62em;
+	}
+	.helpTopimage {
+    position: static;
+		width: 550px;
+		margin: 10px 10px 10px 40px;
+	}
+	.helpimages {
+    top: 10px;
+    float: right;
+		margin: 10px 10px 10px 10px;
+	}
+  .helpimagesFooter {
+    float: right;
+    margin: 10px 313px 1px 10px;
+  }
+	body {
+		background-color: #3a4660;
+		background-position: center;
+		overflow: hidden;
+		font-family: arial, helvetica, sans-serif;
+		font-size: 12px;
+		color: #FFFFFF;
+	 background-image: url(]] .. DialogWindow.myBackGround .. [[);
+	}
+	html {
+		overflow: hidden
+	}
+</style>]]
+end
+-- ================= End of File ======================]]

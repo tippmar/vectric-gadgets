@@ -1,0 +1,1359 @@
+-- ====================================================================================================================================
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
+-- =====================================================]]
+function ProcessSide()
+    for _ = 1, Drawer.Count do
+        Drawer_Side()
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) -- Left Side
+        Push()
+    end
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        -- Reordered: Dados first (after Blum globally handled in back), then all finger toolpaths, then profile
+        if "Rabbeted Bottom" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Side Rabbet", Milling.LNSidePocket, 0.0,
+                (Drawer.SideThickness - Milling.DadoHeight))
+        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
+        else -- "Flat Bottom"
+            CreateLayerDadoToolpath("Rear Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
+        end
+        Push()
+        CreateLayerFingerToolpath("Side-Blind", Milling.LNSideBlind, 0.0, Drawer.SideThickness)
+        Push()
+        CreateLayerFingerToolpath("Side-Fingers", "Side-" .. Milling.LNFingerBox, 0.0,
+            Drawer.SideThickness - Milling.BlindTabThickness)
+        Push()
+        CreateLayerProfileToolpath("Side-Profile", Milling.LNSideProfile, 0.0, Drawer.SideThickness, "OUT")
+        Push()
+    else
+        if "Rabbeted Bottom" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Side Rabbet", Milling.LNSidePocket, 0.0,
+                (Drawer.SideThickness - Milling.DadoHeight))
+        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
+        else -- Flat Bottom
+            CreateLayerDadoToolpath("Rear Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
+        end
+        Push()
+        CreateLayerFingerToolpath("Side-Fingers", "Side-" .. Milling.LNFingerBox, 0.0, Drawer.SideThickness)
+        Push()
+        CreateLayerProfileToolpath("Side-Profile", Milling.LNSideProfile, 0.0, Drawer.SideThickness, "OUT")
+        Push()
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function ProcessFront() -- Process Front
+    for _ = 1, Drawer.Count do
+        Push()
+        Drawer_Front()
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) --  Front Panel
+    end
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        -- Reordered: Dados first, then finger toolpaths (blind + fingers), then profile
+        if "Rabbeted Bottom" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Front Rabbet", Milling.LNFrontPocket, 0.0,
+                (Drawer.FrontThickness - Milling.DadoHeight))
+        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0,
+                (Drawer.FrontThickness - Milling.DadoHeight))
+        end
+        Push()
+        CreateLayerFingerToolpath("Front Blind", Milling.LNFrontBlind, 0.0,
+            Drawer.FrontThickness - Milling.BlindTabThickness)
+        Push()
+        CreateLayerFingerToolpath("Front-Fingers", "Front-" .. Milling.LNFingerBox, 0.0,
+            Drawer.FrontThickness - Milling.BlindTabThickness)
+        Push()
+        CreateLayerProfileToolpath("Front-Profile", Milling.LNFrontProfile, 0.0, Drawer.FrontThickness, "OUT")
+        Push()
+    else
+        if "Rabbeted Bottom" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Front Rabbet", Milling.LNFrontPocket, 0.0,
+                (Drawer.FrontThickness - Milling.DadoHeight))
+        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
+            CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0,
+                (Drawer.FrontThickness - Milling.DadoHeight))
+        end
+        Push()
+        CreateLayerFingerToolpath("Front-Fingers", "Front-" .. Milling.LNFingerBox, 0.0, Drawer.FrontThickness)
+        Push()
+        CreateLayerProfileToolpath("Front-Profile", Milling.LNFrontProfile, 0.0, Drawer.FrontThickness, "OUT")
+        Push()
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function ProcessBack() -- Process Back
+    for _ = 1, Drawer.Count do
+        Push()
+        Drawer_Back()
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
+    end
+    -- Reordered: Blume pockets first (if any), then dados, then profile
+    if (Milling.BlumeHole == "Yes") or (Milling.BlumeSoftClose == "Yes") then
+        CreateLayerBlumeToolpath("Blume Pockets", Milling.LNBlume, 0.0, Drawer.BackThickness)
+        Push()
+    end
+    if "Rabbeted Bottom" == Milling.DrawerStyleName then
+        CreateLayerDadoToolpath("Back Rabbet", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
+    elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
+        CreateLayerDadoToolpath("Back Dado", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
+    end
+    Push()
+    CreateLayerProfileToolpath("Back-Profile", Milling.LNBackProfile, 0.0, Drawer.BackThickness, "OUT")
+    Push()
+    return true
+end -- function End
+-- =====================================================]]
+function ProcessBottom() -- Process Bottom
+    for _ = 1, Drawer.Count do -- Captured
+        Push()
+        Drawer_Bottom()
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.BottomPanelWidth + Milling.PartGap)) -- Draw Panel Bottom
+    end
+    CreateLayerProfileToolpath("Bottom-Profile", Milling.LNBottomProfile, 0.0, Drawer.BottomThickness, "OUT")
+    Push()
+    return true
+end -- function End
+-- =====================================================]]
+function CutBySheets() -- Groups parts by thickness per sheet
+    Sheet.Side = 0
+    Sheet.Front = 0
+    Sheet.Back = 0
+    Sheet.Bottom = 0
+    for i = 1, 4, 1 do
+        if Sheet.Side == 0 then
+            Drawer.Thick = Drawer.SideThickness
+        elseif Sheet.Front == 0 then
+            Drawer.Thick = Drawer.FrontThickness
+        elseif Sheet.Back == 0 then
+            Drawer.Thick = Drawer.BackThickness
+        elseif Sheet.Bottom == 0 then
+            Drawer.Thick = Drawer.BottomThickness
+        else
+            Drawer.Thick = 0.0
+        end
+        if Sheet.Side == 0 then
+            if Drawer.Thick == Drawer.SideThickness then
+                Sheet.Side = i
+            end
+        end
+        if Sheet.Front == 0 then
+            if Drawer.Thick == Drawer.FrontThickness then
+                Sheet.Front = i
+            end
+        end
+        if Sheet.Back == 0 then
+            if Drawer.Thick == Drawer.BackThickness then
+                Sheet.Back = i
+            end
+        end
+        if Sheet.Bottom == 0 then
+            if Drawer.Thick == Drawer.BottomThickness then
+                Sheet.Bottom = i
+            end
+        end
+    end
+    return true
+end -- function End
+-- =====================================================]]
+function Drawer_Side() -- Drawer Side LEFT
+    Push()
+    -- Draw Left Side Profile
+    local pt1 = Drawer.WP
+    local pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
+    local pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth)
+    local pt4 = Polar2D(pt3, 270.0, Drawer.SideLength)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile)
+
+    -- Add the Part Note
+    local pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.50 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("Drawer - Left Side", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("( " .. tostring(Drawer.SideThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
+                   GetDistance(pt3, pt4) .. " )", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+
+    -- Post to the BOM
+    if Drawer.LSide == 1 then
+        CutListfileWriterItem("A", "Left Side", tostring(Drawer.Count), Drawer.SideThickness, "Plywood",
+            GetDistance(pt2, pt3), GetDistance(pt3, pt4))
+        Drawer.LSide = Drawer.LSide + 1
+    end
+
+    FingerBoxSide(Drawer.WP, "L") -- Draw Left Side Fingers
+
+    -- Draw bottom dado
+    if Milling.DrawerStyleName == "Rabbeted Bottom" then -- 5.1 do something only if Rabbeted or Captive
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolRadius)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+        pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.PocketToolRadius)
+        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    elseif Milling.DrawerStyleName == [[Captive Bottom (Dado)]] then
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth - Drawer.BottomDadoInset)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer bottom panel center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+        pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
+        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    end
+
+    -- Draw Back Dado
+    pt1 = Drawer.WP
+    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength - Drawer.BackDadoInset)
+    pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
+    pt2 = Polar2D(pt1, 270.0, Drawer.BackThickness + Milling.DadoClearance)
+    pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
+    pt4 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+
+    Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.SideWidth + Milling.PartGap)) -- Sets WP for other Side
+
+    Push()
+
+    -- ------------------------------------------------------
+    -- Draw Right Side Profile                                         --- "Drawer Side Right"
+    pt1 = Drawer.WP
+    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
+    pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth)
+    pt4 = Polar2D(pt3, 270.0, Drawer.SideLength)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile)
+
+    pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("Drawer - Right Side", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("( " .. tostring(Drawer.SideThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
+                   GetDistance(pt3, pt4) .. " )", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+
+    FingerBoxSide(pt4, "R") -- Draw Right Side Fingers
+
+    -- Draw Bottom Dado or Rabbet
+    if Milling.DrawerStyleName == "Rabbeted Bottom" then -- 5.1 do something only if Rabbeted or Captive
+        pt2 = Polar2D(pt1, 180.0, Milling.PocketToolRadius)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.PocketToolRadius)
+        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    elseif Milling.DrawerStyleName == "Captive Bottom (Dado)" then
+        pt1 = Drawer.WP --
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
+        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    end
+
+    -- Post to the BOM
+    if Drawer.RSide == 1 then
+        CutListfileWriterItem("A", "Right Side", tostring(Drawer.Count), Drawer.SideThickness, "Plywood",
+            GetDistance(pt2, pt3), GetDistance(pt3, pt4))
+        Drawer.RSide = Drawer.RSide + 1
+    end -- if end
+
+    -- Draw Back Dado
+    pt1 = Drawer.WP
+    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength - Drawer.BackDadoInset)
+    pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
+    pt2 = Polar2D(pt1, 270.0, Drawer.BackThickness + Milling.DadoClearance)
+    pt3 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
+    pt4 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
+    DrawBox(pt1, pt2, pt4, pt3, Milling.LNSidePocket)
+
+    return true
+end -- function end
+-- =====================================================]]
+function Drawer_Front() -- Drawer Front
+    Push()
+    local pt1Text = Point2D(0, 0)
+    local pt1 = Drawer.WP
+    local pt2 = Polar2D(pt1, 90.0, Drawer.FrontLength)
+    local pt3 = Polar2D(pt2, 0.0, Drawer.FrontWidth)
+    local pt4 = Polar2D(pt3, 270.0, Drawer.FrontLength)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNFrontProfile)
+    FingerBoxFront(pt1, pt2)
+
+    -- Place Part Note
+    pt1Text = Polar2D(Polar2D(pt1, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("Drawer - Front", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("( " .. tostring(Drawer.FrontThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
+                   GetDistance(pt3, pt4) .. " )", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    if Drawer.Front == 1 then
+        CutListfileWriterItem("B", "Front", tostring(Drawer.Count), Drawer.FrontThickness, "Plywood",
+            GetDistance(pt2, pt3), GetDistance(pt3, pt4))
+        Drawer.Front = Drawer.Front + 1
+    end -- if end
+    if "Rabbeted Bottom" == Milling.DrawerStyleName then
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 0.0, Drawer.FrontWidth + Milling.PocketToolRadius)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.FrontLength)) -- Drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
+        pt3 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance + Milling.PocketToolRadius)
+        pt4 = Polar2D(pt2, 180.0, Drawer.BottomThickness + Milling.DadoClearance + Milling.PocketToolRadius)
+        DrawBox(pt1, pt2, pt4, pt3, Milling.LNFrontPocket)
+    elseif Milling.DrawerStyleName == [[Captive Bottom (Dado)]] then
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 0.0, Drawer.FrontWidth - Drawer.BottomDadoInset)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.FrontLength)) -- Drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
+        pt3 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
+        pt4 = Polar2D(pt2, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
+        DrawBox(pt1, pt2, pt4, pt3, Milling.LNFrontPocket)
+    end -- if end
+
+    return true
+end -- function end
+-- =====================================================]]
+function Drawer_Back() -- Drawer Back
+    Push()
+    local Bit
+    if MillTool1.Name == "Tool Not Selected" then
+        Bit = math.sin(math.rad(45.0)) * Milling.ProfileToolDia
+    else
+        Bit = math.sin(math.rad(45.0)) * MillTool1.ToolDia
+    end -- if end
+    local pt1Text = Point2D(0, 0)
+    local pt1 = Drawer.WP
+    local pt2 = Polar2D(pt1, 90.0, Drawer.BackLength)
+    local pt3 = Polar2D(pt2, 0.0, Drawer.BackWidth)
+    local pt4 = Polar2D(pt3, 270.0, Drawer.BackLength)
+    -- Draw Rear Profile
+    if (Milling.BlumeSoftClose == "No") or (Milling.DrawerStyleName == [[Mount Flat On Bottom]]) or
+        ((Milling.BlumeSoftClose == "Yes") and (Milling.DrawerStyleName == [[Rabbeted Bottom]])) then
+        DrawBox(pt1, pt2, pt3, pt4, Milling.LNBackProfile)
+        if Milling.BlumeHole == "Yes" then
+            local pt13 = Polar2D(Polar2D(Polar2D(pt1, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumeDown), 90.0,
+                Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
+            local pt14 = Polar2D(Polar2D(Polar2D(pt2, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumeDown), 270.0,
+                Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
+            DrawCircle(pt13, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+            DrawCircle(pt14, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+        end -- if end
+        Milling.BlumeSoftClose = "No"
+    else
+        local pt5 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+        local pt10 = Polar2D(pt2, 0.0, Drawer.BottomDadoInset)
+        local pt6 = Polar2D(pt5, 90.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumeWide)
+        local pt6a = Polar2D(pt6, 270.0, Bit)
+        local pt6b = Polar2D(pt6, 180.0, Bit)
+        local pt7 = Polar2D(pt6, 180.0, Drawer.BottomDadoInset)
+        local pt9 = Polar2D(pt10, 270.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumeWide)
+        local pt8 = Polar2D(pt9, 180.0, Drawer.BottomDadoInset)
+        local pt9a = Polar2D(pt9, 180.0, Bit)
+        local pt9b = Polar2D(pt9, 90.0, Bit)
+        local pt11 = Polar2D(Polar2D(pt5, 0.0, Drawer.BlumeDown), 90.0,
+            Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
+        local pt12 = Polar2D(Polar2D(pt10, 0.0, Drawer.BlumeDown), 270.0,
+            Drawer.BlumeIn + (Drawer.SideThickness - Milling.DadoHeight))
+        local layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBackProfile)
+        local line = Contour(0.0)
+        line:AppendPoint(pt5);
+        line:LineTo(pt6a);
+        line:ArcTo(pt6b, 1.0);
+        line:LineTo(pt7);
+        line:LineTo(pt8);
+        line:LineTo(pt9a);
+        line:ArcTo(pt9b, 1.0);
+        line:LineTo(pt10);
+        line:LineTo(pt3);
+        line:LineTo(pt4);
+        line:LineTo(pt5)
+        layer:AddObject(CreateCadContour(line), true)
+
+        if Milling.BlumeHole == "Yes" then
+            DrawCircle(pt11, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+            DrawCircle(pt12, Drawer.BlumeDia * 0.5, Milling.LNBlume)
+        end -- if end
+    end -- if end
+
+    -- Place Part Note
+    pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("Drawer - Back", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
+    DrawWriter("( " .. tostring(Drawer.BackThickness) .. " X " .. GetDistance(pt2, pt3) .. " x " ..
+                   GetDistance(pt3, pt4) .. " )", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    if Drawer.Back == 1 then
+        CutListfileWriterItem("C", "Back", tostring(Drawer.Count), Drawer.BackThickness, "Plywood",
+            GetDistance(pt2, pt3), GetDistance(pt3, pt4))
+        Drawer.Back = Drawer.Back + 1
+    end -- if end
+    -- Draw bottom dato
+
+    if "Rabbeted Bottom" == Milling.DrawerStyleName then
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 180.0, Milling.PocketToolRadius)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.BackWidth)) -- Drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.BackWidth) + Milling.PocketToolRadius)
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.PocketToolRadius)
+        pt3 = Polar2D(pt1, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+        pt4 = Polar2D(pt2, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+        DrawBox(pt1, pt2, pt4, pt3, Milling.LNBackPocket)
+    elseif Milling.DrawerStyleName == "Captive Bottom (Dado)" then
+        pt1 = Drawer.WP
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+        pt2 = Polar2D(pt2, 90.0, H(Drawer.BackWidth)) -- Drawer center point
+        pt1 = Polar2D(pt2, 270.0, H(Drawer.BackWidth) + Milling.PocketToolRadius)
+        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
+        pt3 = Polar2D(pt1, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+        pt4 = Polar2D(pt2, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+        DrawBox(pt1, pt2, pt4, pt3, Milling.LNBackPocket)
+    end -- if end
+    return true
+end -- function end
+-- =====================================================]]
+function Drawer_Bottom() -- Drawer Bottom
+    Push()
+    local pt1Text = Point2D(0, 0)
+    local pt1 = Drawer.WP
+    local pt2 = Polar2D(pt1, 90.0, Drawer.BottomPanelLength)
+    local pt3 = Polar2D(pt2, 0.0, Drawer.BottomPanelWidth)
+    local pt4 = Polar2D(pt3, 270.0, Drawer.BottomPanelLength)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNBottomProfile)
+    -- Place Part Note
+    pt1Text = Polar2D(Polar2D(pt1, 45, 1.5 * Drawer.Cal), 0, 0.75 * Drawer.Cal)
+    DrawWriter("Drawer - Bottom", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0, 0.75 * Drawer.Cal)
+    DrawWriter("( " .. tostring(Drawer.BottomThickness) .. " X " .. GetDistance(pt2, pt3) .. " x " ..
+                   GetDistance(pt3, pt4) .. " )", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    if Drawer.Bottom == 1 then
+        CutListfileWriterItem("D", "Bottom", tostring(Drawer.Count), Drawer.BottomThickness, "Plywood",
+            GetDistance(pt2, pt3), GetDistance(pt3, pt4))
+        Drawer.Bottom = Drawer.Bottom + 1
+    end -- if end
+    return true
+end -- function end
+-- =====================================================]]
+function CutListfileWriterHeader() -- Cut List File Header
+
+    local OK, Error = isdir(Project.ProjectPath)
+    if not OK then
+        PresentMessage("Export Path", "Error", [[The selected path not a directory. You must select a real directory.]],
+            165)
+        PresentMessage("Export Path", "Error", "Message " .. Error, 165)
+        return false
+    end -- if end
+    local file = io.open(Project.DatFile .. ".dat", "w")
+    if Drawer.WriteSetting then
+        ExportWriter(Project.DatFile)
+    end
+    -- Open dat file for writing lines to the file
+    Push()
+    Drawer.OpeningDiagonal = math.sqrt((Drawer.OpeningHeight * Drawer.OpeningHeight) + Drawer.OpeningWidth ^ 2)
+    file:write("================================================================ \n")
+    file:write("=====================  Drawer Cut List  ======================== \n")
+    file:write("Run ID = " .. Project.DrawerID .. "\n")
+    file:write("Cabinet = " .. Project.CabinetName .. "\n")
+    file:write("Drawer Run Count = " .. Drawer.Count .. "\n")
+    file:write("================  Cabinet Opening Dimensions  ================== \n")
+    file:write("Cabinet Opening Height   = " .. Drawer.OpeningHeight .. "\n")
+    file:write("Cabinet Opening Width    = " .. Drawer.OpeningWidth .. "\n")
+    file:write("Cabinet Opening Depth    = " .. Drawer.OpeningDepth .. "\n")
+    file:write("Cabinet Opening Diagonal = " .. Drawer.OpeningDiagonal .. "\n")
+    file:write("Side Gap     .........   = " .. Drawer.SideGap .. "\n")
+    file:write("Bottom Gap   .........   = " .. Drawer.BottomGap .. "\n")
+    file:write("Top Gap      .........   = " .. Drawer.TopGap .. "\n")
+    file:write("----------------------------------------------------------------\n")
+    file:write("Finished Length .......  = " .. Drawer.Length .. "\n")
+    file:write("Finished Height .......  = " .. Drawer.Height .. "\n")
+    file:write("Finished Width  .......  = " .. Drawer.Width .. "\n")
+    file:write("----------------------------------------------------------------\n")
+    file:write("ID | Name       |Count| Thick | Material     | Width   | Length \n")
+    file:write("----------------------------------------------------------------\n")
+    file:close() -- closes the door on the open file
+    file = io.open(Project.DatFile .. ".csv", "w")
+    -- Open dat file for writing lines to the file
+    file:write("ID,Name,Count,Thick,Material,Width,Length\n")
+    file:close() -- closes the door on the open file
+
+    file = io.open(Project.DatFile .. ".html", "w")
+    file:write(
+        [[<html><head><meta content="text/html ; charset = iso-8859-1" http-equiv="Content-Type"><title>Blum Drawer Maker Cut List</title><style>h2{width:100%;text-align:left;font-size:14px;border-bottom:1px solid;line-height:1em;margin:1px 0 2px}h2 span{padding:0 10px}.p1-l{font-size:12px;text-align:left}.h1-c{font-size:12px;font-weight:700;text-align:center;white-space:nowrap}.h1-cOk{font-size:12px;font-weight:700;text-align:center;white-space:nowrap;width:15%}.h0-l{font-size:9px;font-weight:700;text-align:left;white-space:nowrap}.h1-l{font-size:12px;font-weight:700;text-align:left;white-space:nowrap}.h1-lwrap{font-size:14px;text-align:left}.h1-r{font-size:12px;font-weight:700;text-align:right;white-space:nowrap}.h1-spc{width:50%;font-size:12px;font-weight:700;text-align:right;white-space:nowrap}.h1-rwrap{font-size:14px;text-align:right}.h1-rP{font-size:12px;font-weight:700;text-align:right;white-space:nowrap;padding-right:4px;padding-left:4px}.h1-rPx{font-size:12px;font-weight:700;text-align:right;white-space:nowrap;padding-right:8px;padding-left:8px}.h2-c{font-size:14px;font-weight:700;text-align:center;white-space:nowrap;}.h2-l{font-size:14px;font-weight:700;text-align:left;white-space:nowrap;}.h2-lm{font-size:14px;font-weight:700;text-align:left;}.h2-r{font-size:14px;font-weight:700;text-align:right;white-space:nowrap;}.h2-rPx{font-size:14px;font-weight:700;text-align:right;white-space:nowrap;padding-right:10px;padding-left:10px;}.h3-bc{font-size:16px;font-weight:700;text-align:center;white-space:nowrap}.h3-c{font-size:16px;font-weight:700;text-align:center;white-space:nowrap}.h3-l{font-size:16px;font-weight:700;text-align:left;white-space:nowrap}.h3-r{font-size:16px;font-weight:700;text-align:right;white-space:nowrap}.p1-c{font-size:12px;text-align:center}.p1-r{font-size:12px;text-align:right}body{background-image: url(]] ..
+            DialogWindow.CutlistBackground ..
+            [[);overflow:visible;font-family:arial,helvetica,sans-serif;font-size:12px}html{overflow:visible}table{width:100%;border:0}</style></head><body><table><tr><td colspan="3"><h2><span>Drawer Cut List for ]] ..
+            Project.CabinetName .. [[</span></h2></td></tr><tr><td class="h1-r">Run ID =</td><td class="h1-l"> ]] ..
+            Project.DrawerID ..
+            [[ </td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Drawer Run Count =</td><td class="h1-l">]] ..
+            Drawer.Count ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Cabinet Opening Size</span></h2></td></tr><tr><td class="h1-r">Cabinet Opening Height =</td><td class="h1-l">]] ..
+            Drawer.OpeningHeight ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Width =</td><td class="h1-l">]] ..
+            Drawer.OpeningWidth ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Depth =</td><td class="h1-l">]] ..
+            Drawer.OpeningDepth ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Diagonal =</td><td class="h1-l">]] ..
+            Drawer.OpeningDiagonal ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Side Gap =</td><td class="h1-l">]] ..
+            Drawer.SideGap ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Bottom Gap =</td><td class="h1-l">]] ..
+            Drawer.BottomGap ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Top Gap =</td><td class="h1-l">]] ..
+            Drawer.TopGap ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Drawer Dimensions</span></h2></td></tr><tr><td class="h1-r">Finished Height =</td><td class="h1-l">]] ..
+            Drawer.Height ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Finished Width =</td><td class="h1-l">]] ..
+            Drawer.Width ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Finished Depth =</td><td class="h1-l">]] ..
+            Drawer.Length ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr></table><table><tr><td colspan="7"><h2><span>Drawer Parts</span></h2></td></tr><tr class="h2-l"><td>ID</td><td>Name</td><td>Count</td><td>Thick</td><td>Material</td><td>Width</td><td>Length</td></tr><tr><td colspan="7"><h2><span></span></h2></td></tr>]])
+    file:close() -- closes the drawer on the open file
+    return true
+end -- function end
+-- =====================================================]]
+function CutListfileWriterItem(ID, Name, Count, Thick, Material, Width, Length) -- Cut List File  Items
+    Push()
+    local file = io.open(Project.DatFile .. ".dat", "a")
+    local sID = " " .. ID .. " "
+    local Space = "                             "
+    local sName = string.sub("| " .. Name .. Space, 1, 13)
+    local sCount = string.sub("| " .. Count .. Space, 1, 6)
+    local sThick = string.sub("| " .. Thick .. Space, 1, 8)
+    local sMaterial = string.sub("| " .. Material .. Space, 1, 15)
+    local sWidth = string.sub("| " .. Width .. Space, 1, 10)
+    local sLength = string.sub("| " .. Length .. Space, 1, 9)
+    file:write(sID .. sName .. sCount .. sThick .. sMaterial .. sWidth .. sLength .. "\n")
+    file:close() -- closes the drawer on the open file
+    file = io.open(Project.DatFile .. ".csv", "a")
+    file:write(ID .. "," .. Name .. "," .. Count .. "," .. Thick .. "," .. Material .. "," .. Width .. "," .. Length ..
+                   "     \n")
+    file:close() -- closes the drawer on the open file
+    file = io.open(Project.DatFile .. ".html", "a")
+    file:write([[<tr class="h1-l"><td>]] .. ID .. "</td><td>" .. Name .. "</td><td>" .. Count .. "</td><td>" .. Thick ..
+                   "</td>" .. "<td>" .. Material .. "</td><td>" .. Width .. "</td> <td>" .. Length .. "</td></tr>\n")
+    file:close() -- closes the drawer on the open file
+    return true
+end -- function end
+-- =====================================================]]
+function CutListfileWriterFooter() -- Cut List File  Footer
+    Push()
+    local file = io.open(Project.DatFile .. ".dat", "a")
+    file:write("----------------------------------------------------------------\n")
+    file:close() -- closes the drawer on the open file
+    file = io.open(Project.DatFile .. ".csv", "a")
+    file:write("\n")
+    file:close() -- closes the the drawer on the open file
+    file = io.open(Project.DatFile .. ".html", "a")
+    file:write(
+        [[</table><table><tr><td colspan="7"><h2><span></span></h2></td></tr><tr><td class="h0-l">EOF</td></tr></table></body></html>]])
+    file:close() -- closes the drawer on the open file
+end -- function end
+-- =====================================================]]
+function MyFrontFingers(pta, ang)
+    local ptAx, ptCx, pt1, pt2, pt3, pt4, pt5, ptw, ptx, pty, ptz = Point2D(0.0, 0.0)
+    local pt2a, pt2b, pt3a, pt3b, pt4a, pt4b, pt5a, pt5b, pt6a, pt6b, pt7a, pt7b, Cord1, Cord2, ang1a, ang1b
+    local layer = Milling.job.LayerManager:GetLayerWithName("Side-" .. Milling.LNFingerBox)
+    local line = Contour(0.0)
+    local Bit = math.sin(math.rad(45.0)) * Milling.FingerToolDia
+    Push()
+    --------------------------------------------------------------------]]
+    if (Milling.JointStyleName == "Dog Bone") or (Milling.JointStyleName == "Blind Dog Bone") then
+        ptAx = Polar2D(pta, 180.0, 0.0)
+        pt1 = Polar2D(ptAx, 90.0, Drawer.SideThickness)
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+        ptCx = Polar2D(pt3, 0.0, 0.0)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.SideThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        ptw = Polar2D(pt1, 270.0, Bit)
+        ptx = Polar2D(pt1, 0.0, Bit)
+        pty = Polar2D(pt4, 180.0, Bit)
+        ptz = Polar2D(pt4, 270.0, Bit)
+        if ang == 270.0 then
+            ptAx = Polar2D(pta, 0.0, 0.0)
+            pt1 = Polar2D(ptAx, 270.0, Drawer.SideThickness)
+            pt2 = Polar2D(ptAx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(pt3, 180.0, 0.0)
+            pt4 = Polar2D(ptCx, 270.0, Drawer.SideThickness)
+            pt5 = Polar2D(ptCx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            ptw = Polar2D(pt1, 90.0, Bit)
+            ptx = Polar2D(pt1, 0.0, Bit)
+            pty = Polar2D(pt4, 180.0, Bit)
+            ptz = Polar2D(pt4, 90.0, Bit)
+        end
+        local layer = Milling.job.LayerManager:GetLayerWithName("Front-" .. Milling.LNFingerBox)
+        local line = Contour(0.0)
+        line:AppendPoint(pt2)
+        if ang == 270.0 then
+            line:LineTo(ptw)
+            line:ArcTo(ptx, 1.0)
+            line:LineTo(pty)
+            line:ArcTo(ptz, 1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else
+            line:LineTo(ptw)
+            line:ArcTo(ptx, -1.0)
+            line:LineTo(pty)
+            line:ArcTo(ptz, -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+        -------------------------------------------------------------------------------]]
+    elseif (Milling.JointStyleName == "T-Bone Joint") or (Milling.JointStyleName == "Blind T-Bone") then
+        ptAx = Polar2D(pta, 180.0, 0.0)
+        pt1 = Polar2D(ptAx, 90.0, Drawer.SideThickness)
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+        ptCx = Polar2D(pt3, 0.0, 0.0)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.SideThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        ptw = Polar2D(pt1, 270.0, Milling.FingerToolDia)
+        ptz = Polar2D(pt4, 270.0, Milling.FingerToolDia)
+        if ang == 270.0 then
+            ptAx = Polar2D(pta, 0.0, 0.0)
+            pt1 = Polar2D(ptAx, 270.0, Drawer.SideThickness)
+            pt2 = Polar2D(ptAx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(pt3, 180.0, 0.0)
+            pt4 = Polar2D(ptCx, 270.0, Drawer.SideThickness)
+            pt5 = Polar2D(ptCx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            ptw = Polar2D(pt1, 90.0, Milling.FingerToolDia)
+            ptz = Polar2D(pt4, 90.0, Milling.FingerToolDia)
+        end
+        local layer = Milling.job.LayerManager:GetLayerWithName("Front-" .. Milling.LNFingerBox)
+        local line = Contour(0.0)
+        line:AppendPoint(pt2)
+        if ang == 270.0 then
+            line:LineTo(ptw)
+            line:ArcTo(pt1, 1.0)
+            line:LineTo(pt4)
+            line:ArcTo(ptz, 1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else
+            line:LineTo(ptw)
+            line:ArcTo(pt1, -1.0)
+            line:LineTo(pt4)
+            line:ArcTo(ptz, -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+        -------------------------------------------------------------------------------]]
+    else -- Milling.JointStyleName == "Sniglet Joint" or "Blind Sniglet"
+        ptAx = Polar2D(pta, 180.0, 0.0)
+        pt1 = Polar2D(ptAx, 90.0, Drawer.SideThickness)
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+        ptCx = Polar2D(pt3, 0.0, 0.0)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.SideThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        ptw = Polar2D(pt1, 270.0, Milling.FingerToolDia)
+        ptz = Polar2D(pt4, 270.0, Milling.FingerToolDia)
+        if ang == 270.0 then
+            ptAx = Polar2D(pta, 0.0, 0.0)
+            pt1 = Polar2D(ptAx, 270.0, Drawer.SideThickness)
+            pt2 = Polar2D(ptAx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            pt3 = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(pt3, 180.0, 0.0)
+            pt4 = Polar2D(ptCx, 270.0, Drawer.SideThickness)
+            pt5 = Polar2D(ptCx, 90.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            ptw = Polar2D(pt1, 90.0, Milling.FingerToolDia)
+            ptz = Polar2D(pt4, 90.0, Milling.FingerToolDia)
+            pt6a = Polar2D(pt1, 90.0, Milling.FingerToolRad)
+            ang1a = 90.0 + math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2a = Polar2D(pt6a, ang1a, Milling.FingerToolDia)
+            pt7a = Polar2D(pt2a, 0.0, H(Milling.FingerToolRad))
+            pt5a = Polar2D(pt2a, 0.0, H(Milling.FingerToolDia))
+            pt4a = Polar2D(pt6a, 90.0, H(GetDistance(pt6a, pt5a)))
+            pt3a = Polar2D(pt4a, 180.0, H(Milling.FingerToolRad))
+            Cord1 = Polar2D(pt6a, 270.0, GetDistance(pt1, pt3a))
+            Cord2 = Polar2D(pt6a, 270.0, GetDistance(pt5a, pt3a))
+            pt6b = Polar2D(pt4, 90.0, Milling.FingerToolRad)
+            ang1b = 90.0 - math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2b = Polar2D(pt6b, ang1b, Milling.FingerToolDia)
+            pt7b = Polar2D(pt2b, 180.0, H(Milling.FingerToolRad))
+            pt5b = Polar2D(pt2b, 180.0, H(Milling.FingerToolDia))
+            pt4b = Polar2D(pt6b, 90.0, H(GetDistance(pt6b, pt5b)))
+            pt3b = Polar2D(pt4b, 0.0, H(Milling.FingerToolRad))
+            layer = Milling.job.LayerManager:GetLayerWithName("Front-" .. Milling.LNFingerBox)
+            line = Contour(0.0)
+        else -- bottom
+            pt6a = Polar2D(pt1, 270.0, Milling.FingerToolRad)
+            ang1a = 270.0 - math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2a = Polar2D(pt6a, ang1a, Milling.FingerToolDia)
+            pt7a = Polar2D(pt2a, 0.0, H(Milling.FingerToolRad))
+            pt5a = Polar2D(pt2a, 0.0, H(Milling.FingerToolDia))
+            pt4a = Polar2D(pt6a, 270.0, H(GetDistance(pt6a, pt5a)))
+            pt3a = Polar2D(pt4a, 180.0, H(Milling.FingerToolRad))
+            Cord1 = Polar2D(pt6a, 270.0, GetDistance(pt1, pt3a))
+            Cord2 = Polar2D(pt6a, 270.0, GetDistance(pt5a, pt3a))
+            pt6b = Polar2D(pt4, 270.0, Milling.FingerToolRad)
+            ang1b = 270.0 + math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2b = Polar2D(pt6b, ang1b, Milling.FingerToolDia)
+            pt7b = Polar2D(pt2b, 180.0, H(Milling.FingerToolRad))
+            pt5b = Polar2D(pt2b, 180.0, H(Milling.FingerToolDia))
+            pt4b = Polar2D(pt6b, 270.0, H(GetDistance(pt6b, pt5b)))
+            pt3b = Polar2D(pt4b, 0.0, H(Milling.FingerToolRad))
+            layer = Milling.job.LayerManager:GetLayerWithName("Front-" .. Milling.LNFingerBox)
+            line = Contour(0.0)
+        end
+        line:AppendPoint(pt2)
+        if ang == 270.0 then
+            line:LineTo(pt5a)
+            line:ArcTo(pt3a, Arc2Bulge(pt5a, pt3a, Milling.FingerToolRad) * -1.0)
+            line:ArcTo(pt1, Arc2Bulge(pt1, pt3a, Milling.FingerToolRad))
+            line:LineTo(pt4)
+            line:ArcTo(pt3b, Arc2Bulge(pt4, pt3b, Milling.FingerToolRad))
+            line:ArcTo(pt5b, Arc2Bulge(pt5b, pt3b, Milling.FingerToolRad) * -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else
+            line:LineTo(pt5a)
+            line:ArcTo(pt3a, Arc2Bulge(pt5a, pt3a, Milling.FingerToolRad))
+            line:ArcTo(pt1, Arc2Bulge(pt1, pt3a, Milling.FingerToolRad) * -1.0)
+            line:LineTo(pt4)
+            line:ArcTo(pt3b, Arc2Bulge(pt4, pt3b, Milling.FingerToolRad) * -1.0)
+            line:ArcTo(pt5b, Arc2Bulge(pt5b, pt3b, Milling.FingerToolRad))
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+    end
+end -- function end
+-- =====================================================]]
+function MySideFingers(pta, ang)
+    local ptAx, ptBx, ptCx, pt1, pt2, pt3, pt4, pt5, ptw, ptx, pty, ptz = Point2D(0.0, 0.0)
+    local layer = Milling.job.LayerManager:GetLayerWithName("Side-" .. Milling.LNFingerBox)
+    local line = Contour(0.0)
+    local Bit = math.sin(math.rad(45.0)) * Milling.FingerToolDia
+    Push()
+    ---------------------------------------------------------------------------------]]
+    if (Milling.JointStyleName == "Dog Bone") or (Milling.JointStyleName == "Blind Dog Bone") then
+        if ang == 0 then -- left
+            ptAx = Polar2D(pta, 180.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 0.0, Milling.FingerClearance * 0.5)
+        else -- Right
+            if not Drawer.xx then
+                pta = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+                Drawer.xx = true
+            end
+            ptAx = Polar2D(pta, 0.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 180.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 180.0, Milling.FingerClearance * 0.5)
+        end -- if end
+
+        pt1 = Polar2D(ptAx, 90.0, Drawer.FrontThickness)
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, ang, Drawer.SideFingerWidth)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.FrontThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        ptw = Polar2D(pt1, 270.0, Bit)
+        ptx = Polar2D(pt1, 0.0, Bit)
+        pty = Polar2D(pt4, 180.0, Bit)
+        ptz = Polar2D(pt4, 270.0, Bit)
+        line:AppendPoint(pt2)
+        if ang == 0 then -- left
+            line:LineTo(ptw)
+            line:ArcTo(ptx, -1.0)
+            line:LineTo(pty)
+            line:ArcTo(ptz, -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else -- Right
+            ptw = Polar2D(pt1, 270.0, Bit)
+            ptx = Polar2D(pt1, 180.0, Bit)
+            pty = Polar2D(pt4, 0.0, Bit)
+            ptz = Polar2D(pt4, 270.0, Bit)
+            line:LineTo(ptw)
+            line:ArcTo(ptx, 1.0)
+            line:LineTo(pty)
+            line:ArcTo(ptz, 1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+        -----------------------------------------------------------------------------]]
+    elseif (Milling.JointStyleName == "T-Bone Joint") or (Milling.JointStyleName == "Blind T-Bone") then
+        if ang == 0 then -- left
+            ptAx = Polar2D(pta, 180.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 0.0, Milling.FingerClearance * 0.5)
+        else -- Right
+            if not Drawer.xx then
+                pta = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+                Drawer.xx = true
+            end
+            ptAx = Polar2D(pta, 0.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 180.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 180.0, Milling.FingerClearance * 0.5)
+        end -- if end
+        pt1 = Polar2D(ptAx, 90.0, Drawer.FrontThickness) -- left back
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, ang, Drawer.SideFingerWidth)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.FrontThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        line:AppendPoint(pt2)
+        if ang == 0 then
+            ptw = Polar2D(pt1, 270.0, Milling.FingerToolDia)
+            ptz = Polar2D(pt4, 270.0, Milling.FingerToolDia)
+            line:LineTo(ptw)
+            line:ArcTo(pt1, -1.0)
+            line:LineTo(pt4)
+            line:ArcTo(ptz, -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else
+            ptw = Polar2D(pt1, 270.0, Milling.FingerToolDia)
+            ptz = Polar2D(pt4, 270.0, Milling.FingerToolDia)
+            line:LineTo(ptw)
+            line:ArcTo(pt1, 1.0)
+            line:LineTo(pt4)
+            line:ArcTo(ptz, 1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+        -------------------------------------------------------------------------------]]
+    else -- Milling.JointStyleName == "Sniglet Joint" or "Blind Sniglet"
+        if ang == 0 then -- left
+            ptAx = Polar2D(pta, 180.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 0.0, Milling.FingerClearance * 0.5)
+        else -- Right
+            if not Drawer.xx then
+                pta = Polar2D(pta, 0.0, Drawer.SideFingerWidth)
+                Drawer.xx = true
+            end
+            ptAx = Polar2D(pta, 0.0, Milling.FingerClearance * 0.5)
+            ptBx = Polar2D(pta, 180.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 180.0, Milling.FingerClearance * 0.5)
+        end -- if end
+        pt1 = Polar2D(ptAx, 90.0, Drawer.FrontThickness) -- left back
+        pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        pt3 = Polar2D(pta, ang, Drawer.SideFingerWidth)
+        pt4 = Polar2D(ptCx, 90.0, Drawer.FrontThickness)
+        pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+        local ang1a, ang1b, pt2a, pt2b, pt3a, pt3b, pt4a, pt4b, pt5a, pt5b, pt6a, pt6b
+        line:AppendPoint(pt2)
+        if ang == 0 then -- Lelf Hand
+            pt6a = Polar2D(pt1, 270.0, Milling.FingerToolRad)
+            ang1a = 270.0 - math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2a = Polar2D(pt6a, ang1a, Milling.FingerToolDia)
+            pt5a = Polar2D(pt2a, 0.0, H(Milling.FingerToolDia))
+            pt4a = Polar2D(pt6a, 270.0, H(GetDistance(pt6a, pt5a)))
+            pt3a = Polar2D(pt4a, 180.0, H(Milling.FingerToolRad))
+            pt6b = Polar2D(pt4, 270.0, Milling.FingerToolRad)
+            ang1b = 270.0 + math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2b = Polar2D(pt6b, ang1b, Milling.FingerToolDia)
+            pt5b = Polar2D(pt2b, 180.0, H(Milling.FingerToolDia))
+            pt4b = Polar2D(pt6b, 270.0, H(GetDistance(pt6b, pt5b)))
+            pt3b = Polar2D(pt4b, 0.0, H(Milling.FingerToolRad))
+            line:LineTo(pt5a)
+            line:ArcTo(pt3a, Arc2Bulge(pt5a, pt3a, Milling.FingerToolRad))
+            line:ArcTo(pt1, Arc2Bulge(pt1, pt3a, Milling.FingerToolRad) * -1.0)
+            line:LineTo(pt4)
+            line:ArcTo(pt3b, Arc2Bulge(pt4, pt3b, Milling.FingerToolRad) * -1.0)
+            line:ArcTo(pt5b, Arc2Bulge(pt5b, pt3b, Milling.FingerToolRad))
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        else -- Right Hand
+            ptAx = Polar2D(pta, 0.0, Milling.FingerClearance * 0.5) -- far right
+            ptBx = Polar2D(pta, 180.0, Drawer.SideFingerWidth)
+            ptCx = Polar2D(ptBx, 180.0, Milling.FingerClearance * 0.5) -- far left
+            pt1 = Polar2D(ptAx, 90.0, Drawer.FrontThickness) -- left back
+            pt2 = Polar2D(ptAx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            pt3 = Polar2D(pta, 180.0, Drawer.SideFingerWidth)
+            pt4 = Polar2D(ptCx, 90.0, Drawer.FrontThickness)
+            pt5 = Polar2D(ptCx, 270.0, (Milling.FingerToolDia + Milling.FingerToolRadius))
+            pt6a = Polar2D(pt1, 270.0, Milling.FingerToolRad)
+            ang1a = 270.0 - math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            ang1b = 270.0 + math.deg(math.asin(Milling.FingerToolRad / Milling.FingerToolDia))
+            pt2a = Polar2D(pt6a, ang1b, Milling.FingerToolDia)
+            pt5a = Polar2D(pt2a, 180.0, H(Milling.FingerToolDia))
+            pt4a = Polar2D(pt6a, 270.0, H(GetDistance(pt6a, pt5a)))
+            pt3a = Polar2D(pt4a, 0.0, H(Milling.FingerToolRad))
+            pt6b = Polar2D(pt4, 270.0, Milling.FingerToolRad)
+            pt2b = Polar2D(pt6b, ang1a, Milling.FingerToolDia)
+            pt5b = Polar2D(pt2b, 0.0, H(Milling.FingerToolDia))
+            pt4b = Polar2D(pt6b, 270.0, H(GetDistance(pt6b, pt5b)))
+            pt3b = Polar2D(pt4b, 180.0, H(Milling.FingerToolRad))
+            line:LineTo(pt5a)
+            line:ArcTo(pt3a, Arc2Bulge(pt5a, pt3a, Milling.FingerToolRad) * -1.0)
+            line:ArcTo(pt1, Arc2Bulge(pt1, pt3a, Milling.FingerToolRad))
+            line:LineTo(pt4)
+            line:ArcTo(pt3b, Arc2Bulge(pt4, pt3b, Milling.FingerToolRad))
+            line:ArcTo(pt5b, Arc2Bulge(pt5b, pt3b, Milling.FingerToolRad) * -1.0)
+            line:LineTo(pt5)
+            line:LineTo(pt2)
+        end
+        layer:AddObject(CreateCadContour(line), true)
+        return pt3
+    end
+end -- function end
+-- =====================================================]]
+function FingerBoxSide(pt, hand) -- Finger Box Side
+    local pt1 = pt
+    local pt2 = pt
+    local ang = 0.0
+    local fCount = 1
+
+    if hand == "L" then
+        ang = 0.0
+    else
+        ang = 180.0
+    end
+
+    fCount = math.floor(Drawer.SideFingerCount * 0.5) + 1
+
+    pt1 = Polar2D(pt1, 180.0, Drawer.SideFingerWidth * 0.5)
+    Drawer.xx = false
+
+    for _ = 1, fCount do
+        Push()
+        pt2 = MySideFingers(pt1, ang) -- _SideFingerBox(pt1, ang)
+        pt1 = Polar2D(pt2, ang, Drawer.SideFingerWidth)
+    end -- end for
+
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        BlindPocket(pt, ang, Milling.LNSideBlind, "Bottom")
+    end
+
+    return true
+end -- function end
+-- =====================================================]]
+function FingerBoxFront(pta, ptb) -- Finger Box Front
+    local pt1 = Polar2D(pta, 0.0, Drawer.SideFingerWidth * 0.5)
+    local pt2 = pt1
+    for _ = 1, Drawer.FrontFingerCount do
+        pt2 = MyFrontFingers(pt1, 90.0)
+        pt1 = Polar2D(pt2, 0.0, Drawer.SideFingerWidth)
+    end
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        BlindPocket(pta, 0.0, Milling.LNFrontBlind, "Bottom")
+    end
+    pt1 = Polar2D(ptb, 0.0, Drawer.SideFingerWidth * 0.5)
+    for _ = 1, Drawer.FrontFingerCount do
+        pt2 = MyFrontFingers(pt1, 270.0)
+        pt1 = Polar2D(pt2, 0.0, Drawer.SideFingerWidth)
+    end
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        BlindPocket(ptb, 0.0, Milling.LNFrontBlind, "Top")
+    end
+    return true
+end -- function end
+-- =====================================================]]
+function CreateLayerBlumeToolpath(name, layer_name, start_depth, cut_depth)
+    if (Milling.Blume) and (Milling.BlumeHole == "Yes") then
+        local selection = Milling.job.Selection -- clear current selection
+        selection:Clear()
+        -- get layer
+        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+        if layer == nil then
+            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+            return false
+        end
+        -- select all closed vectors on the layer
+        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
+            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+            return false
+        end
+        -- Create tool we will use to machine vectors
+        local tool = Tool(MillTool6.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+        tool.InMM = MillTool6.InMM -- tool_in_mm
+        tool.ToolDia = MillTool6.ToolDia -- tool_dia
+        tool.Stepdown = MillTool6.Stepdown -- tool_stepdown
+        tool.Stepover = MillTool6.Stepover -- tool_dia * (tool_stepover_percent / 100)
+        tool.RateUnits = MillTool6.RateUnits -- Tool.MM_SEC, MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
+        tool.FeedRate = MillTool6.FeedRate -- 30
+        tool.PlungeRate = MillTool6.PlungeRate -- 10
+        tool.SpindleSpeed = MillTool6.SpindleSpeed -- 20000
+        tool.ToolNumber = MillTool6.ToolNumber -- 1
+        -- we will set home position and safe z relative to material block size
+        local mtl_block = MaterialBlock()
+        local mtl_box = mtl_block.MaterialBox
+        local mtl_box_blc = mtl_box.BLC
+        -- Create object used to set home position and safez gap above material surface
+        local pos_data = ToolpathPosData()
+        pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+        pos_data.SafeZGap = mtl_block.Thickness * 0.1
+        -- Create  object used to pass pocketing options
+        local pocket_data = PocketParameterData()
+        -- start depth for toolpath
+        pocket_data.StartDepth = start_depth
+        -- cut depth for toolpath this is depth below start depth
+        pocket_data.CutDepth = cut_depth
+        -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
+        pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+        -- Allowance to leave on when machining
+        pocket_data.Allowance = 0.0
+        -- if true use raster Clearance strategy , else use offset area Clearance
+        pocket_data.DoRasterClearance = false -- true
+        -- angle for raster if using raster Clearance
+        pocket_data.RasterAngle = 0
+        -- type of profile pass to perform  PocketParameterData.PROFILE_NONE , PocketParameterData.PROFILE_FIRST orPocketParameterData.PROFILE_LAST
+        pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
+        -- if true we ramp into pockets (always zig-zag)
+        pocket_data.DoRamping = false
+        --  if ramping, distance to ramp over
+        pocket_data.RampDistance = 1.0
+        -- if true in Aspire, project toolpath onto composite model
+        pocket_data.ProjectToolpath = false
+        -- Create object which can used to automatically select geometry on layers etc
+        local geometry_selector = GeometrySelector()
+        -- if this is true we create 2d toolpaths previews in 2d view, if false we dont
+        local create_2d_previews = true
+        -- if this is true we will display errors and warning to the user
+        local display_warnings = false -- true
+        -- if we are doing two tool pocketing define tool to use for area Clearance
+        local area_clear_tool = nil
+        local toolpath_manager = ToolpathManager()
+        local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
+            geometry_selector, create_2d_previews, display_warnings)
+        if toolpath_id == nil then
+            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            return false
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function CreateLayerDadoToolpath(name, layer_name, start_depth, cut_depth)
+    if Milling.Dado then
+        local selection = Milling.job.Selection -- clear current selection
+        selection:Clear()
+        -- get layer
+        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+        if layer == nil then
+            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+            return false
+        end
+        -- select all closed vectors on the layer
+        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
+            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+            return false
+        end
+        -- Create tool we will use to machine vectors
+        local tool = Tool(MillTool2.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+        tool.InMM = MillTool2.InMM -- tool_in_mm
+        tool.ToolDia = MillTool2.ToolDia -- tool_dia
+        tool.Stepdown = MillTool2.Stepdown -- tool_stepdown
+        tool.Stepover = MillTool2.Stepover -- tool_dia * (tool_stepover_percent / 100)
+        tool.RateUnits = MillTool2.RateUnits -- Tool.MM_SEC     -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
+        tool.FeedRate = MillTool2.FeedRate -- 30
+        tool.PlungeRate = MillTool2.PlungeRate -- 10
+        tool.SpindleSpeed = MillTool2.SpindleSpeed -- 20000
+        tool.ToolNumber = MillTool2.ToolNumber -- 1
+        --  tool.VBitAngle    = MillTool2.VBitAngle          -- 90.0            -- used for vbit only
+        --  tool.ClearStepover = MillTool2.ClearStepover   --  tool_dia * (tool_stepover_percent / 100)  -- used for vbit only
+        -- we will set home position and safe z relative to material block size
+        local mtl_block = MaterialBlock()
+        local mtl_box = mtl_block.MaterialBox
+        local mtl_box_blc = mtl_box.BLC
+        -- Create object used to set home position and safez gap above material surface
+        local pos_data = ToolpathPosData()
+        pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+        pos_data.SafeZGap = mtl_block.Thickness * 0.1
+        -- Create  object used to pass pocketing options
+        local pocket_data = PocketParameterData()
+        -- start depth for toolpath
+        pocket_data.StartDepth = start_depth
+        -- cut depth for toolpath this is depth below start depth
+        pocket_data.CutDepth = cut_depth
+        -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
+        pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+        -- Allowance to leave on when machining
+        pocket_data.Allowance = 0.0
+        -- if true use raster Clearance strategy , else use offset area Clearance
+        pocket_data.DoRasterClearance = false -- true
+        -- angle for raster if using raster Clearance
+        pocket_data.RasterAngle = 0
+        -- type of profile pass to perform  PocketParameterData.PROFILE_NONE , PocketParameterData.PROFILE_FIRST orPocketParameterData.PROFILE_LAST
+        pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
+        -- if true we ramp into pockets (always zig-zag)
+        pocket_data.DoRamping = false
+        --  if ramping, distance to ramp over
+        pocket_data.RampDistance = 1.0
+        -- if true in Aspire, project toolpath onto composite model
+        pocket_data.ProjectToolpath = false
+        -- Create object which can used to automatically select geometry on layers etc
+        local geometry_selector = GeometrySelector()
+        -- if this is true we create 2d toolpaths previews in 2d view, if false we dont
+        local create_2d_previews = true
+        -- if this is true we will display errors and warning to the user
+        local display_warnings = false -- true
+        -- if we are doing two tool pocketing define tool to use for area Clearance
+        local area_clear_tool = nil
+        if Milling.DadoClear then
+            -- we just create a tool twice as large for testing here
+            --   local jim = MillTool3
+            area_clear_tool = Tool(MillTool3.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+            area_clear_tool.InMM = MillTool3.InMM -- tool_in_mm
+            area_clear_tool.ToolDia = MillTool3.ToolDia -- tool_dia * 2
+            area_clear_tool.Stepdown = MillTool3.Stepdown -- tool_stepdown * 2
+            area_clear_tool.Stepover = MillTool3.Stepover -- tool_dia * 2 *(tool_stepover_percent / 100)
+            area_clear_tool.RateUnits = MillTool3.RateUnits -- Tool.MM_SEC  -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
+            area_clear_tool.FeedRate = MillTool3.FeedRate -- 30
+            area_clear_tool.PlungeRate = MillTool3.PlungeRate -- 10
+            area_clear_tool.SpindleSpeed = MillTool3.SpindleSpeed -- 20000
+            area_clear_tool.ToolNumber = MillTool3.ToolNumber -- 1
+            -- area_clear_tool.VBitAngle     = Carrier.MillTool3.VBitAngle      -- 90.0 -- used for vbit only
+            -- area_clear_tool.ClearStepover = Carrier.MillTool3.ClearStepover  -- tool_dia * 2 * (tool_stepover_percent / 100)  -- used for vbit only
+            -- Create our toolpath
+        end
+        local toolpath_manager = ToolpathManager()
+        local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
+            geometry_selector, create_2d_previews, display_warnings)
+        if toolpath_id == nil then
+            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            return false
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
+    if Milling.Finger then
+        local selection = Milling.job.Selection -- clear current selection
+        selection:Clear()
+        -- get layer
+        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+        if layer == nil then
+            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+            return false
+        end
+        -- select all closed vectors on the layer
+        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
+            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+            return false
+        end
+        -- Create tool we will use to machine vectors
+        local tool = Tool(MillTool4.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+        tool.InMM = MillTool4.InMM -- tool_in_mm
+        tool.ToolDia = MillTool4.ToolDia -- tool_dia
+        tool.Stepdown = MillTool4.Stepdown -- tool_stepdown
+        tool.Stepover = MillTool4.Stepover -- tool_dia * (tool_stepover_percent / 100)
+        tool.RateUnits = MillTool4.RateUnits -- Tool.MM_SEC -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
+        tool.FeedRate = MillTool4.FeedRate -- 30
+        tool.PlungeRate = MillTool4.PlungeRate -- 10
+        tool.SpindleSpeed = MillTool4.SpindleSpeed -- 20000
+        tool.ToolNumber = MillTool4.ToolNumber -- 1
+        -- we will set home position and safe z relative to material block size
+        local mtl_block = MaterialBlock()
+        local mtl_box = mtl_block.MaterialBox
+        local mtl_box_blc = mtl_box.BLC
+        -- Create object used to set home position and safez gap above material surface
+        local pos_data = ToolpathPosData()
+        pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+        pos_data.SafeZGap = mtl_block.Thickness * 0.1
+        -- Create  object used to pass pocketing options
+        local pocket_data = PocketParameterData()
+        -- start depth for toolpath
+        pocket_data.StartDepth = start_depth
+        -- cut depth for toolpath this is depth below start depth
+        pocket_data.CutDepth = cut_depth
+        -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
+        pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+        -- Allowance to leave on when machining
+        pocket_data.Allowance = 0.0
+        -- if true use raster Clearance strategy , else use offset area Clearance
+        pocket_data.DoRasterClearance = false -- true
+        -- angle for raster if using raster Clearance
+        pocket_data.RasterAngle = 0
+        -- type of profile pass to perform  PocketParameterData.PROFILE_NONE , PocketParameterData.PROFILE_FIRST orPocketParameterData.PROFILE_LAST
+        pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
+        -- if true we ramp into pockets (always zig-zag)
+        pocket_data.DoRamping = false
+        --  if ramping, distance to ramp over
+        pocket_data.RampDistance = 1.0
+        -- if true in Aspire, project toolpath onto composite model
+        pocket_data.ProjectToolpath = false
+        -- Create object which can used to automatically select geometry on layers etc
+        local geometry_selector = GeometrySelector()
+        -- if this is true we create 2d toolpaths previews in 2d view, if false we dont
+        local create_2d_previews = true
+        -- if this is true we will display errors and warning to the user
+        local display_warnings = false -- true
+        -- if we are doing two tool pocketing define tool to use for area Clearance
+        local area_clear_tool = nil
+        if Milling.FingerClear then
+            -- we just create a tool twice as large for testing here
+            area_clear_tool = Tool(MillTool5.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+            area_clear_tool.InMM = MillTool5.InMM -- tool_in_mm
+            area_clear_tool.ToolDia = MillTool5.ToolDia -- tool_dia * 2
+            area_clear_tool.Stepdown = MillTool5.Stepdown -- tool_stepdown * 2
+            area_clear_tool.Stepover = MillTool5.Stepover -- tool_dia * 2 *(tool_stepover_percent / 100)
+            area_clear_tool.RateUnits = MillTool5.RateUnits -- Tool.MM_SEC  -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
+            area_clear_tool.FeedRate = MillTool5.FeedRate -- 30
+            area_clear_tool.PlungeRate = MillTool5.PlungeRate -- 10
+            area_clear_tool.SpindleSpeed = MillTool5.SpindleSpeed -- 20000
+            area_clear_tool.ToolNumber = MillTool5.ToolNumber -- 1
+        end
+        local toolpath_manager = ToolpathManager()
+        local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
+            geometry_selector, create_2d_previews, display_warnings)
+        if toolpath_id == nil then
+            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            return false
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut)
+    if Milling.Profile then
+        --  Please Note: CreateLayerProfileToolpath is provided by Vectric and can be found in the SDK and Sample Gadget files.
+        local selection = Milling.job.Selection -- clear current selection
+        selection:Clear()
+        -- get layer
+        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+        if layer == nil then
+            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+            return false
+        end
+        -- select all closed vectors on the layer
+        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
+            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+            return false
+        end
+        -- Create tool we will use to machine vectors
+        local tool = Tool(MillTool1.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
+        tool.InMM = MillTool1.InMM -- tool_in_mm
+        tool.ToolDia = MillTool1.ToolDia -- tool_dia
+        tool.Stepdown = MillTool1.Stepdown -- tool_stepdown
+        tool.Stepover = MillTool1.Stepover -- tool_dia * 0.25
+        tool.RateUnits = MillTool1.RateUnits -- Tool.MM_SEC -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC ...
+        tool.FeedRate = MillTool1.FeedRate -- 30
+        tool.PlungeRate = MillTool1.PlungeRate -- 10
+        tool.SpindleSpeed = MillTool1.SpindleSpeed -- 20000
+        tool.ToolNumber = MillTool1.ToolNumber -- 1
+        -- tool.VBitAngle     = Carrier.MillTool.VBitAngle     -- 90.0 -- used for vbit only
+        -- tool.ClearStepover = tool_dia * 0.5                 -- used for vbit only
+        -- Create object used to set home position and safez gap above material surface
+        local pos_data = ToolpathPosData()
+        pos_data:SetHomePosition(0, 0, 5.0)
+        pos_data.SafeZGap = 5.0
+        -- Create object used to pass profile options
+        local profile_data = ProfileParameterData()
+        -- start depth for toolpath
+        profile_data.StartDepth = start_depth
+        profile_data.CutDepth = cut_depth -- cut depth for toolpath this is depth below start depth
+        profile_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION -- direction of cut - ProfileParameterData. CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION
+        if InOrOut == "IN" then
+            profile_data.ProfileSide = ProfileParameterData.PROFILE_INSIDE
+        elseif InOrOut == "OUT" then
+            profile_data.ProfileSide = ProfileParameterData.PROFILE_OUTSIDE
+        else -- InOrOut == "ON"
+            profile_data.ProfileSide = ProfileParameterData.PROFILE_ON
+        end
+        profile_data.Allowance = 0.0 -- Allowance to leave on when machining
+        profile_data.KeepStartPoints = false -- true to preserve start point positions, false to reorder start points to minimise toolpath length
+        profile_data.CreateSquareCorners = false -- true if want to create 'square' external corners on toolpath
+        profile_data.CornerSharpen = false -- true to perform corner sharpening on internal corners (only with v-bits)
+        profile_data.UseTabs = false -- UseTab -- true to use tabs (position of tabs must already have been defined on vectors)
+        profile_data.TabLength = 0.5 -- length for tabs if being used
+        profile_data.TabThickness = 0.25
+        profile_data.Use3dTabs = true -- if true then create 3d tabs else 2d tabs
+        profile_data.ProjectToolpath = false -- if true in Aspire, project toolpath onto composite model
+        local ramping_data = RampingData() -- Create object used to control ramping
+        ramping_data.DoRamping = false -- if true we do ramping into toolpath
+        ramping_data.RampType = RampingData.RAMP_ZIG_ZAG -- type of ramping to perform RampingData.RAMP_LINEAR , RampingData.RAMP_ZIG_ZAG or RampingData.RAMP_SPIRAL
+        ramping_data.RampConstraint = RampingData.CONSTRAIN_ANGLE -- how ramp is contrained - either by angle or distance RampingData.CONSTRAIN_DISTANCE or RampingData.CONSTRAIN_ANGLE
+        ramping_data.RampDistance = 100.0 -- if we are constraining ramp by distance, distance to ramp over
+        ramping_data.RampAngle = 25.0 -- if we are contraining ramp by angle , angle to ramp in at (in degrees)
+        ramping_data.RampMaxAngleDist = 15 -- if we are contraining ramp by angle, max distance to travel before 'zig zaging' if zig zaging
+        ramping_data.RampOnLeadIn = false -- if true we restrict our ramping to lead in section of toolpath
+        lead_in_out_data.DoLeadIn = false -- if true we create lead ins on profiles (not for profile on)
+        lead_in_out_data.DoLeadOut = false -- if true we create lead outs on profiles (not for profile on)
+        lead_in_out_data.LeadType = LeadInOutData.CIRCULAR_LEAD -- type of leads to create LeadInOutData.LINEAR_LEAD or LeadInOutData.CIRCULAR_LEAD
+        lead_in_out_data.LeadLength = 5.0 -- length of lead to create
+        lead_in_out_data.LinearLeadAngle = 45 -- Angle for linear leads
+        lead_in_out_data.CirularLeadRadius = 5.0 -- Radius for circular arc leads
+        lead_in_out_data.OvercutDistance = 0.0 -- distance to 'overcut' (travel past start point) when profiling
+        local geometry_selector = GeometrySelector() -- Create object which can be used to automatically select geometry
+        local create_2d_previews = true -- if this is true we create 2d toolpaths previews in 2d view, if false we dont
+        local display_warnings = false -- true -- if this is true we will display errors and warning to the user
+        local toolpath_manager = ToolpathManager() -- Create our toolpath
+        local toolpath_id = toolpath_manager:CreateProfilingToolpath(name, tool, profile_data, ramping_data,
+            lead_in_out_data, pos_data, geometry_selector, create_2d_previews, display_warnings)
+        if toolpath_id == nil then
+            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            return false
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function SelectVectorsOnLayer(layer, selection, select_closed, select_open, select_groups)
+    -- Please Note: SelectVectorsOnLayer is provided by Vectric and can be found in the SDK and Sample Gadget files.
+    --[[  ---------------- SelectVectorsOnLayer ----------------
+  -- |   SelectVectorsOnLayer("Stringer Profile", selection, true, falus, falus)
+  -- |   Add all the vectors on the layer to the selection
+  -- |     layer,            -- layer we are selecting vectors on
+  -- |     selection         -- selection object
+  -- |     select_closed     -- if true  select closed objects
+  -- |     select_open       -- if true  select open objects
+  -- |     select_groups     -- if true select grouped vectors (irrespective of open / closed state of member objects)
+  -- |  Return Values:
+  -- |     true if selected one or more vectors|
+  --]]
+    local objects_selected = false
+    local warning_displayed = false
+    local pos = layer:GetHeadPosition()
+    while pos ~= nil do
+        local object
+        object, pos = layer:GetNext(pos)
+        local contour = object:GetContour()
+        if contour == nil then
+            if (object.ClassName == "vcCadObjectGroup") and select_groups then
+                selection:Add(object, true, true)
+                objects_selected = true
+            else
+                if not warning_displayed then
+                    local message = "Object(s) without contour information found on layer - ignoring"
+                    if not select_groups then
+                        message = message .. "\r\n\r\n" ..
+                                      "If layer contains grouped vectors these must be ungrouped for this script"
+                    end -- if end
+                    PresentMessage("Alert", "Select Vectors On Layer", message)
+                    warning_displayed = true
+                end -- if end
+            end -- if end
+        else -- contour was NOT nil, test if Open or Closed
+            if contour.IsOpen and select_open then
+                selection:Add(object, true, true)
+                objects_selected = true
+            elseif select_closed then
+                selection:Add(object, true, true)
+                objects_selected = true
+            end -- if end
+        end -- if end
+    end -- while end
+    -- to avoid excessive redrawing etc we added vectors to the selection in 'batch' mode
+    -- tell selection we have now finished updating
+    if objects_selected then
+        selection:GroupSelectionFinished()
+    end -- if end
+    return objects_selected
+end -- function end
+-- =============== End of File =========================]]

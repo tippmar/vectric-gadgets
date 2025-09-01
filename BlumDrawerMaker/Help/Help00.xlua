@@ -1,0 +1,225 @@
+-- ==============================================================================
+--[[
+╦ ╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦╔╗╔  ╔╦╗╔═╗╔╗╔╦ ╦
+╠═╣║╣ ║  ╠═╝  ║║║╠═╣║║║║  ║║║║╣ ║║║║ ║
+╩ ╩╚═╝╩═╝╩    ╩ ╩╩ ╩╩╝╚╝  ╩ ╩╚═╝╝╚╝╚═╝
+--]]
+-- ==============================================================================
+--  Gadgets are an entirely optional add-in to Vectric's core software products.
+--  They are provided 'as-is', without any express or implied warranty, and you
+--  make use of them entirely at your own risk.
+--  In no event will the author(s) or Vectric Ltd. be held liable for any damages
+--  arising from their use.
+--  Permission is granted to anyone to use this software for any purpose,
+--  including commercial applications, and to alter it and redistribute it freely,
+--  subject to the following restrictions:
+--  1. The origin of this software must not be misrepresented;
+--     you must not claim that you wrote the original software.
+--     If you use this software in a product, an acknowledgement in the product
+--     documentation would be appreciated but is not required.
+--  2. Altered source versions must be plainly marked as such, and
+--     must not be misrepresented as being the original software.
+--  3. This notice may not be removed or altered from any source distribution.
+-- ==============================================================================
+-- Blum Drawer Maker Gadget was written by JimAndi Gadgets of Houston Texas
+-- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- ====================================================]]
+function HTMLHelp00()
+  DialogWindow.Help00 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
+  <body><div class="layout">
+    <div class="h3-lP">
+      <label>Main Menu Help</label>
+    </div>
+    <div>
+      <div class="helpTopimage"><img src="]] .. Project.AppPath .. [[\Help\Images\Main_Menu.png" width="550"></div>
+      <div class="h2-lP">
+        <label>Main Screen Information</label>
+      </div>
+      <div class="h1-help">
+        <p>The Main Menu is the User Entry Point to Configure the Drawer(s). The Main Menu is Broken Down into Groupings of Information.</p>
+        <ul>
+          <li class="h1-help"><strong>Functional Menus - </strong> This area is Buttons to open the Main Help, About, Project, Layers, Milling and Import menus.</li>
+          <li class="h1-help"><strong>Drawer Opening - </strong> This is for User Input of the Cabinet Drawer Opening: Height, Width, Depth, and the Number of Drawers to Create.</li>
+          <li class="h1-help"><strong>Material Thickness - </strong>This area is for Thicknesses of the Individual Parts: Sides, Back, Front and the Bottom.</li>
+          <li class="h1-help"><strong>Drawer Clearance - </strong>Here the User Inputs the Clearances between Drawer and Cabinet: Drawer Sides, Top and Bottom Clearance</li>
+          <li class="h1-help"><strong>Tooling Setup - </strong> Here the user can specify the tooling: End mills style for each Toolpath to utilize.</li>
+          <li class="h1-help"><strong>Menu Footer - </strong> The Menu Footer is located at the Bottom of the Menu and contains the Help, OK, Cancel and/of Close Buttons. </li>
+        </ul>
+        <p>Note: Each Menu has a dedicated Help Page that will provide Detailed Information on each setting and or options within the Sub Menus.</p>
+        <p>See below for more details.</p>
+        <div><hr /></div>
+      </div>
+      <div class="h1-help">
+        <div class="h2-lP">
+          <label>Drawer Opening</label>
+        </div>
+        <p>The gadget is designed to work from the drawer area inward to the actual drawer size.</p>
+        <ul>
+          <li class="h1-help"><strong>Height - </strong> This is the vertical dimension of the opening where the drawer will be placed.</li>
+          <li class="h1-help"><strong>Width - </strong> This is the horizontal dimension of the drawer opening.</li>
+          <li class="h1-help"><strong>Depth - </strong> This this is overall length of drawer. Note: The drawer may need to be lesss than the actual depth of the cabinet to accommodate the drawer slide hardware.</li>
+          <li class="h1-help"><strong>Count - </strong> provide the number of drawers of these given sizes.</li>
+        </ul>
+         <div><hr /></div>
+      </div>
+      <div class="h1-help">
+        <div class="h2-lP">
+          <label>Material Thicknesses</label>
+        </div>
+        <p>The gadget these the precise material thicknesses in order to correctly calculate the materials correctly. </p>
+        <ul>
+          <li class="h1-help"><strong>Side - </strong> The material thickness of the side members. These parts are found on the left and right side of the drawer.</li>
+          <li class="h1-help"><strong>Back - </strong> The material thickness of the back member. This part is found in the rear of the drawer.</li>
+          <li class="h1-help"><strong>Front - </strong> The material thickness of the front member. This part is found in the very front of the drawer and often is where the handle or knob is placed.</li>
+          <li class="h1-help"><strong>Bottom - </strong> The material thickness of the bottom. This material is often bound to be thinner than the sides or front</li>
+        </ul>
+        <p>Because of the varying material thicknesses, it is recommended to use digital calipers to measure material thicknesses and enter the exact thicknesses up to three decimal places. The material thicknesses play a vital role in the calculation of the drawer component sizes especially in the fit of the parts</p>
+        <div><hr /></div>
+      </div>
+      <div class="h1-help">
+        <div class="h2-lP">
+          <label>Drawer Clearance</label>
+        </div>
+        <p>Drawer hardware must be a included in the calculations of the drawer component parts. Various manufacturers will provide measurements of there components (slides and mounts) on their websites.
+           If these are unavailable, measure the items with digital calipers and enter the exact values up to three decimal places</p>
+        <ul>
+          <li class="h1-help"><strong>Side - </strong> Provide the horizontal distance between the drawer opening and the side of the drawer.</li>
+          <li class="h1-help"><strong>Top - </strong> Enter a vertical clearance value between the top of the drawer opening down to the top of the drawer side member.</li>
+          <li class="h1-help"><strong>Bottom - </strong> provide a horizontal distance from the bottom of the drawer opening up to the bottom of the drawer slide.</li>
+          <li class="h1-help"><strong>Finger Count - </strong> Enter the total number of fingers (Box Joint). for best results interface are number that is equal to or greater than three (3) and less than a quantity smaller than the milling bit width multiplied by the finger count.</li>
+        </ul>
+        <p>Note: The finger Count issues to calculate the finger opening and finger size. Entering a low number will result in larger fingers. In contrast, entering a extreme high number will result in very small fingers. If the tooling is selected, the gadget will warn you if the finger count is too high so that the Entmill cannot mill the opening.</p>
+        <div><hr /></div>
+      </div>
+      <div class="h1-help">
+        <div class="h2-lP">
+          <label>Tooling and Drawer Name Area</label>
+        </div>
+        <p>Tool selection plays a major part in your milling strategy. If you choose to mill the drawers with only one bit (small diameter) the milling time will be extended. It is recommended use at least two bits to balance speed, time and quality</p>
+        <ul>
+          <li class="h1-help"><strong>Cabinet name - </strong> Provide a name that you want to defer these chores by.</li>
+          <li class="h1-help"><strong>Profile Bit - </strong> Select a bit for cutting out the profile of the parts (A compression type bits will provide the best results).</li>
+          <li class="h1-help"><strong>Dado Pocket Bit - </strong> Select a bit for cutting the dadoes and pockets (A down cut it will provide the best finish results).</li>
+          <li class="h1-help"><strong>Dado Clearing Bit - </strong> Select a bit larger than the dado pocket bit for clear cutting the dadoes and pockets (A down cut it will provide the best finish results).</li>
+          <li class="h1-help"><strong>Finger Bit - </strong> Select a bit for cutting the fingers, Select a bit that best works with the type of finger design selected. (Note: A small diameter down cut it will provide the best finish results).</li>
+          <li class="h1-help"><strong>Finger Clearing Bit - </strong> Select a bit larger than the Finger bit for clear finger area (A down cut it will provide the best finish results).
+                                      This bit cannot have a larger diameter than the finger physical size. A warning will be presented if the bit diameter is too large</li>
+          <li class="h1-help"><strong>Blume Circle Bit - </strong>This is an optional toolpath. Used when Balaam under drawer slides are used. Warning, if used a whole will
+                                                                    be cut through the back of the drawer panel.</li>
+          <li class="h1-help"><strong>Clear Button - </strong> This will clear all of the toolpaths and set them as No Tool Selected.</li>
+          <li class="h1-help"><strong>X Button - </strong> Will clear the tool selection for the single item as No Tool Selected.</li>
+        </ul>
+        <p><strong>Note:</strong> Warnings will be presented if the clearing bit are the same size as the detail bits. If you are not using a clearing bit do not selected bit. Any toolpath with the name
+                 "Tool Not Select" will not be generated</p>
+      </div>
+    </div>
+    <div><hr /></div>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[\Help\Images\Footer.png" width="80" height="20" alt="Page Footer"></span>
+      </div>
+     <div class="foot" id="FooterBox">
+    <div><hr /></div>
+      <div align="center"><input id="ButtonOK" class="FormButton" name="ButtonOK" type="button" value="Close"  />
+      </div>
+    </div>
+  </div>
+</body>
+</html>]]
+return true
+end -- Function End
+--  ================================================================]]
+function Style03()
+  return [[<style>
+	.FormButton {
+		font-family: Arial, Helvetica, sans-serif;
+		font-weight: bold;
+		font-size: 12px;
+		white-space: nowrap;
+		background-color: #663300;
+		color: #FFFFFF;
+	}
+  .h1-help {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    text-align: left;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+  .h2-lP {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    padding-top: 4px;
+    padding-right: 8px;
+    padding-left: 18px;
+  }
+  .h2-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 16px;
+		font-weight: bold;
+		text-align: left;
+		padding-top: 8px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+  .h3-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 20px;
+		font-weight: bold;
+		text-align: left;
+    width: 650px;
+		padding-top: 18px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+	.layout {
+		background-color: white;
+		color: #000000;
+		overflow: auto;
+		width: 99.5%;
+    height: 44em;
+	}
+	.pad-10 {
+    padding-bottom: 2em;
+	}
+	.foot {
+		position: absolute;
+		bottom: 1em;
+		width: 62em;
+	}
+	.helpTopimage {
+    position: static;
+		width: 550px;
+    height: 40em;
+		margin: 10px 10px 10px 100px;
+	}
+	.helpimages {
+    top: 10px;
+    float: right;
+		margin: 10px 10px 10px 10px;
+	}
+	.helpimagesX {
+    top: 10px;
+    float: right;
+		margin: 10px 120px 10px 120px;
+	}
+    .helpimagesFooter {
+    float: right;
+    margin: 10px 313px 1px 10px;
+  }
+	body {
+		background-color: #3a4660;
+		background-position: center;
+		overflow: hidden;
+		font-family: arial, helvetica, sans-serif;
+		font-size: 12px;
+		color: #FFFFFF;
+	 background-image: url(]] .. DialogWindow.myBackGround .. [[);
+	}
+	html {
+		overflow: hidden
+	}
+</style>]]
+end
+
+-- ================= End of File ======================]]

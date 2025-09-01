@@ -1,0 +1,9 @@
+The Blum Drawer gadget is an entirely optional software add-in to Vectric's core software products.
+
+The gadget is provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+
+In no event will Vectric Ltd. or the author be held liable for any damages arising from its use.
+
+Modification and re-use of the gadget source may or may not be allowed by the gadget author. Please read carefully any copyright notices included in the gadget source.
+
+The notice at the head of the gadget source files may not be removed or altered from any source distribution.

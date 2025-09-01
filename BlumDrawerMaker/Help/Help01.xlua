@@ -1,0 +1,167 @@
+-- ==============================================================================
+--[[
+╦ ╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦╔╗╔  ╔╦╗╔═╗╔╗╔╦ ╦
+╠═╣║╣ ║  ╠═╝  ║║║╠═╣║║║║  ║║║║╣ ║║║║ ║
+╩ ╩╚═╝╩═╝╩    ╩ ╩╩ ╩╩╝╚╝  ╩ ╩╚═╝╝╚╝╚═╝
+--]]
+-- ==============================================================================
+--  Gadgets are an entirely optional add-in to Vectric's core software products.
+--  They are provided 'as-is', without any express or implied warranty, and you
+--  make use of them entirely at your own risk.
+--  In no event will the author(s) or Vectric Ltd. be held liable for any damages
+--  arising from their use.
+--  Permission is granted to anyone to use this software for any purpose,
+--  including commercial applications, and to alter it and redistribute it freely,
+--  subject to the following restrictions:
+--  1. The origin of this software must not be misrepresented;
+--     you must not claim that you wrote the original software.
+--     If you use this software in a product, an acknowledgement in the product
+--     documentation would be appreciated but is not required.
+--  2. Altered source versions must be plainly marked as such, and
+--     must not be misrepresented as being the original software.
+--  3. This notice may not be removed or altered from any source distribution.
+-- ==============================================================================
+-- Blum Drawer Maker Gadget was written by JimAndi Gadgets of Houston Texas
+-- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- ====================================================]]
+function HTMLHelp01()
+  DialogWindow.Help01 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style00() .. [[
+  <body><div class="layout">
+    <div class="h3-lP">
+      <label>About Menu Help</label>
+    </div>
+    <div>
+      <div class="helpAboutimage"><img src="]] .. Project.AppPath .. [[/Help/Images/About.png" width="500"></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div class="h2-lP">
+        <label>About and Disclaimer</label>
+      </div>
+      <div class="h1-help">
+        <p>The About User Menu is where the Gadget Version is Noted, a Gadget Reset Button along with the Gadget Disclaimer</p>
+        <ul>
+          <li class="h1-help"><strong>Gadget Reset - </strong> This Button Returns the Gadget to the Factory Defaults Settings in both the Imperial and Metric Job Setups.</li>
+          <li class="h1-help"><strong>Disclaimer - </strong> Gadget Disclaimer Information</li>
+          <li class="h1-help"><strong>Vectric User Forum - </strong>A Link to the Vectric User Forum.</li>
+        </ul>
+      </div>
+    </div>
+    <div><hr /></div>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+      </div>
+      <div class="foot" id="FooterBox">
+    <div><hr /></div>
+      <div align="center">
+        <input id="ButtonOK" class="FormButton" name="ButtonOK" type="button" value="Close"  />
+      </div>
+    </div>
+  </div>
+</body>
+</html>]]
+return true
+end -- Function End
+--  ================================================================]]
+function Style00()
+  return [[<style>
+	.FormButton {
+		font-family: Arial, Helvetica, sans-serif;
+		font-weight: bold;
+		font-size: 12px;
+		white-space: nowrap;
+		background-color: #663300;
+		color: #FFFFFF;
+	}
+  .h1-help {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    text-align: left;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+  .h2-lP {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: left;
+    padding-top: 4px;
+    padding-right: 8px;
+    padding-left: 18px;
+  }
+  .h2-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 16px;
+		font-weight: bold;
+		text-align: left;
+		padding-top: 8px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+  .h3-lP {
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: 20px;
+		font-weight: bold;
+		text-align: left;
+    width: 650px;
+		padding-top: 18px;
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+	.layout {
+		background-color: white;
+		color: #000000;
+		overflow: auto;
+		width: 99.5%;
+    height: 44em;
+	}
+	.pad-10 {
+    padding-bottom: 2em;
+	}
+	.foot {
+		position: absolute;
+		bottom: 1em;
+		width: 62em;
+	}
+	.helpTopimage {
+    position: static;
+		width: 550px;
+    height: 40em;
+		margin: 10px 10px 10px 120px;
+	}
+  .helpAboutimage {
+    position: static;
+		width: 550px;
+    height: 45em;
+		margin: 10px 10px 10px 120px;
+	}
+	.helpimages {
+    top: 10px;
+    float: right;
+		margin: 10px 10px 10px 10px;
+	}
+	.helpimagesX {
+    top: 10px;
+    float: right;
+		margin: 10px 120px 10px 120px;
+	}
+  .helpimagesFooter {
+    float: right;
+    margin: 10px 313px 1px 10px;
+  }
+	body {
+		background-color: #3a4660;
+		background-position: center;
+		overflow: hidden;
+		font-family: arial, helvetica, sans-serif;
+		font-size: 12px;
+		color: #FFFFFF;
+	 background-image: url(]] .. DialogWindow.myBackGround .. [[);
+	}
+	html {
+		overflow: hidden
+	}
+</style>]]
+end
+
+-- ================= End of File ======================]]
