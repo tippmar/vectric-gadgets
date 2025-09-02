@@ -60,25 +60,35 @@ if (Test-Path $outputPath) {
     }
 }
 
-# Gather all files under the gadget folder.
-Write-Host "Creating $outputName from contents of $gadgetFolder (base name from $($luaFile.Name))" -ForegroundColor Cyan
+Write-Host "Creating $outputName with root folder '$baseName' from contents of $gadgetFolder" -ForegroundColor Cyan
 
-# Use a temporary zip then rename extension to .vgadget so gitignore can ignore these archives consistently.
-$tmpZip = [System.IO.Path]::GetTempFileName()
-Remove-Item $tmpZip -Force
-$tmpZip = "$tmpZip.zip"
+# Staging directory to ensure everything is under a single top-level folder (required for .vgadget layout)
+$stagingParent = Join-Path ([System.IO.Path]::GetTempPath()) ("gadgetpkg-" + [guid]::NewGuid())
+$stagingRoot = Join-Path $stagingParent $baseName
+New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
 
-# Compress (exclude any prior .vgadget or .zip that might exist inside the folder)
-$items = Get-ChildItem -Path $gadgetFolder -Recurse -File | Where-Object { $_.Extension -notin '.vgadget', '.zip' }
+# Copy all contents preserving structure
+Copy-Item -Path (Join-Path $gadgetFolder '*') -Destination $stagingRoot -Recurse -Force
 
-if ($items.Count -eq 0) {
-    Write-Warning 'No files found to add to archive.'
-}
-else {
-    Compress-Archive -Path $items.FullName -DestinationPath $tmpZip -Force
-    Move-Item $tmpZip $outputPath
-    Write-Host "Created $outputPath" -ForegroundColor Green
-}
+# Remove any nested archives that shouldn't ship
+Get-ChildItem -Path $stagingRoot -Recurse -Include *.vgadget, *.zip -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+
+# Build a fresh temp zip path (avoid GetTempFileName zero-byte artifact)
+$tmpZip = Join-Path ([System.IO.Path]::GetTempPath()) ("gadgetpkg-" + [guid]::NewGuid().ToString() + '.zip')
+if (Test-Path $tmpZip) { Remove-Item $tmpZip -Force }
+
+# Use .NET ZipFile to avoid historical Compress-Archive quirks
+Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue | Out-Null
+
+# We want the archive to contain the top-level folder named $baseName; zip the stagingParent so that folder is included
+[System.IO.Compression.ZipFile]::CreateFromDirectory($stagingParent, $tmpZip)
+
+# Move/rename to .vgadget
+Move-Item $tmpZip $outputPath -Force
+Write-Host "Created $outputPath" -ForegroundColor Green
+
+# Cleanup staging
+Remove-Item $stagingParent -Recurse -Force -ErrorAction SilentlyContinue
 
 # Optional: show resulting archive size
 if (Test-Path $outputPath) {

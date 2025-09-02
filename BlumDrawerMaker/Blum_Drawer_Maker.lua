@@ -32,7 +32,7 @@ Tool_ID4 = ToolDBId()
 Tool_ID5 = ToolDBId()
 Tool_ID6 = ToolDBId()
 lead_in_out_data = LeadInOutData() -- Create object used to control lead in/out
-Project.ProgramVersion = 0.1 -- Version Number
+Project.ProgramVersion = 0.2 -- Version Number
 Milling.myRecord = 1.0
 Drawer.RSide = 1
 Drawer.LSide = 1
@@ -101,9 +101,9 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             elseif Project.CabinetName == "" then
                 PresentMessage("Unable to Proceed!", "Error", "Drawer Name cannot be blank.")
                 DialogLoop = 1 -- Nope do it again
-            elseif Drawer.OpeningDepth < (10 * Drawer.SideThickness) then
+            elseif Drawer.SlideLength < (10 * Drawer.SideThickness) then
                 PresentMessage("Unable to Proceed!", "Error",
-                    "Drawer Opening Depth is too small of value. \nEnter a larger Drawer Depth value or enter a smaller Side Thickness")
+                    "Drawer Slide Length is too small of value. \nEnter a larger Slide Length value or enter a smaller Side Thickness")
                 DialogLoop = 1 -- Nope do it again
             elseif (Drawer.SideFingerCount <= 1) then
                 PresentMessage("Unable to Proceed!", "Error", "Finger count cannot be lass then 2 fingers")
@@ -193,7 +193,6 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
     if DialogLoop == 2 then
         Sheet.ProgressBar = ProgressBar("Drawing Parts", ProgressBar.LINEAR) -- Setup Type of progress bar
         Sheet.ProgressBar:SetPercentProgress(0) -- Sets progress bar to zero
-        -- Project.ProjectPath = string.gsub(Project.ProjectPath, "\\", "/")
         R1, R2, R3 = os.rename(Project.ProjectPath, Project.ProjectPath)
         -- How many sheets do we need
         Sheets = {Drawer.BackThickness, Drawer.BottomThickness, Drawer.SideThickness, Drawer.FrontThickness}
@@ -229,7 +228,6 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             SheetThick = Sheets[i]
             DrawWriter("Material Thickness " .. tostring(SheetThick) .. " Thk.",
                 Polar2D(Point2D(0, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal, Milling.LNDrawNotes, 0.0)
-            -- Reordered so back (and its Blum pockets) are processed before sides or front
             if SheetThick == Drawer.BackThickness then
                 ProcessBack()
             end

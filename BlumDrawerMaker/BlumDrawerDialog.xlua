@@ -290,19 +290,19 @@ table {
       </tr>
       <tr>
         <td colspan="2" class="p1-l"><p>The ]] .. DialogWindow.ProgramName ..
-                             [[ Gadget is a plugin for Vectric software, V-Carve Pro and Aspire.<br>
-           Gadgets are an entirely optional add-in to Vectric's core software products.<br>
-           They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.<br>
-           In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.<br>
-          <br>
+                             [[ Gadget is a plugin for Vectric software, V-Carve Pro and Aspire.<br/>&nbsp;<br/>
+           Gadgets are an entirely optional add-in to Vectric's core software products.<br/>
+           They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.<br/>
+           In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.<br/>
+          <br/>
            Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it
-           and redistribute it freely, subject to the following restrictions:<br>
-          <br>
-           1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.<br>
-           *** If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.<br>
-           2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.<br>
-           3. This notice may not be removed or altered from any source distribution.<br>
-          <br>
+           and redistribute it freely, subject to the following restrictions:<br/>
+          <br/>
+           1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.<br/>
+           *** If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.<br/>
+           2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.<br/>
+           3. This notice may not be removed or altered from any source distribution.<br/>
+          <br/>
           </td>
       </tr>
       <tr>
@@ -792,11 +792,10 @@ table {
   <!-- TopGap input removed -->
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Provide a drawer depth from the face frame to the cabinet back. (Cannot be blank)">Depth</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningDepth" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label>Front</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.FrontThickness" size="10" maxlength="10" /></td>
-  <!-- BottomGap input removed -->
+    <td colspan="2">&nbsp;</td>
+  <!-- Depth field moved; BottomGap input removed -->
   </tr>
   <tr>
     <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
@@ -805,6 +804,11 @@ table {
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomThickness" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2)">Finger Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SideFingerCount" size="10" maxlength="10" /></td>
+  </tr>
+  <tr>
+    <td colspan="4">&nbsp;</td>
+    <td class="h1-rP"><label title="Blum Undermount drawer slide length. (Cannot be blank)">Slide Length</label></td>
+  <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SlideLength" size="10" maxlength="10" /></td>
   </tr>
 </table>
 <table>
@@ -928,7 +932,7 @@ function InquiryDrawer(Header) -- Main Menu
     end
     Drawer.dialog:AddIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
     Drawer.dialog:AddDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
-    Drawer.dialog:AddDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+    Drawer.dialog:AddDoubleField("Drawer.SlideLength", Drawer.SlideLength)
     Drawer.dialog:AddDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
     Drawer.dialog:AddDoubleField("Drawer.SideThickness", Drawer.SideThickness)
     Drawer.dialog:AddDoubleField("Drawer.BackThickness", Drawer.BackThickness)
@@ -959,7 +963,7 @@ function InquiryDrawer(Header) -- Main Menu
     if Drawer.dialog:ShowDialog() then
         Drawer.SideFingerCount = math.abs(Drawer.dialog:GetIntegerField("Drawer.SideFingerCount"))
         Drawer.OpeningHeight = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningHeight"))
-        Drawer.OpeningDepth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningDepth"))
+        Drawer.SlideLength = math.abs(Drawer.dialog:GetDoubleField("Drawer.SlideLength"))
         Drawer.OpeningWidth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningWidth"))
         Drawer.SideThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.SideThickness"))
         Drawer.BackThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BackThickness"))
@@ -1110,7 +1114,7 @@ function OnLuaButton_InquiryReset() -- "Factory/Gadget Reset" Button
         Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
         Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
-        Drawer.dialog:UpdateDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+        Drawer.dialog:UpdateDoubleField("Drawer.SlideLength", Drawer.SlideLength)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
         Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
@@ -1135,9 +1139,7 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
     dialog:AddDoubleField("Milling.FingerClearance", Milling.FingerClearance)
     dialog:AddDoubleField("Milling.ProfileToolDia", Milling.ProfileToolDia)
     dialog:AddDoubleField("Milling.FingerToolDia", Milling.FingerToolDia)
-    -- BottomDadoInset fixed; field removed
     dialog:AddDoubleField("Milling.BlindTabThickness", Milling.BlindTabThickness)
-    -- Blum hardware options fixed to Yes; dropdowns removed
     dialog:AddDropDownList("Milling.JointStyleName", Milling.JointStyleName)
     dialog:AddDropDownList("Milling.DrawerStyleName", Milling.DrawerStyleName) -- 5.1  Loads the Dropdown list
     if dialog:ShowDialog() then
@@ -1148,9 +1150,6 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
         Milling.ProfileToolDia = math.abs(dialog:GetDoubleField("Milling.ProfileToolDia"))
         Milling.FingerToolDia = math.abs(dialog:GetDoubleField("Milling.FingerToolDia"))
         Milling.BlindTabThickness = math.abs(dialog:GetDoubleField("Milling.BlindTabThickness"))
-        -- Drawer.BottomDadoInset fixed (13mm / 0.5"); Blum options forced:
-        Milling.BlumSoftClose = "Yes"
-        Milling.BlumHole = "Yes"
         Milling.JointStyleName = dialog:GetDropDownListValue("Milling.JointStyleName")
         Milling.DrawerStyleName = dialog:GetDropDownListValue("Milling.DrawerStyleName") -- 5.1  Reads value from the Dropdown list
         DialogWindow.MillingXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)
@@ -1192,7 +1191,7 @@ function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
             ImportFile = assert(loadfile(fName))(ImportFile) -- Import Data Function
             Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
             Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
-            Drawer.dialog:UpdateDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
+            Drawer.dialog:UpdateDoubleField("Drawer.SlideLength", Drawer.SlideLength)
             Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
             Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
             Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)

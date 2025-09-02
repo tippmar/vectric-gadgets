@@ -19,7 +19,6 @@ function ProcessSide()
         Push()
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        -- Reordered: Dados first (after Blum globally handled in back), then all finger toolpaths, then profile
         CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Side-Blind", Milling.LNSideBlind, 0.0, Drawer.SideThickness)
@@ -47,7 +46,6 @@ function ProcessFront() -- Process Front
         Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) --  Front Panel
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        -- Reordered: Dados first, then finger toolpaths (blind + fingers), then profile
         CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0, (Drawer.FrontThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Front Blind", Milling.LNFrontBlind, 0.0,
@@ -75,7 +73,6 @@ function ProcessBack() -- Process Back
         Drawer_Back()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
     end
-    -- Blum features always enabled: pockets first, then dado, then profile
     CreateLayerBlumToolpath("Blum Pockets", Milling.LNBlum, 0.0, Drawer.BackThickness)
     Push()
     CreateLayerDadoToolpath("Back Dado", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
@@ -163,16 +160,15 @@ function Drawer_Side() -- Drawer Side LEFT
     FingerBoxSide(Drawer.WP, "L") -- Draw Left Side Fingers
 
     -- Draw bottom dado
-    if true then -- Fixed style: Captive Bottom (Dado)
-        pt1 = Drawer.WP
-        pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth - Drawer.BottomDadoInset)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer bottom panel center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-        pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
-        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
-    end
+    -- Fixed style: Captive Bottom (Dado)
+    pt1 = Drawer.WP
+    pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth - Drawer.BottomDadoInset)
+    pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer bottom panel center point
+    pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+    pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
+    pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+    pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
 
     -- Draw Back Dado
     pt1 = Drawer.WP
@@ -204,16 +200,15 @@ function Drawer_Side() -- Drawer Side LEFT
     FingerBoxSide(pt4, "R") -- Draw Right Side Fingers
 
     -- Draw Bottom Dado or Rabbet
-    if true then -- Fixed style: Captive Bottom (Dado)
-        pt1 = Drawer.WP --
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
-        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
-    end
+    -- Fixed style: Captive Bottom (Dado)
+    pt1 = Drawer.WP --
+    pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+    pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
+    pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
+    pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
+    pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+    pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
+    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
 
     -- Post to the BOM
     if Drawer.RSide == 1 then
@@ -387,7 +382,7 @@ function CutListfileWriterHeader() -- Cut List File Header
     file:write("================  Cabinet Opening Dimensions  ================== \n")
     file:write("Cabinet Opening Height   = " .. Drawer.OpeningHeight .. "\n")
     file:write("Cabinet Opening Width    = " .. Drawer.OpeningWidth .. "\n")
-    file:write("Cabinet Opening Depth    = " .. Drawer.OpeningDepth .. "\n")
+    file:write("Cabinet Slide Length     = " .. Drawer.SlideLength .. "\n")
     file:write("Cabinet Opening Diagonal = " .. Drawer.OpeningDiagonal .. "\n")
     file:write("Clearance Rules Applied:\n")
     file:write("  Outside Height = Opening Height - 21mm (13/16\")\n")
@@ -419,8 +414,8 @@ function CutListfileWriterHeader() -- Cut List File Header
             Drawer.OpeningHeight ..
             [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Width =</td><td class="h1-l">]] ..
             Drawer.OpeningWidth ..
-            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Depth =</td><td class="h1-l">]] ..
-            Drawer.OpeningDepth ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Slide Length =</td><td class="h1-l">]] ..
+            Drawer.SlideLength ..
             [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Diagonal =</td><td class="h1-l">]] ..
             Drawer.OpeningDiagonal ..
             [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Clearance Rules</span></h2></td></tr><tr><td class="h1-r">Outside Height =</td><td class="h1-l">Opening Height - 21mm (13/16")</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Inside Width =</td><td class="h1-l">Opening Width - 42mm (1 21/32")</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Outside Width =</td><td class="h1-l">Inside Width + 2 * Side Thickness</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Drawer Dimensions</span></h2></td></tr><tr><td class="h1-r">Finished Height =</td><td class="h1-l">]] ..
@@ -876,76 +871,54 @@ function FingerBoxFront(pta, ptb) -- Finger Box Front
 end -- function end
 -- =====================================================]]
 function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
-    if Milling.Blum then -- BlumHole always Yes (fixed)
-        local selection = Milling.job.Selection -- clear current selection
-        selection:Clear()
-        -- get layer
-        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
-        if layer == nil then
-            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
-            return false
-        end
-        -- select all closed vectors on the layer
-        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
-            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
-            return false
-        end
-        -- Create tool we will use to machine vectors
-        local tool = Tool(MillTool6.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
-        tool.InMM = MillTool6.InMM -- tool_in_mm
-        tool.ToolDia = MillTool6.ToolDia -- tool_dia
-        tool.Stepdown = MillTool6.Stepdown -- tool_stepdown
-        tool.Stepover = MillTool6.Stepover -- tool_dia * (tool_stepover_percent / 100)
-        tool.RateUnits = MillTool6.RateUnits -- Tool.MM_SEC, MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC, INCHES_MIN, FEET_MIN
-        tool.FeedRate = MillTool6.FeedRate -- 30
-        tool.PlungeRate = MillTool6.PlungeRate -- 10
-        tool.SpindleSpeed = MillTool6.SpindleSpeed -- 20000
-        tool.ToolNumber = MillTool6.ToolNumber -- 1
-        -- we will set home position and safe z relative to material block size
-        local mtl_block = MaterialBlock()
-        local mtl_box = mtl_block.MaterialBox
-        local mtl_box_blc = mtl_box.BLC
-        -- Create object used to set home position and safez gap above material surface
-        local pos_data = ToolpathPosData()
-        pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
-        pos_data.SafeZGap = mtl_block.Thickness * 0.1
-        -- Create  object used to pass pocketing options
-        local pocket_data = PocketParameterData()
-        -- start depth for toolpath
-        pocket_data.StartDepth = start_depth
-        -- cut depth for toolpath this is depth below start depth
-        pocket_data.CutDepth = cut_depth
-        -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
-        pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
-        -- Allowance to leave on when machining
-        pocket_data.Allowance = 0.0
-        -- if true use raster Clearance strategy , else use offset area Clearance
-        pocket_data.DoRasterClearance = false -- true
-        -- angle for raster if using raster Clearance
-        pocket_data.RasterAngle = 0
-        -- type of profile pass to perform  PocketParameterData.PROFILE_NONE , PocketParameterData.PROFILE_FIRST orPocketParameterData.PROFILE_LAST
-        pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
-        -- if true we ramp into pockets (always zig-zag)
-        pocket_data.DoRamping = false
-        --  if ramping, distance to ramp over
-        pocket_data.RampDistance = 1.0
-        -- if true in Aspire, project toolpath onto composite model
-        pocket_data.ProjectToolpath = false
-        -- Create object which can used to automatically select geometry on layers etc
-        local geometry_selector = GeometrySelector()
-        -- if this is true we create 2d toolpaths previews in 2d view, if false we dont
-        local create_2d_previews = true
-        -- if this is true we will display errors and warning to the user
-        local display_warnings = false -- true
-        -- if we are doing two tool pocketing define tool to use for area Clearance
-        local area_clear_tool = nil
-        local toolpath_manager = ToolpathManager()
-        local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
-            geometry_selector, create_2d_previews, display_warnings)
-        if toolpath_id == nil then
-            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
-            return false
-        end
+    local selection = Milling.job.Selection
+    selection:Clear()
+    local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+    if layer == nil then
+        PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+        return false
+    end
+    if not SelectVectorsOnLayer(layer, selection, true, false, true) then
+        PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        return false
+    end
+    local tool = Tool(MillTool6.Name, Tool.END_MILL)
+    tool.InMM = MillTool6.InMM
+    tool.ToolDia = MillTool6.ToolDia
+    tool.Stepdown = MillTool6.Stepdown
+    tool.Stepover = MillTool6.Stepover
+    tool.RateUnits = MillTool6.RateUnits
+    tool.FeedRate = MillTool6.FeedRate
+    tool.PlungeRate = MillTool6.PlungeRate
+    tool.SpindleSpeed = MillTool6.SpindleSpeed
+    tool.ToolNumber = MillTool6.ToolNumber
+    local mtl_block = MaterialBlock()
+    local mtl_box = mtl_block.MaterialBox
+    local mtl_box_blc = mtl_box.BLC
+    local pos_data = ToolpathPosData()
+    pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+    pos_data.SafeZGap = mtl_block.Thickness * 0.1
+    local pocket_data = PocketParameterData()
+    pocket_data.StartDepth = start_depth
+    pocket_data.CutDepth = cut_depth
+    pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+    pocket_data.Allowance = 0.0
+    pocket_data.DoRasterClearance = false
+    pocket_data.RasterAngle = 0
+    pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
+    pocket_data.DoRamping = false
+    pocket_data.RampDistance = 1.0
+    pocket_data.ProjectToolpath = false
+    local geometry_selector = GeometrySelector()
+    local create_2d_previews = true
+    local display_warnings = false
+    local area_clear_tool = nil
+    local toolpath_manager = ToolpathManager()
+    local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
+        geometry_selector, create_2d_previews, display_warnings)
+    if toolpath_id == nil then
+        PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+        return false
     end
     return true
 end
