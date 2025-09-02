@@ -773,42 +773,40 @@ table {
 
 <table>
   <tr class="h1-c">
-    <td colspan="2" class="h2-c">Drawer Opening</td>
+    <td colspan="2" class="h2-c">Drawer Dimensions</td>
     <td colspan="2" class="h2-c">Material Thickness</td>
-  <!-- Drawer Clearance column removed (clearances now fixed by rules) -->
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Provide a drawer face frame opening height. (Cannot be blank)">Height</label></td>
+    <td class="h1-rP"><label title="Drawer opening height. (Cannot be zero)">Height</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningHeight" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Side material thickness. (Cannot be zero)">Side</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideThickness" size="10" maxlength="10" /></td>
-  <!-- SideGap input removed -->
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Provide a drawer face frame opening width. (Cannot be blank)">Width</label></td>
+    <td class="h1-rP"><label title="Drawer opening width. (Cannot be zero)">Width</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningWidth" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Rear/Back panel material thickness. (Cannot be zero)">Back</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.BackThickness" size="10" maxlength="10" /></td>
-  <!-- TopGap input removed -->
+    <td colspan="2">&nbsp;</td>
   </tr>
   <tr>
+    <td class="h1-rP"><label title="Blum Undermount drawer slide length. (Cannot be blank)">Slide Length</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SlideLength" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label>Front</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.FrontThickness" size="10" maxlength="10" /></td>
     <td colspan="2">&nbsp;</td>
-  <!-- Depth field moved; BottomGap input removed -->
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
-    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.Count" size="10" maxlength="10" /></td>
+    <td colspan="2">&nbsp;</td>
     <td class="h1-rP"><label title="Bottom material thickness. (Cannot be zero)">Bottom</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomThickness" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2)">Finger Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SideFingerCount" size="10" maxlength="10" /></td>
   </tr>
   <tr>
+    <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.Count" size="10" maxlength="10" /></td>
     <td colspan="4">&nbsp;</td>
-    <td class="h1-rP"><label title="Blum Undermount drawer slide length. (Cannot be blank)">Slide Length</label></td>
-  <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SlideLength" size="10" maxlength="10" /></td>
   </tr>
 </table>
 <table>
