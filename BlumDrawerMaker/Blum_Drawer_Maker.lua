@@ -13,7 +13,16 @@
 -- ====================================================================================================================================
 -- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
 ]] -- =====================================================]]
--- require("mobdebug").start()
+-- optional remote debug
+do
+    local ok_env = os.getenv("DRAWER_DEBUG") == "1"
+    if ok_env then
+        local ok, md = pcall(require, "mobdebug")
+        if ok then
+            md.start()
+        end
+    end
+end
 require "strict"
 -- Global Table Names
 Milling = {}
