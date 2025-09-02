@@ -105,11 +105,22 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
                 PresentMessage("Unable to Proceed!", "Error",
                     "Drawer Opening Depth is too small of value. \nEnter a larger Drawer Depth value or enter a smaller Side Thickness")
                 DialogLoop = 1 -- Nope do it again
-            elseif Drawer.SideFingerCount <= 1 then
+            elseif (Drawer.SideFingerCount <= 1) then
                 PresentMessage("Unable to Proceed!", "Error", "Finger count cannot be lass then 2 fingers")
                 DialogLoop = 1 -- Nope do it again
             elseif not StringChecks() then
                 DialogLoop = 1 -- Nope do it again
+            elseif Drawer.SideWidth <= 0 then
+                local needed = 0
+                if Drawer.Unit then
+                    needed = 21.0
+                else
+                    needed = 13.0 / 16.0
+                end
+                PresentMessage("Unable to Proceed!", "Error",
+                    "Opening Height minus required clearance (" .. string.format("%.4f", needed) ..
+                        ") is not positive.\nIncrease the Opening Height.")
+                DialogLoop = 1
             elseif (MillTool1.InMM ~= Drawer.Unit) then
                 PresentMessage("Unable to Proceed!", "Error",
                     "Profile Milling bit units do not match the drawing units. Select a bit in the drawing units")
@@ -135,9 +146,14 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
                     "Blum Operation bit units do not match the drawing units. Select a bit in the drawing units")
                 DialogLoop = 1 -- Nope do it again
             elseif (Drawer.SideWidth / Drawer.SideFingerCount) < (Milling.FingerToolDia / 0.70) then
+                local effectiveWidth = math.max(0, Drawer.SideWidth)
+                local minFinger = math.ceil(effectiveWidth / (Milling.FingerToolDia / 0.70))
+                if minFinger < 2 then
+                    minFinger = 2
+                end
                 PresentMessage("Unable to Proceed!", "Error",
-                    "Number of fingers is to high to allow proper milling. \nReduce the Finger Count to ~" ..
-                        tostring(math.ceil(Drawer.SideWidth / (Milling.FingerToolDia / 0.70))) .. " fingers.")
+                    "Number of fingers is too high to allow proper milling.\nReduce the Finger Count to " ..
+                        tostring(minFinger) .. " or less, or increase the drawer opening height.")
                 DialogLoop = 1 -- Nope do it again
             elseif (MillTool1 and (MillTool1.Name ~= "Tool Not Selected")) or
                 (MillTool2 and (MillTool2.Name ~= "Tool Not Selected")) or

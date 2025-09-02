@@ -775,31 +775,28 @@ table {
   <tr class="h1-c">
     <td colspan="2" class="h2-c">Drawer Opening</td>
     <td colspan="2" class="h2-c">Material Thickness</td>
-    <td colspan="2" class="h2-c">Drawer Clearance</td>
+  <!-- Drawer Clearance column removed (clearances now fixed by rules) -->
   </tr>
   <tr>
     <td class="h1-rP"><label title="Provide a drawer face frame opening height. (Cannot be blank)">Height</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningHeight" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Side material thickness. (Cannot be zero)">Side</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideThickness" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Side clearance for hardware. (Cannot be zero)">Sides</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideGap" size="10" maxlength="10" /></td>
+  <!-- SideGap input removed -->
   </tr>
   <tr>
     <td class="h1-rP"><label title="Provide a drawer face frame opening width. (Cannot be blank)">Width</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningWidth" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Rear/Back panel material thickness. (Cannot be zero)">Back</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.BackThickness" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Top space clearance amount. (Cannot be zero)">Tops</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.TopGap" size="10" maxlength="10" /></td>
+  <!-- TopGap input removed -->
   </tr>
   <tr>
     <td class="h1-rP"><label title="Provide a drawer depth from the face frame to the cabinet back. (Cannot be blank)">Depth</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningDepth" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label>Front</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.FrontThickness" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Bottom clearance amount for hardware. (Cannot be zero)">Bottoms</label></td>
-    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomGap" size="10" maxlength="10" /></td>
+  <!-- BottomGap input removed -->
   </tr>
   <tr>
     <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
@@ -937,9 +934,8 @@ function InquiryDrawer(Header) -- Main Menu
     Drawer.dialog:AddDoubleField("Drawer.BackThickness", Drawer.BackThickness)
     Drawer.dialog:AddDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
     Drawer.dialog:AddDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
-    Drawer.dialog:AddDoubleField("Drawer.SideGap", Drawer.SideGap)
-    Drawer.dialog:AddDoubleField("Drawer.TopGap", Drawer.TopGap)
-    Drawer.dialog:AddDoubleField("Drawer.BottomGap", Drawer.BottomGap)
+    -- Clearance fields (SideGap, TopGap, BottomGap) removed; now derived from opening & rules
+    -- Clearance update fields removed
     Drawer.dialog:AddDoubleField("Drawer.Count", Drawer.Count)
     Drawer.dialog:AddTextField("Project.CabinetName", Project.CabinetName)
     Drawer.dialog:AddLabelField("ToolNameLabel1", MillTool1.Name)
@@ -969,9 +965,7 @@ function InquiryDrawer(Header) -- Main Menu
         Drawer.BackThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BackThickness"))
         Drawer.FrontThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.FrontThickness"))
         Drawer.BottomThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BottomThickness"))
-        Drawer.SideGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.SideGap"))
-        Drawer.TopGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.TopGap"))
-        Drawer.BottomGap = math.abs(Drawer.dialog:GetDoubleField("Drawer.BottomGap"))
+        -- Clearance values no longer read (computed by rules)
         Drawer.Count = math.abs(Drawer.dialog:GetDoubleField("Drawer.Count"))
         Project.CabinetName = All_Trim(Drawer.dialog:GetTextField("Project.CabinetName"))
         if Drawer.dialog:GetTool("ToolChooseButton1") then
@@ -1113,16 +1107,13 @@ function OnLuaButton_InquiryReset() -- "Factory/Gadget Reset" Button
         "Reset Variables Back To Factory Settings With the Current Drawing Units?") then
         RegistryReset()
         Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
-        Drawer.dialog:UpdateDoubleField("Drawer.BottomGap", Drawer.BottomGap)
         Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
         Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningDepth", Drawer.OpeningDepth)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
-        Drawer.dialog:UpdateDoubleField("Drawer.SideGap", Drawer.SideGap)
         Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
-        Drawer.dialog:UpdateDoubleField("Drawer.TopGap", Drawer.TopGap)
         Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
         Drawer.dialog:UpdateTextField("Project.CabinetName", Project.CabinetName)
         Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
@@ -1207,9 +1198,6 @@ function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
             Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
             Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
             Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
-            Drawer.dialog:UpdateDoubleField("Drawer.TopGap", Drawer.TopGap)
-            Drawer.dialog:UpdateDoubleField("Drawer.SideGap", Drawer.SideGap)
-            Drawer.dialog:UpdateDoubleField("Drawer.BottomGap", Drawer.BottomGap)
             Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
             Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
             Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)

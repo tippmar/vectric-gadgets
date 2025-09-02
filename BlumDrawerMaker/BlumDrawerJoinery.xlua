@@ -176,7 +176,7 @@ function Drawer_Side() -- Drawer Side LEFT
 
     -- Draw Back Dado
     pt1 = Drawer.WP
-    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength - Drawer.BackDadoInset)
+    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength) -- BackDadoInset removed
     pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
     pt2 = Polar2D(pt1, 270.0, Drawer.BackThickness + Milling.DadoClearance)
     pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
@@ -224,7 +224,7 @@ function Drawer_Side() -- Drawer Side LEFT
 
     -- Draw Back Dado
     pt1 = Drawer.WP
-    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength - Drawer.BackDadoInset)
+    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength) -- BackDadoInset removed
     pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
     pt2 = Polar2D(pt1, 270.0, Drawer.BackThickness + Milling.DadoClearance)
     pt3 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
@@ -389,9 +389,10 @@ function CutListfileWriterHeader() -- Cut List File Header
     file:write("Cabinet Opening Width    = " .. Drawer.OpeningWidth .. "\n")
     file:write("Cabinet Opening Depth    = " .. Drawer.OpeningDepth .. "\n")
     file:write("Cabinet Opening Diagonal = " .. Drawer.OpeningDiagonal .. "\n")
-    file:write("Side Gap     .........   = " .. Drawer.SideGap .. "\n")
-    file:write("Bottom Gap   .........   = " .. Drawer.BottomGap .. "\n")
-    file:write("Top Gap      .........   = " .. Drawer.TopGap .. "\n")
+    file:write("Clearance Rules Applied:\n")
+    file:write("  Outside Height = Opening Height - 21mm (13/16\")\n")
+    file:write("  Inside Width   = Opening Width - 42mm (1 21/32\")\n")
+    file:write("  Outside Width  = Inside Width + 2 * Side Thickness\n")
     file:write("----------------------------------------------------------------\n")
     file:write("Finished Length .......  = " .. Drawer.Length .. "\n")
     file:write("Finished Height .......  = " .. Drawer.Height .. "\n")
@@ -422,13 +423,7 @@ function CutListfileWriterHeader() -- Cut List File Header
             Drawer.OpeningDepth ..
             [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Cabinet Opening Diagonal =</td><td class="h1-l">]] ..
             Drawer.OpeningDiagonal ..
-            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Side Gap =</td><td class="h1-l">]] ..
-            Drawer.SideGap ..
-            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Bottom Gap =</td><td class="h1-l">]] ..
-            Drawer.BottomGap ..
-            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Top Gap =</td><td class="h1-l">]] ..
-            Drawer.TopGap ..
-            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Drawer Dimensions</span></h2></td></tr><tr><td class="h1-r">Finished Height =</td><td class="h1-l">]] ..
+            [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Clearance Rules</span></h2></td></tr><tr><td class="h1-r">Outside Height =</td><td class="h1-l">Opening Height - 21mm (13/16")</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Inside Width =</td><td class="h1-l">Opening Width - 42mm (1 21/32")</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Outside Width =</td><td class="h1-l">Inside Width + 2 * Side Thickness</td><td class="h1-spc">&nbsp;</td></tr><tr><td colspan="3"><h2><span>Drawer Dimensions</span></h2></td></tr><tr><td class="h1-r">Finished Height =</td><td class="h1-l">]] ..
             Drawer.Height ..
             [[</td><td class="h1-spc">&nbsp;</td></tr><tr><td class="h1-r">Finished Width =</td><td class="h1-l">]] ..
             Drawer.Width ..

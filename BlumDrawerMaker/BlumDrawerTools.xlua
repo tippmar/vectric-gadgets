@@ -1601,24 +1601,25 @@ function ToolCheck() -- Checks if tooling was selected
     end -- if end
 end
 -- =====================================================]]
-function Drawer_Math() -- All the math for Wall Cabinet
+function Drawer_Math() -- All the math for Blum drawer box
     Project.DrawerID = StartDate()
     -- Keep Windows style backslashes for paths
     Project.DatFile = Project.ProjectPath .. "\\" .. Project.CabinetName .. "-" .. Project.DrawerID
     Drawer.PlacementStep = math.max(Drawer.OpeningDepth, Drawer.OpeningHeight, Drawer.OpeningWidth)
-    Drawer.Height = Drawer.OpeningHeight - (Drawer.TopGap + Drawer.BottomGap)
-    Drawer.Width = Drawer.OpeningWidth - (Drawer.SideGap * 2.0)
-    -- Depth no longer reduced by SideGap (user request)
+
+    Drawer.Height = Drawer.OpeningHeight - Drawer.HeightClearance
+    Drawer.InsideWidth = Drawer.OpeningWidth - Drawer.WidthClearance
+    Drawer.Width = Drawer.InsideWidth + (Drawer.SideThickness * 2.0)
+
     Drawer.Length = Drawer.OpeningDepth
     Drawer.SideWidth = Drawer.Height
     Drawer.FrontWidth = Drawer.Height
     Drawer.BackWidth = Drawer.Height
-    Drawer.SideLength = Drawer.OpeningDepth -- SideGap ignored for depth per update request
-    Drawer.FrontLength = Drawer.OpeningWidth - (Drawer.SideGap * 2.0)
+    Drawer.SideLength = Drawer.OpeningDepth
+    Drawer.FrontLength = Drawer.Width -- front/outside width matches computed outside width
     Drawer.BackLength = Drawer.FrontLength - (Milling.DadoHeight * 2.0)
     -- Fixed bottom style: Captive Bottom (Dado)
-    Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -
-                                   Drawer.BackDadoInset
+    Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
     Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
     Drawer.SideFingerWidth = Drawer.Height / Drawer.SideFingerCount
     if (Drawer.SideFingerCount % 2 == 0) then
