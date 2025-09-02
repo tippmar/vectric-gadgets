@@ -388,26 +388,7 @@ table {
                 <input type="text" class="h1-l" id="Milling.DadoHeight" size="10" maxlength="10" />
             </td>
         </tr>
-        <tr>
-            <td class="h1-rP">
-                <label title="Add milling for the Blum under drawer soft close hardware?">Blum Soft Close</label>
-            </td>
-            <td>
-                <Select type="text" class="h1-l" id="Milling.BlumSoftClose" size="1">
-                    <option selected>Yes</option>
-                    <option>No</option>
-                </Select>
-            </td>
-            <td class="h1-rP">
-                <label title="Add the through hole in the back panel for the Blum hardware?">Blum Hole</label>
-            </td>
-            <td>
-                <Select type="text" class="h1-l" id="Milling.BlumHole" size="1">
-                    <option selected>Yes</option>
-                    <option>No</option>
-                </Select>
-            </td>
-        </tr>
+  <!-- Blum hardware features always enabled (Soft Close & Hole) -->
         <tr>
             <td colspan="4">
                 <h2>
@@ -441,17 +422,16 @@ table {
                 <label title="Select the bottom construction style.">Bottom Style</label>
             </td>
             <td>
-                <select type="text" class="h1-l" id="Milling.DrawerStyleName" onChange = BottomMill() size="1">
-                    <option value=1 selected="selected">Captive Bottom (Dado)</option>
-                    <option value=2 >Rabbeted Bottom</option>
-                    <option value=3 >Mount Flat On Bottom</option>
-                </select>
+        <select type="text" class="h1-l" id="Milling.DrawerStyleName" size="1" disabled>
+          <option selected="selected">Captive Bottom (Dado)</option>
+        </select>
             </td>
             <td class="h1-rP">
-                <label id="Drawer.BottomDadoInsetLabel" title="The vertical distance the bottom panel is inset from the bottom of the side and in panels. (Cannot be zero)" >Bottom Dado Inset</label>
+                <!-- Bottom Dado Inset now fixed (13mm / 0.5\") and not user editable -->
+                <label id="Drawer.BottomDadoInsetLabel" style="display:none" title="Fixed at 13mm (0.5\")">Bottom Dado Inset (Fixed)</label>
             </td>
             <td nowrap width="50">
-                <input type="text" class="h1-l" id="Drawer.BottomDadoInset" size="10" maxlength="10" />
+                <input type="text" class="h1-l" id="Drawer.BottomDadoInset" size="10" maxlength="10" disabled style="display:none" />
             </td>
         </tr>
     </table>
@@ -503,8 +483,7 @@ table {
     function BottomMill() {
        var x = document.getElementById("Milling.DrawerStyleName").value;
        if (x == 1){
-         document.getElementById("Drawer.BottomDadoInset").style.visibility       = "visible";
-         document.getElementById("Drawer.BottomDadoInsetLabel").style.visibility  = "visible";
+         // BottomDadoInset fixed; keep hidden
        }
        if (x == 2){
          document.getElementById("Drawer.BottomDadoInset").style.visibility        = "hidden";
@@ -1165,10 +1144,9 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
     dialog:AddDoubleField("Milling.FingerClearance", Milling.FingerClearance)
     dialog:AddDoubleField("Milling.ProfileToolDia", Milling.ProfileToolDia)
     dialog:AddDoubleField("Milling.FingerToolDia", Milling.FingerToolDia)
-    dialog:AddDoubleField("Drawer.BottomDadoInset", Drawer.BottomDadoInset) -- 5.1 Loads this value
+    -- BottomDadoInset fixed; field removed
     dialog:AddDoubleField("Milling.BlindTabThickness", Milling.BlindTabThickness)
-    dialog:AddDropDownList("Milling.BlumSoftClose", Milling.BlumSoftClose)
-    dialog:AddDropDownList("Milling.BlumHole", Milling.BlumHole)
+    -- Blum hardware options fixed to Yes; dropdowns removed
     dialog:AddDropDownList("Milling.JointStyleName", Milling.JointStyleName)
     dialog:AddDropDownList("Milling.DrawerStyleName", Milling.DrawerStyleName) -- 5.1  Loads the Dropdown list
     if dialog:ShowDialog() then
@@ -1179,9 +1157,9 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
         Milling.ProfileToolDia = math.abs(dialog:GetDoubleField("Milling.ProfileToolDia"))
         Milling.FingerToolDia = math.abs(dialog:GetDoubleField("Milling.FingerToolDia"))
         Milling.BlindTabThickness = math.abs(dialog:GetDoubleField("Milling.BlindTabThickness"))
-        Drawer.BottomDadoInset = math.abs(dialog:GetDoubleField("Drawer.BottomDadoInset")) -- 5.1 Reads the user value
-        Milling.BlumSoftClose = dialog:GetDropDownListValue("Milling.BlumSoftClose")
-        Milling.BlumHole = dialog:GetDropDownListValue("Milling.BlumHole")
+        -- Drawer.BottomDadoInset fixed (13mm / 0.5"); Blum options forced:
+        Milling.BlumSoftClose = "Yes"
+        Milling.BlumHole = "Yes"
         Milling.JointStyleName = dialog:GetDropDownListValue("Milling.JointStyleName")
         Milling.DrawerStyleName = dialog:GetDropDownListValue("Milling.DrawerStyleName") -- 5.1  Reads value from the Dropdown list
         DialogWindow.MillingXY = tostring(dialog.WindowWidth) .. " x " .. tostring(dialog.WindowHeight)

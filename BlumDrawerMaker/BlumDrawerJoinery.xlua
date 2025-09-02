@@ -20,14 +20,7 @@ function ProcessSide()
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
         -- Reordered: Dados first (after Blum globally handled in back), then all finger toolpaths, then profile
-        if "Rabbeted Bottom" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Side Rabbet", Milling.LNSidePocket, 0.0,
-                (Drawer.SideThickness - Milling.DadoHeight))
-        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
-        else -- "Flat Bottom"
-            CreateLayerDadoToolpath("Rear Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
-        end
+        CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Side-Blind", Milling.LNSideBlind, 0.0, Drawer.SideThickness)
         Push()
@@ -37,14 +30,7 @@ function ProcessSide()
         CreateLayerProfileToolpath("Side-Profile", Milling.LNSideProfile, 0.0, Drawer.SideThickness, "OUT")
         Push()
     else
-        if "Rabbeted Bottom" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Side Rabbet", Milling.LNSidePocket, 0.0,
-                (Drawer.SideThickness - Milling.DadoHeight))
-        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
-        else -- Flat Bottom
-            CreateLayerDadoToolpath("Rear Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
-        end
+        CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.SideThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Side-Fingers", "Side-" .. Milling.LNFingerBox, 0.0, Drawer.SideThickness)
         Push()
@@ -62,13 +48,7 @@ function ProcessFront() -- Process Front
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
         -- Reordered: Dados first, then finger toolpaths (blind + fingers), then profile
-        if "Rabbeted Bottom" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Front Rabbet", Milling.LNFrontPocket, 0.0,
-                (Drawer.FrontThickness - Milling.DadoHeight))
-        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0,
-                (Drawer.FrontThickness - Milling.DadoHeight))
-        end
+        CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0, (Drawer.FrontThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Front Blind", Milling.LNFrontBlind, 0.0,
             Drawer.FrontThickness - Milling.BlindTabThickness)
@@ -79,13 +59,7 @@ function ProcessFront() -- Process Front
         CreateLayerProfileToolpath("Front-Profile", Milling.LNFrontProfile, 0.0, Drawer.FrontThickness, "OUT")
         Push()
     else
-        if "Rabbeted Bottom" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Front Rabbet", Milling.LNFrontPocket, 0.0,
-                (Drawer.FrontThickness - Milling.DadoHeight))
-        elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
-            CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0,
-                (Drawer.FrontThickness - Milling.DadoHeight))
-        end
+        CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0, (Drawer.FrontThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Front-Fingers", "Front-" .. Milling.LNFingerBox, 0.0, Drawer.FrontThickness)
         Push()
@@ -101,16 +75,10 @@ function ProcessBack() -- Process Back
         Drawer_Back()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
     end
-    -- Reordered: Blum pockets first (if any), then dados, then profile
-    if (Milling.BlumHole == "Yes") or (Milling.BlumSoftClose == "Yes") then
-        CreateLayerBlumToolpath("Blum Pockets", Milling.LNBlum, 0.0, Drawer.BackThickness)
-        Push()
-    end
-    if "Rabbeted Bottom" == Milling.DrawerStyleName then
-        CreateLayerDadoToolpath("Back Rabbet", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
-    elseif "Captive Bottom (Dado)" == Milling.DrawerStyleName then
-        CreateLayerDadoToolpath("Back Dado", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
-    end
+    -- Blum features always enabled: pockets first, then dado, then profile
+    CreateLayerBlumToolpath("Blum Pockets", Milling.LNBlum, 0.0, Drawer.BackThickness)
+    Push()
+    CreateLayerDadoToolpath("Back Dado", Milling.LNBackPocket, 0.0, (Drawer.BackThickness - Milling.DadoHeight))
     Push()
     CreateLayerProfileToolpath("Back-Profile", Milling.LNBackProfile, 0.0, Drawer.BackThickness, "OUT")
     Push()
@@ -195,16 +163,7 @@ function Drawer_Side() -- Drawer Side LEFT
     FingerBoxSide(Drawer.WP, "L") -- Draw Left Side Fingers
 
     -- Draw bottom dado
-    if Milling.DrawerStyleName == "Rabbeted Bottom" then -- 5.1 do something only if Rabbeted or Captive
-        pt1 = Drawer.WP
-        pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolRadius)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-        pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.PocketToolRadius)
-        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
-    elseif Milling.DrawerStyleName == [[Captive Bottom (Dado)]] then
+    if true then -- Fixed style: Captive Bottom (Dado)
         pt1 = Drawer.WP
         pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth - Drawer.BottomDadoInset)
         pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer bottom panel center point
@@ -245,15 +204,7 @@ function Drawer_Side() -- Drawer Side LEFT
     FingerBoxSide(pt4, "R") -- Draw Right Side Fingers
 
     -- Draw Bottom Dado or Rabbet
-    if Milling.DrawerStyleName == "Rabbeted Bottom" then -- 5.1 do something only if Rabbeted or Captive
-        pt2 = Polar2D(pt1, 180.0, Milling.PocketToolRadius)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.PocketToolRadius)
-        pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-        DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
-    elseif Milling.DrawerStyleName == "Captive Bottom (Dado)" then
+    if true then -- Fixed style: Captive Bottom (Dado)
         pt1 = Drawer.WP --
         pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
         pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
@@ -304,16 +255,7 @@ function Drawer_Front() -- Drawer Front
             GetDistance(pt2, pt3), GetDistance(pt3, pt4))
         Drawer.Front = Drawer.Front + 1
     end -- if end
-    if "Rabbeted Bottom" == Milling.DrawerStyleName then
-        pt1 = Drawer.WP
-        pt2 = Polar2D(pt1, 0.0, Drawer.FrontWidth + Milling.PocketToolRadius)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.FrontLength)) -- Drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.BottomPanelWidth) + H(Milling.DadoClearance))
-        pt3 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance + Milling.PocketToolRadius)
-        pt4 = Polar2D(pt2, 180.0, Drawer.BottomThickness + Milling.DadoClearance + Milling.PocketToolRadius)
-        DrawBox(pt1, pt2, pt4, pt3, Milling.LNFrontPocket)
-    elseif Milling.DrawerStyleName == [[Captive Bottom (Dado)]] then
+    if true then -- Fixed style: Captive Bottom (Dado)
         pt1 = Drawer.WP
         pt2 = Polar2D(pt1, 0.0, Drawer.FrontWidth - Drawer.BottomDadoInset)
         pt2 = Polar2D(pt2, 90.0, H(Drawer.FrontLength)) -- Drawer center point
@@ -341,53 +283,38 @@ function Drawer_Back() -- Drawer Back
     local pt3 = Polar2D(pt2, 0.0, Drawer.BackWidth)
     local pt4 = Polar2D(pt3, 270.0, Drawer.BackLength)
     -- Draw Rear Profile
-    if (Milling.BlumSoftClose == "No") or (Milling.DrawerStyleName == [[Mount Flat On Bottom]]) or
-        ((Milling.BlumSoftClose == "Yes") and (Milling.DrawerStyleName == [[Rabbeted Bottom]])) then
-        DrawBox(pt1, pt2, pt3, pt4, Milling.LNBackProfile)
-        if Milling.BlumHole == "Yes" then
-            local pt13 = Polar2D(Polar2D(Polar2D(pt1, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumDown), 90.0,
-                Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
-            local pt14 = Polar2D(Polar2D(Polar2D(pt2, 0.0, Drawer.BottomDadoInset), 0.0, Drawer.BlumDown), 270.0,
-                Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
-            DrawCircle(pt13, Drawer.BlumDia * 0.5, Milling.LNBlum)
-            DrawCircle(pt14, Drawer.BlumDia * 0.5, Milling.LNBlum)
-        end -- if end
-        Milling.BlumSoftClose = "No"
-    else
-        local pt5 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
-        local pt10 = Polar2D(pt2, 0.0, Drawer.BottomDadoInset)
-        local pt6 = Polar2D(pt5, 90.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
-        local pt6a = Polar2D(pt6, 270.0, Bit)
-        local pt6b = Polar2D(pt6, 180.0, Bit)
-        local pt7 = Polar2D(pt6, 180.0, Drawer.BottomDadoInset)
-        local pt9 = Polar2D(pt10, 270.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
-        local pt8 = Polar2D(pt9, 180.0, Drawer.BottomDadoInset)
-        local pt9a = Polar2D(pt9, 180.0, Bit)
-        local pt9b = Polar2D(pt9, 90.0, Bit)
-        local pt11 = Polar2D(Polar2D(pt5, 0.0, Drawer.BlumDown), 90.0,
-            Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
-        local pt12 = Polar2D(Polar2D(pt10, 0.0, Drawer.BlumDown), 270.0,
-            Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
-        local layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBackProfile)
-        local line = Contour(0.0)
-        line:AppendPoint(pt5);
-        line:LineTo(pt6a);
-        line:ArcTo(pt6b, 1.0);
-        line:LineTo(pt7);
-        line:LineTo(pt8);
-        line:LineTo(pt9a);
-        line:ArcTo(pt9b, 1.0);
-        line:LineTo(pt10);
-        line:LineTo(pt3);
-        line:LineTo(pt4);
-        line:LineTo(pt5)
-        layer:AddObject(CreateCadContour(line), true)
+    -- Blum hardware geometry always included (options fixed to Yes)
+    local pt5 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+    local pt10 = Polar2D(pt2, 0.0, Drawer.BottomDadoInset)
+    local pt6 = Polar2D(pt5, 90.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
+    local pt6a = Polar2D(pt6, 270.0, Bit)
+    local pt6b = Polar2D(pt6, 180.0, Bit)
+    local pt7 = Polar2D(pt6, 180.0, Drawer.BottomDadoInset)
+    local pt9 = Polar2D(pt10, 270.0, (Drawer.SideThickness - Milling.DadoHeight) + Drawer.BlumWide)
+    local pt8 = Polar2D(pt9, 180.0, Drawer.BottomDadoInset)
+    local pt9a = Polar2D(pt9, 180.0, Bit)
+    local pt9b = Polar2D(pt9, 90.0, Bit)
+    local pt11 = Polar2D(Polar2D(pt5, 0.0, Drawer.BlumDown), 90.0,
+        Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
+    local pt12 = Polar2D(Polar2D(pt10, 0.0, Drawer.BlumDown), 270.0,
+        Drawer.BlumIn + (Drawer.SideThickness - Milling.DadoHeight))
+    local layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNBackProfile)
+    local line = Contour(0.0)
+    line:AppendPoint(pt5);
+    line:LineTo(pt6a);
+    line:ArcTo(pt6b, 1.0);
+    line:LineTo(pt7);
+    line:LineTo(pt8);
+    line:LineTo(pt9a);
+    line:ArcTo(pt9b, 1.0);
+    line:LineTo(pt10);
+    line:LineTo(pt3);
+    line:LineTo(pt4);
+    line:LineTo(pt5)
+    layer:AddObject(CreateCadContour(line), true)
 
-        if Milling.BlumHole == "Yes" then
-            DrawCircle(pt11, Drawer.BlumDia * 0.5, Milling.LNBlum)
-            DrawCircle(pt12, Drawer.BlumDia * 0.5, Milling.LNBlum)
-        end -- if end
-    end -- if end
+    DrawCircle(pt11, Drawer.BlumDia * 0.5, Milling.LNBlum)
+    DrawCircle(pt12, Drawer.BlumDia * 0.5, Milling.LNBlum)
 
     -- Place Part Note
     pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
@@ -402,25 +329,15 @@ function Drawer_Back() -- Drawer Back
     end -- if end
     -- Draw bottom dato
 
-    if "Rabbeted Bottom" == Milling.DrawerStyleName then
-        pt1 = Drawer.WP
-        pt2 = Polar2D(pt1, 180.0, Milling.PocketToolRadius)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.BackWidth)) -- Drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.BackWidth) + Milling.PocketToolRadius)
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.PocketToolRadius)
-        pt3 = Polar2D(pt1, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
-        pt4 = Polar2D(pt2, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
-        DrawBox(pt1, pt2, pt4, pt3, Milling.LNBackPocket)
-    elseif Milling.DrawerStyleName == "Captive Bottom (Dado)" then
-        pt1 = Drawer.WP
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
-        pt2 = Polar2D(pt2, 90.0, H(Drawer.BackWidth)) -- Drawer center point
-        pt1 = Polar2D(pt2, 270.0, H(Drawer.BackWidth) + Milling.PocketToolRadius)
-        pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
-        pt3 = Polar2D(pt1, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
-        pt4 = Polar2D(pt2, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
-        DrawBox(pt1, pt2, pt4, pt3, Milling.LNBackPocket)
-    end -- if end
+    -- Fixed style: Captive Bottom (Dado)
+    pt1 = Drawer.WP
+    pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
+    pt2 = Polar2D(pt2, 90.0, H(Drawer.BackWidth)) -- Drawer center point
+    pt1 = Polar2D(pt2, 270.0, H(Drawer.BackWidth) + Milling.PocketToolRadius)
+    pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
+    pt3 = Polar2D(pt1, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+    pt4 = Polar2D(pt2, 90.0, Drawer.BackLength + (Milling.PocketToolRadius * 2.0))
+    DrawBox(pt1, pt2, pt4, pt3, Milling.LNBackPocket)
     return true
 end -- function end
 -- =====================================================]]
@@ -964,7 +881,7 @@ function FingerBoxFront(pta, ptb) -- Finger Box Front
 end -- function end
 -- =====================================================]]
 function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
-    if (Milling.Blum) and (Milling.BlumHole == "Yes") then
+    if Milling.Blum then -- BlumHole always Yes (fixed)
         local selection = Milling.job.Selection -- clear current selection
         selection:Clear()
         -- get layer

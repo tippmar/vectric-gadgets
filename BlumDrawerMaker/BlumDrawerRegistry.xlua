@@ -18,7 +18,7 @@ function RegistryReset() -- Reset All Settings
         Drawer.BackLength = 311.9000
         Drawer.BackThickness = 12.7000
         Drawer.BackWidth = 117.3000
-        Drawer.BottomDadoInset = 9.0000
+        Drawer.BottomDadoInset = 13.0000 -- fixed constant (metric)
         Drawer.BottomGap = 12.7000
         Drawer.BottomPanelLength = 491.5800
         Drawer.BottomPanelWidth = 310.6300
@@ -95,7 +95,7 @@ function RegistryReset() -- Reset All Settings
         Drawer.BackLength = 18.2500
         Drawer.BackThickness = 0.5000
         Drawer.BackWidth = 5.2500
-        Drawer.BottomDadoInset = 0.3750
+        Drawer.BottomDadoInset = 0.5000 -- fixed constant (imperial)
         Drawer.BottomGap = 0.5000
         Drawer.BottomPanelLength = 18.2500
         Drawer.BottomPanelWidth = 5.2500
@@ -182,6 +182,7 @@ function RegistryReset() -- Reset All Settings
     Milling.LNBackPocket = "BackPocketProfile"
     Milling.LNBlum = "BlumMilling"
     Milling.DrawerStyleName = [[Captive Bottom (Dado)]]
+    -- Blum hardware options fixed
     Milling.BlumSoftClose = "Yes"
     Milling.BlumHole = "Yes"
     Milling.LNBackProfile = "BackPanelProfile"
@@ -251,7 +252,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.BackLength = RegistryRead:GetDouble("Drawer.BackLength", 463.55)
         Drawer.BackThickness = RegistryRead:GetDouble("Drawer.BackThickness", 12.7)
         Drawer.BackWidth = RegistryRead:GetDouble("Drawer.BackWidth", 133.35)
-        Drawer.BottomDadoInset = RegistryRead:GetDouble("Drawer.BottomDadoInset", 9.5)
+        Drawer.BottomDadoInset = 13.0 -- fixed constant overrides registry
         Drawer.BottomGap = RegistryRead:GetDouble("Drawer.BottomGap", 12.7)
         Drawer.BottomPanelLength = RegistryRead:GetDouble("Drawer.BottomPanelLength", 463.55)
         Drawer.BottomPanelWidth = RegistryRead:GetDouble("Drawer.BottomPanelWidth", 133.35)
@@ -336,7 +337,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.BackLength = RegistryRead:GetDouble("Drawer.BackLength", 18.2500)
         Drawer.BackThickness = RegistryRead:GetDouble("Drawer.BackThickness", 0.5000)
         Drawer.BackWidth = RegistryRead:GetDouble("Drawer.BackWidth", 5.2500)
-        Drawer.BottomDadoInset = RegistryRead:GetDouble("Drawer.BottomDadoInset", 0.3750)
+        Drawer.BottomDadoInset = 0.5 -- fixed constant overrides registry
         Drawer.BottomGap = RegistryRead:GetDouble("Drawer.BottomGap", 0.5000)
         Drawer.BottomPanelLength = RegistryRead:GetDouble("Drawer.BottomPanelLength", 18.2500)
         Drawer.BottomPanelWidth = RegistryRead:GetDouble("Drawer.BottomPanelWidth", 5.2500)
@@ -421,8 +422,10 @@ function RegistryRead() -- Read from Registry values
     Milling.LNBackPocket = RegistryRead:GetString("Milling.LNBackPocket", "BackPocketProfile")
     Milling.LNBlum = RegistryRead:GetString("Milling.LNBlum", "BlumMilling")
     Milling.DrawerStyleName = RegistryRead:GetString("Milling.DrawerStyleName", [[Captive Bottom (Dado)]])
-    Milling.BlumSoftClose = RegistryRead:GetString("Milling.BlumSoftClose", "Yes")
-    Milling.BlumHole = RegistryRead:GetString("Milling.BlumHole", "Yes")
+    -- Blum options fixed
+    -- Blum hardware options fixed
+    Milling.BlumSoftClose = "Yes"
+    Milling.BlumHole = "Yes"
     Milling.LNBackProfile = RegistryRead:GetString("Milling.LNBackProfile", "BackPanelProfile")
     Milling.LNBottomProfile = RegistryRead:GetString("Milling.LNBottomProfile", "Bottom Profile")
     Milling.LNDrawNotes = RegistryRead:GetString("Milling.LNDrawNotes", "Drawing Notes")
@@ -485,8 +488,7 @@ end -- function end
 -- =====================================================]]
 function RegistryWriter() -- Write to Registry values
     local RegistryWrite = Registry(Project.RegName)
-    local RegValue = RegistryWrite:SetString("Milling.BlumHole", Milling.BlumHole)
-    RegValue = RegistryWrite:SetString("Milling.BlumSoftClose", Milling.BlumSoftClose)
+    local RegValue -- Blum hardware options fixed; not persisted as user settings
     RegValue = RegistryWrite:SetString("Milling.JointStyleName", Milling.JointStyleName)
     RegValue = RegistryWrite:SetString("Milling.LNBackPocket", Milling.LNBackPocket)
     RegValue = RegistryWrite:SetString("Milling.LNBackPocketColor", Milling.LNBackPocketColor)
@@ -600,7 +602,8 @@ function RegistryWriter() -- Write to Registry values
     RegValue = RegistryWrite:SetInt("Drawer.Count", Drawer.Count)
     RegValue = RegistryWrite:SetInt("Drawer.SideFingerCount", Drawer.SideFingerCount)
     RegValue = RegistryWrite:SetDouble("Drawer.SideFingerWidth", Drawer.SideFingerWidth)
-    RegValue = RegistryWrite:SetDouble("Drawer.BottomDadoInset", Drawer.BottomDadoInset)
+    -- BottomDadoInset fixed; no need to write dynamic value
+    -- RegValue = RegistryWrite:SetDouble("Drawer.BottomDadoInset", Drawer.BottomDadoInset)
     RegValue = RegistryWrite:SetDouble("Drawer.BackDadoInset", Drawer.BackDadoInset)
     RegValue = RegistryWrite:SetDouble("Drawer.BottomThickness", Drawer.BottomThickness)
     RegValue = RegistryWrite:SetDouble("Drawer.SideWidth", Drawer.SideWidth)
@@ -673,8 +676,7 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.TopGap = tonumber("]] .. ExD2S(Drawer.TopGap) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Width = tonumber("]] .. ExD2S(Drawer.Width) .. [[") ]] .. "\n")
     fileW:write([[Milling.BlindTabThickness = tonumber("]] .. ExD2S(Milling.BlindTabThickness) .. [[") ]] .. "\n")
-    fileW:write([[Milling.BlumHole = "]] .. Milling.BlumHole .. [[" ]] .. "\n")
-    fileW:write([[Milling.BlumSoftClose = "]] .. Milling.BlumSoftClose .. [[" ]] .. "\n")
+    -- Blum options fixed (not exported as variable settings)
     fileW:write([[Milling.DadoClearance = tonumber("]] .. ExD2S(Milling.DadoClearance) .. [[") ]] .. "\n")
     fileW:write([[Milling.DadoHeight = tonumber("]] .. ExD2S(Milling.DadoHeight) .. [[") ]] .. "\n")
     fileW:write([[Milling.DrawerStyleName = "]] .. Milling.DrawerStyleName .. [[" ]] .. "\n")

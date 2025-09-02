@@ -1616,25 +1616,11 @@ function Drawer_Math() -- All the math for Wall Cabinet
     Drawer.SideLength = Drawer.OpeningDepth -- SideGap ignored for depth per update request
     Drawer.FrontLength = Drawer.OpeningWidth - (Drawer.SideGap * 2.0)
     Drawer.BackLength = Drawer.FrontLength - (Milling.DadoHeight * 2.0)
-    if Milling.DrawerStyleName == [[Captive Bottom (Dado)]] then
-        Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -
-                                       Drawer.BackDadoInset -- 5.1 added BackDadoInset
-        Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -- 5.1 changed to width
-        Drawer.SideFingerWidth = Drawer.Height / Drawer.SideFingerCount
-    elseif Milling.DrawerStyleName == [[Rabbeted Bottom]] then
-        Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -
-                                       Drawer.BackDadoInset -- 5.1 added BackDadoInset
-        Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -- 5.1 changed to width
-        Drawer.SideFingerWidth = Drawer.Height / Drawer.SideFingerCount
-        -- Drawer.BottomDadoInset   = 0.0                                       -- 5.1 this will lower the Dado to a rabbet
-    else -- Milling.DrawerStyleName == [[Mount Flat On Bottom]]
-        Drawer.BackWidth = Drawer.BackWidth - Drawer.BottomThickness -- 5.1 this will reduce the height to make space for the bottom
-        Drawer.FrontWidth = Drawer.FrontWidth - Drawer.BottomThickness -- 5.1 this will reduce the height to make space for the bottom
-        Drawer.SideWidth = Drawer.SideWidth - Drawer.BottomThickness -- 5.1 this will reduce the height to make space for the bottom
-        Drawer.BottomPanelLength = Drawer.Length
-        Drawer.BottomPanelWidth = Drawer.Width
-        Drawer.SideFingerWidth = (Drawer.Height - Drawer.BottomThickness) / Drawer.SideFingerCount
-    end
+    -- Fixed bottom style: Captive Bottom (Dado)
+    Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance) -
+                                   Drawer.BackDadoInset
+    Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
+    Drawer.SideFingerWidth = Drawer.Height / Drawer.SideFingerCount
     if (Drawer.SideFingerCount % 2 == 0) then
         Drawer.FrontFingerCount = math.floor(Drawer.SideFingerCount * 0.5) + 1 - 1
     else -- odd
