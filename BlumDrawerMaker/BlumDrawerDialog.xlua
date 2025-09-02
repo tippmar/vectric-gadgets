@@ -779,34 +779,25 @@ table {
   <tr>
     <td class="h1-rP"><label title="Drawer opening height. (Cannot be zero)">Height</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningHeight" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Side material thickness. (Cannot be zero)">Side</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.SideThickness" size="10" maxlength="10" /></td>
+    <td class="h1-rP"><label title="Material thickness used for Side, Front &amp; Back components. (Cannot be zero)">Panel Thickness</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.PanelThickness" size="10" maxlength="10" /></td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Drawer opening width. (Cannot be zero)">Width</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Drawer.OpeningWidth" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Rear/Back panel material thickness. (Cannot be zero)">Back</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.BackThickness" size="10" maxlength="10" /></td>
-    <td colspan="2">&nbsp;</td>
+    <td class="h1-rP"><label title="Bottom material thickness. (Cannot be zero)">Bottom Thickness</label></td>
+    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomThickness" size="10" maxlength="10" /></td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Blum Undermount drawer slide length. (Cannot be blank)">Slide Length</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SlideLength" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label>Front</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Drawer.FrontThickness" size="10" maxlength="10" /></td>
-    <td colspan="2">&nbsp;</td>
-  </tr>
-  <tr>
-    <td colspan="2">&nbsp;</td>
-    <td class="h1-rP"><label title="Bottom material thickness. (Cannot be zero)">Bottom</label></td>
-    <td class="h2-l"><input type="text" class="h1-l" id="Drawer.BottomThickness" size="10" maxlength="10" /></td>
     <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2)">Finger Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SideFingerCount" size="10" maxlength="10" /></td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.Count" size="10" maxlength="10" /></td>
-    <td colspan="4">&nbsp;</td>
+    <td colspan="2">&nbsp;</td>
   </tr>
 </table>
 <table>
@@ -930,14 +921,10 @@ function InquiryDrawer(Header) -- Main Menu
     end
     Drawer.dialog:AddIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
     Drawer.dialog:AddDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
-    Drawer.dialog:AddDoubleField("Drawer.SlideLength", Drawer.SlideLength)
     Drawer.dialog:AddDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
-    Drawer.dialog:AddDoubleField("Drawer.SideThickness", Drawer.SideThickness)
-    Drawer.dialog:AddDoubleField("Drawer.BackThickness", Drawer.BackThickness)
-    Drawer.dialog:AddDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
+    Drawer.dialog:AddDoubleField("Drawer.SlideLength", Drawer.SlideLength)
+    Drawer.dialog:AddDoubleField("Drawer.PanelThickness", Drawer.PanelThickness)
     Drawer.dialog:AddDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
-    -- Clearance fields (SideGap, TopGap, BottomGap) removed; now derived from opening & rules
-    -- Clearance update fields removed
     Drawer.dialog:AddDoubleField("Drawer.Count", Drawer.Count)
     Drawer.dialog:AddTextField("Project.CabinetName", Project.CabinetName)
     Drawer.dialog:AddLabelField("ToolNameLabel1", MillTool1.Name)
@@ -963,9 +950,7 @@ function InquiryDrawer(Header) -- Main Menu
         Drawer.OpeningHeight = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningHeight"))
         Drawer.SlideLength = math.abs(Drawer.dialog:GetDoubleField("Drawer.SlideLength"))
         Drawer.OpeningWidth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningWidth"))
-        Drawer.SideThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.SideThickness"))
-        Drawer.BackThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BackThickness"))
-        Drawer.FrontThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.FrontThickness"))
+        Drawer.PanelThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.PanelThickness"))
         Drawer.BottomThickness = math.abs(Drawer.dialog:GetDoubleField("Drawer.BottomThickness"))
         -- Clearance values no longer read (computed by rules)
         Drawer.Count = math.abs(Drawer.dialog:GetDoubleField("Drawer.Count"))
@@ -1108,14 +1093,12 @@ function OnLuaButton_InquiryReset() -- "Factory/Gadget Reset" Button
     if InquiryAreYouSureYesNo("Full Settings Reset",
         "Reset Variables Back To Factory Settings With the Current Drawing Units?") then
         RegistryReset()
-        Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
-        Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
         Drawer.dialog:UpdateDoubleField("Drawer.SlideLength", Drawer.SlideLength)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
-        Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
+        Drawer.dialog:UpdateDoubleField("Drawer.PanelThickness", Drawer.PanelThickness)
         Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
         Drawer.dialog:UpdateTextField("Project.CabinetName", Project.CabinetName)
         Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
@@ -1190,9 +1173,7 @@ function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
             Drawer.dialog:UpdateDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
             Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
             Drawer.dialog:UpdateDoubleField("Drawer.SlideLength", Drawer.SlideLength)
-            Drawer.dialog:UpdateDoubleField("Drawer.SideThickness", Drawer.SideThickness)
-            Drawer.dialog:UpdateDoubleField("Drawer.BackThickness", Drawer.BackThickness)
-            Drawer.dialog:UpdateDoubleField("Drawer.FrontThickness", Drawer.FrontThickness)
+            Drawer.dialog:UpdateDoubleField("Drawer.PanelThickness", Drawer.PanelThickness)
             Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
             Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
             Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)

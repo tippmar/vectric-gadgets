@@ -17,14 +17,12 @@ function RegistryReset() -- Reset All Settings
         Drawer.HeightClearance = 21.0 -- mm to subtract from opening height, per Blum design spec
         Drawer.WidthClearance = 42.0 -- mm to subtract from opening width for inside width, per Blum design spec
         Drawer.BackLength = 311.9000
-        Drawer.BackThickness = 12.7000
         Drawer.BackWidth = 117.3000
         Drawer.BottomDadoInset = 13.0000 -- fixed constant (metric), per Blum design spec
         Drawer.BottomPanelLength = 491.5800
         Drawer.BottomPanelWidth = 310.6300
         Drawer.BottomThickness = 6.0000
         Drawer.FrontLength = 324.6000
-        Drawer.FrontThickness = 19.0000
         Drawer.FrontWidth = 117.3000
         Drawer.Height = 117.3000
         Drawer.Length = 524.6000
@@ -33,7 +31,7 @@ function RegistryReset() -- Reset All Settings
         Drawer.OpeningWidth = 350.0000
         Drawer.SideFingerWidth = 13.0333
         Drawer.SideLength = 524.6000
-        Drawer.SideThickness = 14.0000
+        Drawer.PanelThickness = 12.7000 -- panel thickness (metric)
         Drawer.SideWidth = 117.3000
         Drawer.Width = 324.6000
         Milling.BlindTabThickness = 2.5400
@@ -92,14 +90,12 @@ function RegistryReset() -- Reset All Settings
         Drawer.HeightClearance = 0.8125 -- 13/16" to subtract from opening height, per Blum design spec
         Drawer.WidthClearance = 1.65625 -- 1 21/32" to subtract from opening width for inside width, per Blum design spec
         Drawer.BackLength = 18.2500
-        Drawer.BackThickness = 0.5000
         Drawer.BackWidth = 5.2500
         Drawer.BottomDadoInset = 0.5000 -- fixed constant (imperial), per Blum design spec
         Drawer.BottomPanelLength = 18.2500
         Drawer.BottomPanelWidth = 5.2500
         Drawer.BottomThickness = 0.2500
         Drawer.FrontLength = 18.2500
-        Drawer.FrontThickness = 0.5000
         Drawer.FrontWidth = 1.2500
         Drawer.Height = 6.0000
         Drawer.Length = 16.0000
@@ -108,7 +104,7 @@ function RegistryReset() -- Reset All Settings
         Drawer.OpeningWidth = 16.0000
         Drawer.SideFingerWidth = 0.5000
         Drawer.SideLength = 18.2500
-        Drawer.SideThickness = 0.5000
+        Drawer.PanelThickness = 0.5000 -- panel thickness (imperial)
         Drawer.SideWidth = 1.2500
         Drawer.Width = 18.0000
         Milling.DadoHeight = 0.2500
@@ -241,7 +237,7 @@ function RegistryRead() -- Read from Registry values
     local RegistryRead = Registry(Project.RegName)
     if Drawer.Unit then
         Drawer.BackLength = RegistryRead:GetDouble("Drawer.BackLength", 463.55)
-        Drawer.BackThickness = RegistryRead:GetDouble("Drawer.BackThickness", 12.7)
+        local panel_thick_metric = RegistryRead:GetDouble("Drawer.PanelThickness", 12.7)
         Drawer.BackWidth = RegistryRead:GetDouble("Drawer.BackWidth", 133.35)
         Drawer.BottomDadoInset = 13.0 -- fixed constant overrides registry
         Drawer.BottomPanelLength = RegistryRead:GetDouble("Drawer.BottomPanelLength", 463.55)
@@ -249,7 +245,6 @@ function RegistryRead() -- Read from Registry values
         Drawer.BottomThickness = RegistryRead:GetDouble("Drawer.BottomThickness", 6.35)
         Drawer.Count = RegistryRead:GetInt("Drawer.Count", 1)
         Drawer.FrontLength = RegistryRead:GetDouble("Drawer.FrontLength", 436.55)
-        Drawer.FrontThickness = RegistryRead:GetDouble("Drawer.FrontThickness", 12.7)
         Drawer.FrontWidth = RegistryRead:GetDouble("Drawer.FrontWidth", 31.75)
         Drawer.Height = RegistryRead:GetDouble("Drawer.Height", 152.4)
         Drawer.Length = RegistryRead:GetDouble("Drawer.Length", 406.4)
@@ -259,7 +254,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 12.7)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 463.55)
-        Drawer.SideThickness = RegistryRead:GetDouble("Drawer.SideThickness", 12.7)
+        Drawer.PanelThickness = panel_thick_metric
         Drawer.SideWidth = RegistryRead:GetDouble("Drawer.SideWidth", 31.75)
         Drawer.Width = RegistryRead:GetDouble("Drawer.Width", 457.2)
         Milling.DadoHeight = RegistryRead:GetDouble("Milling.DadoHeight", 6.35)
@@ -322,7 +317,7 @@ function RegistryRead() -- Read from Registry values
         MillTool6.ToolNumber = RegistryRead:GetInt("MillTool6.ToolNumber", 6)
     else
         Drawer.BackLength = RegistryRead:GetDouble("Drawer.BackLength", 18.2500)
-        Drawer.BackThickness = RegistryRead:GetDouble("Drawer.BackThickness", 0.5000)
+        local panel_thick_imperial = RegistryRead:GetDouble("Drawer.PanelThickness", 0.5000)
         Drawer.BackWidth = RegistryRead:GetDouble("Drawer.BackWidth", 5.2500)
         Drawer.BottomDadoInset = 0.5 -- fixed constant overrides registry
         Drawer.BottomPanelLength = RegistryRead:GetDouble("Drawer.BottomPanelLength", 18.2500)
@@ -330,7 +325,6 @@ function RegistryRead() -- Read from Registry values
         Drawer.BottomThickness = RegistryRead:GetDouble("Drawer.BottomThickness", 0.2500)
         Drawer.Count = RegistryRead:GetInt("Drawer.Count", 1)
         Drawer.FrontLength = RegistryRead:GetDouble("Drawer.FrontLength", 18.2500)
-        Drawer.FrontThickness = RegistryRead:GetDouble("Drawer.FrontThickness", 0.5000)
         Drawer.FrontWidth = RegistryRead:GetDouble("Drawer.FrontWidth", 1.2500)
         Drawer.Height = RegistryRead:GetDouble("Drawer.Height", 6.0000)
         Drawer.Length = RegistryRead:GetDouble("Drawer.Length", 16.0000)
@@ -340,7 +334,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 0.5000)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 18.2500)
-        Drawer.SideThickness = RegistryRead:GetDouble("Drawer.SideThickness", 0.5000)
+        Drawer.PanelThickness = panel_thick_imperial
         Drawer.SideWidth = RegistryRead:GetDouble("Drawer.SideWidth", 1.2500)
         Drawer.Width = RegistryRead:GetDouble("Drawer.Width", 18.0000)
         Milling.DadoHeight = RegistryRead:GetDouble("Milling.DadoHeight", 0.2500)
@@ -587,10 +581,8 @@ function RegistryWriter() -- Write to Registry values
     RegValue = RegistryWrite:SetDouble("Drawer.SideFingerWidth", Drawer.SideFingerWidth)
     RegValue = RegistryWrite:SetDouble("Drawer.BottomThickness", Drawer.BottomThickness)
     RegValue = RegistryWrite:SetDouble("Drawer.SideWidth", Drawer.SideWidth)
-    RegValue = RegistryWrite:SetDouble("Drawer.SideThickness", Drawer.SideThickness)
-    RegValue = RegistryWrite:SetDouble("Drawer.FrontThickness", Drawer.FrontThickness)
+    RegValue = RegistryWrite:SetDouble("Drawer.PanelThickness", Drawer.PanelThickness)
     RegValue = RegistryWrite:SetDouble("Drawer.FrontWidth", Drawer.FrontWidth)
-    RegValue = RegistryWrite:SetDouble("Drawer.BackThickness", Drawer.BackThickness)
     RegValue = RegistryWrite:SetDouble("Drawer.BackWidth", Drawer.BackWidth)
     RegValue = RegistryWrite:SetDouble("Drawer.HeightClearance", Drawer.HeightClearance)
     RegValue = RegistryWrite:SetDouble("Drawer.WidthClearance", Drawer.WidthClearance)
@@ -629,7 +621,6 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[DialogWindow.HelpSubXY = "]] .. DialogWindow.HelpSubXY .. [[" ]] .. "\n")
     fileW:write([[DialogWindow.HelpXY = "]] .. DialogWindow.HelpXY .. [[" ]] .. "\n")
     fileW:write([[Drawer.BackLength = tonumber("]] .. ExD2S(Drawer.BackLength) .. [[") ]] .. "\n")
-    fileW:write([[Drawer.BackThickness = tonumber("]] .. ExD2S(Drawer.BackThickness) .. [[") ]] .. "\n")
     fileW:write([[Drawer.BackWidth = tonumber("]] .. ExD2S(Drawer.BackWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.HeightClearance = tonumber("]] .. ExD2S(Drawer.HeightClearance) .. [[") ]] .. "\n")
     fileW:write([[Drawer.WidthClearance = tonumber("]] .. ExD2S(Drawer.WidthClearance) .. [[") ]] .. "\n")
@@ -639,7 +630,6 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.BottomThickness = tonumber("]] .. ExD2S(Drawer.BottomThickness) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Count = tonumber("]] .. ExD2S(Drawer.Count) .. [[") ]] .. "\n")
     fileW:write([[Drawer.FrontLength = tonumber("]] .. ExD2S(Drawer.FrontLength) .. [[") ]] .. "\n")
-    fileW:write([[Drawer.FrontThickness = tonumber("]] .. ExD2S(Drawer.FrontThickness) .. [[") ]] .. "\n")
     fileW:write([[Drawer.FrontWidth = tonumber("]] .. ExD2S(Drawer.FrontWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Height = tonumber("]] .. ExD2S(Drawer.Height) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Length = tonumber("]] .. ExD2S(Drawer.Length) .. [[") ]] .. "\n")
@@ -649,7 +639,7 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.SideFingerCount = tonumber("]] .. ExD2S(Drawer.SideFingerCount) .. [[") ]] .. "\n")
     fileW:write([[Drawer.SideFingerWidth = tonumber("]] .. ExD2S(Drawer.SideFingerWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.SideLength = tonumber("]] .. ExD2S(Drawer.SideLength) .. [[") ]] .. "\n")
-    fileW:write([[Drawer.SideThickness = tonumber("]] .. ExD2S(Drawer.SideThickness) .. [[") ]] .. "\n")
+    fileW:write([[Drawer.PanelThickness = tonumber("]] .. ExD2S(Drawer.PanelThickness) .. [[") ]] .. "\n")
     fileW:write([[Drawer.SideWidth = tonumber("]] .. ExD2S(Drawer.SideWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.Width = tonumber("]] .. ExD2S(Drawer.Width) .. [[") ]] .. "\n")
     fileW:write([[Milling.BlindTabThickness = tonumber("]] .. ExD2S(Milling.BlindTabThickness) .. [[") ]] .. "\n")

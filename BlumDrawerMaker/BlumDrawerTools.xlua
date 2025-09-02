@@ -1605,7 +1605,7 @@ function Drawer_Math() -- All the math for Blum drawer box
 
     Drawer.Height = Drawer.OpeningHeight - Drawer.HeightClearance
     Drawer.InsideWidth = Drawer.OpeningWidth - Drawer.WidthClearance
-    Drawer.Width = Drawer.InsideWidth + (Drawer.SideThickness * 2.0)
+    Drawer.Width = Drawer.InsideWidth + (Drawer.PanelThickness * 2.0)
 
     Drawer.Length = Drawer.SlideLength
     Drawer.SideWidth = Drawer.Height

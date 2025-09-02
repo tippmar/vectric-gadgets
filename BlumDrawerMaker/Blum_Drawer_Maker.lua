@@ -110,9 +110,9 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             elseif Project.CabinetName == "" then
                 PresentMessage("Unable to Proceed!", "Error", "Drawer Name cannot be blank.")
                 DialogLoop = 1 -- Nope do it again
-            elseif Drawer.SlideLength < (10 * Drawer.SideThickness) then
+            elseif Drawer.SlideLength < (10 * Drawer.PanelThickness) then
                 PresentMessage("Unable to Proceed!", "Error",
-                    "Drawer Slide Length is too small of value. \nEnter a larger Slide Length value or enter a smaller Side Thickness")
+                    "Drawer Slide Length is too small of value. \nEnter a larger Slide Length value or enter a smaller Panel Thickness")
                 DialogLoop = 1 -- Nope do it again
             elseif (Drawer.SideFingerCount <= 1) then
                 PresentMessage("Unable to Proceed!", "Error", "Finger count cannot be lass then 2 fingers")
@@ -204,7 +204,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
         Sheet.ProgressBar:SetPercentProgress(0) -- Sets progress bar to zero
         R1, R2, R3 = os.rename(Project.ProjectPath, Project.ProjectPath)
         -- How many sheets do we need
-        Sheets = {Drawer.BackThickness, Drawer.BottomThickness, Drawer.SideThickness, Drawer.FrontThickness}
+        Sheets = {Drawer.PanelThickness, Drawer.BottomThickness}
         Sheets = RemoveDuplicates(Sheets)
         if MillTool4.Name ~= "Tool Not Selected" then
             Milling.FingerToolDia = MillTool4.ToolDia
@@ -237,13 +237,9 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             SheetThick = Sheets[i]
             DrawWriter("Material Thickness " .. tostring(SheetThick) .. " Thk.",
                 Polar2D(Point2D(0, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal, Milling.LNDrawNotes, 0.0)
-            if SheetThick == Drawer.BackThickness then
-                ProcessBack()
-            end
-            if SheetThick == Drawer.SideThickness then
-                ProcessSide()
-            end
-            if SheetThick == Drawer.FrontThickness then
+            if SheetThick == Drawer.PanelThickness then
+                ProcessBack();
+                ProcessSide();
                 ProcessFront()
             end
             if SheetThick == Drawer.BottomThickness then
@@ -259,15 +255,8 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
         Sheet.ProgressBar:Finished() -- Close Progress Bar
         LayerClear()
         Milling.job:Refresh2DView()
-        if Drawer.BottomThickness == Drawer.BackThickness and Drawer.SideThickness == Drawer.FrontThickness and
-            Drawer.BackThickness == Drawer.FrontThickness then
-            PresentMessage("Success", "Congratulations",
-                [[Blum Drawer Maker Gadget has completed. It is recommended you validate the drawing and milling toolpaths before milling parts.]])
-        else
-            PresentMessage("Sheet Configuration", "Alert",
-                [[Blum Drawer Maker Gadget has completed. At this time, the gadget cannot create sheets with differing material (Z) thickness. All sheets have been replicated from the initial sheet having the same thickness (Z) value. The user will need to manually adjust each sheet (Z) thickness in the 'Sheet Tab Menu', to match the part thickness before milling parts.]],
-                220)
-        end -- if end
+        PresentMessage("Success", "Congratulations",
+            [[Blum Drawer Maker Gadget has completed. It is recommended you validate the drawing and milling toolpaths before milling parts.]])
     end -- if end
     return true
 end -- Function End
