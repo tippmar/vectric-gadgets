@@ -3,8 +3,7 @@
 ╦ ╦╔═╗╦  ╔═╗  ╔═╗╦═╗╦═╗╔═╗╦═╗  ╦  ╔═╗╔═╗  ╔╦╗╔═╗╔╗╔╦ ╦
 ╠═╣║╣ ║  ╠═╝  ║╣ ╠╦╝╠╦╝║ ║╠╦╝  ║  ║ ║║ ╦  ║║║║╣ ║║║║ ║
 ╩ ╩╚═╝╩═╝╩    ╚═╝╩╚═╩╚═╚═╝╩╚═  ╩═╝╚═╝╚═╝  ╩ ╩╚═╝╝╚╝╚═╝
---]]
--- ==============================================================================
+--]] -- ==============================================================================
 --  Gadgets are an entirely optional add-in to Vectric's core software products.
 --  They are provided 'as-is', without any express or implied warranty, and you
 --  make use of them entirely at your own risk.
@@ -21,11 +20,10 @@
 --     must not be misrepresented as being the original software.
 --  3. This notice may not be removed or altered from any source distribution.
 -- ==============================================================================
--- Easy MDF Door Maker Gadget was written by JimAndi Gadgets of Houston Texas
--- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
 -- ====================================================]]
 function HTMLHelp08()
-  DialogWindow.Help08 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>]] .. Style08() .. [[
+    DialogWindow.Help08 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>]] .. Style08() .. [[
   <body>
     <div class="layout">
       <label class="h3-lP">General Overview</label>
@@ -51,7 +49,8 @@ function HTMLHelp08()
 
 
       <div><hr /></div>
-      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
     </div>
     <div class="foot" id="FooterBox">
       <div><hr /></div>
@@ -62,11 +61,11 @@ function HTMLHelp08()
     </div>
   </body>
 </html>]]
-  return true
+    return true
 end
 -- ====================================================]]
 function Style08()
-  return [[<style>
+    return [[<style>
 	.FormButton {
 		font-family: Arial, Helvetica, sans-serif;
 		font-weight: bold;

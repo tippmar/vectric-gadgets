@@ -3,8 +3,7 @@
 ╦ ╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦╔╗╔  ╔╦╗╔═╗╔╗╔╦ ╦
 ╠═╣║╣ ║  ╠═╝  ║║║╠═╣║║║║  ║║║║╣ ║║║║ ║
 ╩ ╩╚═╝╩═╝╩    ╩ ╩╩ ╩╩╝╚╝  ╩ ╩╚═╝╝╚╝╚═╝
---]]
--- ==============================================================================
+--]] -- ==============================================================================
 --  Gadgets are an entirely optional add-in to Vectric's core software products.
 --  They are provided 'as-is', without any express or implied warranty, and you
 --  make use of them entirely at your own risk.
@@ -21,11 +20,10 @@
 --     must not be misrepresented as being the original software.
 --  3. This notice may not be removed or altered from any source distribution.
 -- ==============================================================================
--- Blum Drawer Maker Gadget was written by JimAndi Gadgets of Houston Texas
--- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
 -- ====================================================]]
 function HTMLHelp03()
-  DialogWindow.Help03 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style00() .. [[
+    DialogWindow.Help03 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style00() .. [[
   <body><div class="layout">
     <div class="h3-lP">
       <label>Layers Setup Menu Help</label>
@@ -45,7 +43,8 @@ function HTMLHelp03()
       </div>
     </div>
     <div><hr /></div>
-      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
       </div>
       <div class="foot" id="FooterBox">
     <div><hr /></div>
@@ -56,11 +55,11 @@ function HTMLHelp03()
   </div>
 </body>
 </html>]]
-return true
+    return true
 end -- Function End
 --  ================================================================]]
 function Style00()
-  return [[<style>
+    return [[<style>
 	.FormButton {
 		font-family: Arial, Helvetica, sans-serif;
 		font-weight: bold;

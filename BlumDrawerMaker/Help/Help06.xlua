@@ -20,17 +20,16 @@
 --     must not be misrepresented as being the original software.
 --  3. This notice may not be removed or altered from any source distribution.
 -- ==============================================================================
---  Easy Box Maker was written by JimAndi5000 and Sharkcutup in 2023
--- ==============================================================================
--- ====================================================]]
-function HTMLHelp06()
-DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
+-- ====================================================]] function HTMLHelp06()
+    DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
     <body>
     <div class="layout">
       <!-- Header -->
       <div class="helpframe">
         <div class="h3-lP"><label>Bill of Materials Help</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/BOM_Main.png"  alt="Bill of Materials" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/BOM_Main.png"  alt="Bill of Materials" width="600"></div>
         <div class="h2-lP"><label>General Overview</label></div>
         <p class="h1-help">The gadget produces three file format of the bill of material.</p>
           <ul>
@@ -45,7 +44,8 @@ DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>
         <div><hr /></div>
       <div class="helpframe">
       <div class="h3-lP"><label>CSV File Format</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/csv_Spreadsheet_File.png"  alt="CSV Spreadsheet File" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/csv_Spreadsheet_File.png"  alt="CSV Spreadsheet File" width="600"></div>
         <div class="h1-help"><p>The CSV file format is used to import into an Excel style worksheet. This feature can be very beneficial
                                 when working with large numbers of different size parts and where the user may need to calculate total
                                 material usage.</p>
@@ -53,14 +53,16 @@ DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>
         <div><hr /></div>
       <div class="helpframe">
       <div class="h3-lP"><label>DAT File Format</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/dat_File.png"  alt="DAT Format File" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/dat_File.png"  alt="DAT Format File" width="600"></div>
         <p class="h1-help">As shown in the image above, the DAT file format is a plain (ascii) text document that is print ready
                            and provides the user with a shop cut list.</p>
       </div>
         <div><hr /></div>
       <div class="helpframe">
         <div class="h3-lP"><label>HTML File Format</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/HTML_Cut_List.png"  alt="HTML Cut List Format File" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/HTML_Cut_List.png"  alt="HTML Cut List Format File" width="600"></div>
 
 
         <p class="h1-help">The HTML file format is designed for viewing in a typical HTML web browser. This may be beneficial for shops
@@ -70,14 +72,16 @@ DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>
        <div><hr /></div>
       <div class="helpframe">
         <div class="h3-lP"><label>LUA File Format</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/lua_File.png"  alt="LUA Format File" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/lua_File.png"  alt="LUA Format File" width="600"></div>
 
 
         <p class="h1-help">The LUA file format is designed for viewing in Lua file editor. This File Format is for Issue Problem Solving. This file format retains all the user settings for technician to problem solve a users problem issue.</p>
       </div>
 
         <div><hr /></div>
-      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
       </div>
         <div class="foot" id="FooterBox">
       <div><hr /></div>
@@ -88,11 +92,11 @@ DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title>
   </div>
 </body>
 </html>]]
-return true
+    return true
 end -- function end
 -- ====================================================]]
 function Style03()
-  return [[<style>
+    return [[<style>
 	.FormButton {
 		font-family: Arial, Helvetica, sans-serif;
 		font-weight: bold;
@@ -219,6 +223,6 @@ function Style03()
 end
 -- ====================================================]]
 function Image200()
-  return [[image src= ]] ..  Project.AppPath .. [[/Help/Images/Assy.png]]
+    return [[image src= ]] .. Project.AppPath .. [[/Help/Images/Assy.png]]
 end -- function end
 -- ================= End of File ======================]]

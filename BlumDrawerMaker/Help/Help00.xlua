@@ -20,8 +20,7 @@
 --     must not be misrepresented as being the original software.
 --  3. This notice may not be removed or altered from any source distribution.
 -- ==============================================================================
--- Blum Drawer Maker Gadget was written by JimAndi Gadgets of Houston Texas
--- A special thanks goes to Sharkcutup for his hours of testing and validating the Easy gadgets
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
 -- ====================================================]]
 function HTMLHelp00()
     DialogWindow.Help00 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
@@ -39,7 +38,7 @@ function HTMLHelp00()
         <ul>
           <li class="h1-help"><strong>Functional Menus - </strong> This area is Buttons to open the Main Help, About, Project, Layers, Milling and Import menus.</li>
           <li class="h1-help"><strong>Drawer Opening - </strong> This is for User Input of the Cabinet Drawer Opening: Height, Width, Depth, and the Number of Drawers to Create.</li>
-          <li class="h1-help"><strong>Material Thickness - </strong>This area is for Thicknesses of the Individual Parts: Sides, Back, Front and the Bottom.</li>
+          <li class="h1-help"><strong>Material Thickness - </strong>This area provides two inputs: a single Panel Thickness (applied to Sides, Back & Front) and a Bottom Thickness.</li>
           <li class="h1-help"><strong>Drawer Clearance - </strong>Here the User Inputs the Clearances between Drawer and Cabinet: Drawer Sides, Top and Bottom Clearance</li>
           <li class="h1-help"><strong>Tooling Setup - </strong> Here the user can specify the tooling: End mills style for each Toolpath to utilize.</li>
           <li class="h1-help"><strong>Menu Footer - </strong> The Menu Footer is located at the Bottom of the Menu and contains the Help, OK, Cancel and/of Close Buttons. </li>
@@ -63,16 +62,9 @@ function HTMLHelp00()
       </div>
       <div class="h1-help">
         <div class="h2-lP">
-          <label>Material Thicknesses</label>
+          <label>Material Thickness</label>
         </div>
-        <p>The gadget these the precise material thicknesses in order to correctly calculate the materials correctly. </p>
-        <ul>
-          <li class="h1-help"><strong>Side - </strong> The material thickness of the side members. These parts are found on the left and right side of the drawer.</li>
-          <li class="h1-help"><strong>Back - </strong> The material thickness of the back member. This part is found in the rear of the drawer.</li>
-          <li class="h1-help"><strong>Front - </strong> The material thickness of the front member. This part is found in the very front of the drawer and often is where the handle or knob is placed.</li>
-          <li class="h1-help"><strong>Bottom - </strong> The material thickness of the bottom. This material is often bound to be thinner than the sides or front</li>
-        </ul>
-        <p>Because of the varying material thicknesses, it is recommended to use digital calipers to measure material thicknesses and enter the exact thicknesses up to three decimal places. The material thicknesses play a vital role in the calculation of the drawer component sizes especially in the fit of the parts</p>
+  <p>The gadget now uses a single Panel Thickness value for the Side, Back and Front components to simplify setup and enforce consistent construction. A separate Bottom Thickness value is still provided (often thinner material). Enter precise measurements using digital calipers (recommended) up to three decimal places for accurate joinery fit.</p>
         <div><hr /></div>
       </div>
       <div class="h1-help">

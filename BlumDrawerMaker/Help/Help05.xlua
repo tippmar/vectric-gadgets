@@ -20,17 +20,16 @@
 --     must not be misrepresented as being the original software.
 --  3. This notice may not be removed or altered from any source distribution.
 -- ==============================================================================
---  Easy Box Maker was written by JimAndi5000 and Sharkcutup in 2023
--- ==============================================================================
--- ====================================================]]
-function HTMLHelp05()
-DialogWindow.Help05= [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
+-- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
+-- ====================================================]] function HTMLHelp05()
+    DialogWindow.Help05 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
     <body>
     <div class="layout">
       <!-- Header -->
       <div class="helpframe">
         <div class="h3-lP"><label>Import Menu Help</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/Import.png"  alt="Import Job Setting Menu" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Import.png"  alt="Import Job Setting Menu" width="600"></div>
         <div class="h2-lP"><label>General Overview</label></div>
         <div class="h1-help"><p>The import tool allows the user to select a previous job design criteria and reset the current
         system to the previous jobs design. The export file is automatically created each time the gadget is ran and is located
@@ -39,12 +38,14 @@ DialogWindow.Help05= [[<!DOCTYPE html><html lang="en"><head><title>Help</title><
       <div><hr /></div>
       <div class="helpframe">
         <div class="h2-lP"><label>Export File</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath .. [[/Help/Images/Box-Settings.png"  alt="Project Setup" width="600"></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Box-Settings.png"  alt="Project Setup" width="600"></div>
         <div class="h2-lP"><label>Overview</label></div>
         <p class="h1-help">The Export document contains all of the settings the gadget needs to replicate the box design.</p>
       </div>
       <div><hr /></div>
-      <span class="helpimagesFooter"><img src="]] .. Project.AppPath .. [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
+      <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>
       </div>
       <div class="foot" id="FooterBox">
       <div><hr /></div>
@@ -55,11 +56,11 @@ DialogWindow.Help05= [[<!DOCTYPE html><html lang="en"><head><title>Help</title><
   </div>
 </body>
 </html>]]
-return true
+    return true
 end -- function end
 -- ====================================================]]
 function Style03()
-  return [[<style>
+    return [[<style>
 	.FormButton {
 		font-family: Arial, Helvetica, sans-serif;
 		font-weight: bold;
@@ -183,5 +184,5 @@ function Style03()
 		overflow: hidden
 	}
 </style>]]
-  end
+end
 -- ================= End of File ======================]]
