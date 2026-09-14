@@ -25,17 +25,6 @@ function MarkPoint(Note, Pt, Size, LayerName)
     return true
 end -- function end
 -- =====================================================]]
-function SetSheet(Sname) -- Moves focus to a named sheet
-    local sheet_manager = Milling.job.SheetManager
-    local sheet_ids = sheet_manager:GetSheetIds()
-    for id in sheet_ids do
-        if (sheet_manager:GetSheetName(id) == Sname) then
-            sheet_manager.ActiveSheetId = id
-        end
-    end
-    Milling.job:Refresh2DView()
-end
--- =====================================================]]
 function RemoveDuplicates(tab) -- returns table of unique items
     local hashSet = {}
     local new = {}
@@ -82,27 +71,57 @@ function Arc2Bulge(p1, p2, Rad)
     return bulge
 end -- function end
 -- =====================================================]]
-function NextSheet(X, Y) -- Makes a new sheet and moves to it
-    if X == nil then
-        X = Milling.MaterialBlockWidth
-    else
-        X = X + (2 * Milling.Cal)
+function FormatThickness(thickness) -- 0.5000 -> "0.5"
+    local text = string.format("%.4f", thickness):gsub("0+$", ""):gsub("%.$", "")
+    return text
+end
+-- =====================================================]]
+function ThicknessTag(thickness) -- Suffix that keeps layers / toolpaths of different thicknesses apart
+    return " (" .. FormatThickness(thickness) .. ")"
+end
+-- =====================================================]]
+function OccupiedMaxX() -- Right-most X of all vectors on the active sheet, or nil if the sheet is empty
+    local selection = Milling.job.Selection
+    selection:Clear()
+    Milling.job:SelectAllVectors()
+    local max_x = nil
+    if not selection.IsEmpty then
+        max_x = selection:GetBoundingBox().TRC.x
     end
-    if Y == nil then
-        Y = Milling.MaterialBlockHeight
-    else
-        Y = Y + (2 * Milling.Cal)
+    selection:Clear()
+    return max_x
+end
+-- =====================================================]]
+function OpenSpaceStart() -- Start point for new parts, right of anything already drawn on the active sheet
+    local start_x = 1.0 * Drawer.Cal
+    local max_x = OccupiedMaxX()
+    if max_x ~= nil then
+        start_x = math.max(start_x, max_x + Milling.PartGap + 1.0 * Drawer.Cal)
     end
-    Milling.Sheet = Milling.Sheet + 1
+    return Point2D(start_x, 1.0 * Drawer.Cal)
+end
+-- =====================================================]]
+function ActivateThicknessSheet(thickness) -- Finds or creates the sheet for this material thickness
     local sheet_manager = Milling.job.SheetManager
-    local sheet_ids = sheet_manager:GetSheetIds()
-    for id in sheet_ids do
-        if (sheet_manager:GetSheetName(id) == "Sheet 1") then
-            sheet_manager:CreateSheets(1, id, Box2D(Point2D(0, 0), Point2D(X, Y)))
+    local sheet_name = FormatThickness(thickness) .. " Material"
+    for id in sheet_manager:GetSheetIds() do
+        if sheet_manager:GetSheetName(id) == sheet_name then
+            sheet_manager.ActiveSheetId = id
+            Milling.job:Refresh2DView()
+            return
         end
     end
-    SetSheet("Sheet " .. tostring(Milling.Sheet))
-    return true
+    local sheet_id
+    if sheet_manager.NumberOfSheets == 1 and OccupiedMaxX() == nil then
+        -- First run in a fresh job: adopt the empty default sheet rather than leaving it unused
+        sheet_id = sheet_manager.ActiveSheetId
+        sheet_manager:RenameSheet(sheet_id, sheet_name)
+    else
+        sheet_id = sheet_manager:CreateNewSheet(sheet_name)
+    end
+    sheet_manager:ResizeSheet(sheet_id, Milling.MaterialBlockWidth, Milling.MaterialBlockHeight, thickness, false)
+    sheet_manager.ActiveSheetId = sheet_id
+    Milling.job:Refresh2DView()
 end
 -- =====================================================]]
 function StartDate()

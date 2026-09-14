@@ -19,21 +19,21 @@ function ProcessSide()
         Push()
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        CreateLayerDadoToolpath("Side Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
-        CreateLayerFingerToolpath("Side-Blind", Milling.LNSideBlind, 0.0, Drawer.PanelThickness)
+        CreateLayerFingerToolpath("Side-Blind" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideBlind, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerFingerToolpath("Side-Fingers", "Side-" .. Milling.LNFingerBox, 0.0,
+        CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile", Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
         Push()
     else
-        CreateLayerDadoToolpath("Side Dado", Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        CreateLayerDadoToolpath("Side Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
-        CreateLayerFingerToolpath("Side-Fingers", "Side-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
+        CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile", Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
         Push()
     end
     return true
@@ -46,22 +46,22 @@ function ProcessFront() -- Process Front
         Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) --  Front Panel
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
-        CreateLayerFingerToolpath("Front Blind", Milling.LNFrontBlind, 0.0,
+        CreateLayerFingerToolpath("Front Blind" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontBlind, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerFingerToolpath("Front-Fingers", "Front-" .. Milling.LNFingerBox, 0.0,
+        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerProfileToolpath("Front-Profile", Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
         Push()
     else
-        CreateLayerDadoToolpath("Front Dado", Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
-        CreateLayerFingerToolpath("Front-Fingers", "Front-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
+        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerProfileToolpath("Front-Profile", Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
         Push()
     end
     return true
@@ -73,11 +73,11 @@ function ProcessBack() -- Process Back
         Drawer_Back()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
     end
-    CreateLayerBlumToolpath("Blum Pockets", Milling.LNBlum, 0.0, Drawer.PanelThickness)
+    CreateLayerBlumToolpath("Blum Pockets" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBlum, 0.0, Drawer.PanelThickness)
     Push()
-    CreateLayerDadoToolpath("Back Dado", Milling.LNBackPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+    CreateLayerDadoToolpath("Back Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBackPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
     Push()
-    CreateLayerProfileToolpath("Back-Profile", Milling.LNBackProfile, 0.0, Drawer.PanelThickness, "OUT")
+    CreateLayerProfileToolpath("Back-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBackProfile, 0.0, Drawer.PanelThickness, "OUT")
     Push()
     return true
 end -- function End
@@ -88,7 +88,7 @@ function ProcessBottom() -- Process Bottom
         Drawer_Bottom()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.BottomPanelWidth + Milling.PartGap)) -- Draw Panel Bottom
     end
-    CreateLayerProfileToolpath("Bottom-Profile", Milling.LNBottomProfile, 0.0, Drawer.BottomThickness, "OUT")
+    CreateLayerProfileToolpath("Bottom-Profile" .. ThicknessTag(Drawer.BottomThickness), Milling.LNBottomProfile, 0.0, Drawer.BottomThickness, "OUT")
     Push()
     return true
 end -- function End
@@ -102,6 +102,60 @@ function CutBySheets() -- Groups parts by thickness per sheet (unified panel + b
     end
     return true
 end -- function End
+-- =====================================================]]
+function ApplyThicknessLayerNames() -- Must run after the dialog so tagged names are never written to the registry
+    local panel = ThicknessTag(Drawer.PanelThickness)
+    Milling.LNBackPocket = Milling.LNBackPocket .. panel
+    Milling.LNBackProfile = Milling.LNBackProfile .. panel
+    Milling.LNSideProfile = Milling.LNSideProfile .. panel
+    Milling.LNSidePocket = Milling.LNSidePocket .. panel
+    Milling.LNSideBlind = Milling.LNSideBlind .. panel
+    Milling.LNFrontProfile = Milling.LNFrontProfile .. panel
+    Milling.LNFrontPocket = Milling.LNFrontPocket .. panel
+    Milling.LNFrontBlind = Milling.LNFrontBlind .. panel
+    Milling.LNBlum = Milling.LNBlum .. panel
+    Milling.LNFingerBox = Milling.LNFingerBox .. panel
+    Milling.LNBottomProfile = Milling.LNBottomProfile .. ThicknessTag(Drawer.BottomThickness)
+    return true
+end
+-- =====================================================]]
+function FindLatestToolpaths(toolpath_manager, toolpath_name)
+    -- Most recent toolpath with this name, plus its "[Clear]" partner from two-tool pocketing.
+    local wanted = {[toolpath_name] = true, [toolpath_name .. " [Clear]"] = true}
+    local toolpaths = {}
+    local pos = toolpath_manager:GetTailPosition()
+    while pos ~= nil do
+        local candidate
+        candidate, pos = toolpath_manager:GetPrev(pos)
+        if candidate ~= nil and wanted[candidate.Name] then
+            wanted[candidate.Name] = nil
+            table.insert(toolpaths, candidate)
+        end
+    end
+    return toolpaths
+end
+-- =====================================================]]
+function RecalculateExistingToolpath(name)
+    -- A toolpath from an earlier run is already layer-associated, so recalculating it picks up the new parts.
+    local toolpath_manager = ToolpathManager()
+    local toolpaths = FindLatestToolpaths(toolpath_manager, name)
+    if #toolpaths == 0 then
+        return false
+    end
+    for _, toolpath in ipairs(toolpaths) do
+        -- The "[Clear]" partner can't be recalculated on its own (VCarve error 1035); it follows its main toolpath.
+        if toolpath.Name == name then
+            local ok, recalculated = pcall(function()
+                return toolpath_manager:RecalculateToolpath(toolpath)
+            end)
+            if not (ok and recalculated) then
+                PresentMessage("Alert", "Toolpath Processing", "Could not recalculate existing toolpath '" ..
+                    toolpath.Name .. "'. Use Recalculate All Toolpaths to include the new parts.")
+            end
+        end
+    end
+    return true
+end
 -- =====================================================]]
 function Drawer_Side() -- Drawer Side LEFT
     Push()
@@ -843,6 +897,9 @@ function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
     if not SelectLayerVectors(layer_name, true, false) then
         return false
     end
+    if RecalculateExistingToolpath(name) then
+        return true
+    end
     local tool = Tool(MillTool6.Name, Tool.END_MILL)
     tool.InMM = MillTool6.InMM
     tool.ToolDia = MillTool6.ToolDia
@@ -889,6 +946,9 @@ function CreateLayerDadoToolpath(name, layer_name, start_depth, cut_depth)
     if Milling.Dado then
         if not SelectLayerVectors(layer_name, true, false) then
             return false
+        end
+        if RecalculateExistingToolpath(name) then
+            return true
         end
         -- Create tool we will use to machine vectors
         local tool = Tool(MillTool2.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
@@ -975,6 +1035,9 @@ function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
         if not SelectLayerVectors(layer_name, true, false) then
             return false
         end
+        if RecalculateExistingToolpath(name) then
+            return true
+        end
         -- Create tool we will use to machine vectors
         local tool = Tool(MillTool4.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
         tool.InMM = MillTool4.InMM -- tool_in_mm
@@ -1054,6 +1117,9 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         --  Please Note: CreateLayerProfileToolpath is provided by Vectric and can be found in the SDK and Sample Gadget files.
         if not SelectLayerVectors(layer_name, true, false) then
             return false
+        end
+        if RecalculateExistingToolpath(name) then
+            return true
         end
         -- Create tool we will use to machine vectors
         local tool = Tool(MillTool1.Name, Tool.END_MILL) -- BALL_NOSE, END_MILL, VBIT
@@ -1150,19 +1216,7 @@ function AssociateToolpathWithLayer(toolpath_manager, toolpath_name, layer_name,
     -- Wrapped in pcall since this step is purely an enhancement - toolpath creation must not
     -- fail because of it.
     local ok, err = pcall(function()
-        -- Two-tool pocketing creates a second toolpath named "<name> [Clear]"; associate both.
-        local wanted = {[toolpath_name] = true, [toolpath_name .. " [Clear]"] = true}
-        local toolpaths = {}
-        local pos = toolpath_manager:GetTailPosition()
-        while pos ~= nil do
-            local candidate
-            candidate, pos = toolpath_manager:GetPrev(pos)
-            if candidate ~= nil and wanted[candidate.Name] then
-                wanted[candidate.Name] = nil
-                table.insert(toolpaths, candidate)
-            end
-        end
-        for _, toolpath in ipairs(toolpaths) do
+        for _, toolpath in ipairs(FindLatestToolpaths(toolpath_manager, toolpath_name)) do
             local geometry_selector = GeometrySelector()
             -- GeometryFilterUsed is undocumented in the SDK PDF but registered in VCarvePro.exe;
             -- it drives the 'Associate with toolpath' checkbox.

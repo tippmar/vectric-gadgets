@@ -65,7 +65,6 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
     local Tools
     Milling.job = VectricJob()
     Project.AppPath = string.gsub(script_path, "\\", "/")
-    Milling.Sheet = 1
     if not Milling.job.Exists then
         DisplayMessageBox("Error: The Gadget cannot run without a job being setup.\n" ..
                               "Select: 'Create a new file' under 'Startup Tasks' and \n" ..
@@ -225,18 +224,21 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
         Push()
         Drawer_Math()
         Push()
+        ApplyThicknessLayerNames()
         MakeLayers()
         Push()
         if GetAppVersion() < 10.999 then
             StampIt(mtl_thick) -- Job Setup thickness
         end -- if end
         CutListfileWriterHeader()
-        Drawer.WP = Point2D(1.0 * Drawer.Cal, 1.0 * Drawer.Cal)
-        -- Draw parts by thickness
+        -- Draw parts by thickness, each thickness on its own sheet, in open space right of existing parts
         for i = 1, #Sheets do
             SheetThick = Sheets[i]
+            ActivateThicknessSheet(SheetThick)
+            Drawer.WP = OpenSpaceStart()
             DrawWriter("Material Thickness " .. tostring(SheetThick) .. " Thk.",
-                Polar2D(Point2D(0, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal, Milling.LNDrawNotes, 0.0)
+                Polar2D(Point2D(Drawer.WP.x - 1.0 * Drawer.Cal, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal,
+                Milling.LNDrawNotes, 0.0)
             if SheetThick == Drawer.PanelThickness then
                 ProcessBack();
                 ProcessSide();
@@ -244,10 +246,6 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             end
             if SheetThick == Drawer.BottomThickness then
                 ProcessBottom()
-            end
-            if Sheets[i + 1] then
-                NextSheet()
-                Drawer.WP = Point2D(1.0 * Drawer.Cal, 1.0 * Drawer.Cal)
             end
         end
         CutListfileWriterFooter()
