@@ -1150,28 +1150,29 @@ function AssociateToolpathWithLayer(toolpath_manager, toolpath_name, layer_name,
     -- Wrapped in pcall since this step is purely an enhancement - toolpath creation must not
     -- fail because of it.
     local ok, err = pcall(function()
-        local toolpath = nil
+        -- Two-tool pocketing creates a second toolpath named "<name> [Clear]"; associate both.
+        local wanted = {[toolpath_name] = true, [toolpath_name .. " [Clear]"] = true}
+        local toolpaths = {}
         local pos = toolpath_manager:GetTailPosition()
         while pos ~= nil do
             local candidate
             candidate, pos = toolpath_manager:GetPrev(pos)
-            if candidate ~= nil and candidate.Name == toolpath_name then
-                toolpath = candidate
-                break
+            if candidate ~= nil and wanted[candidate.Name] then
+                wanted[candidate.Name] = nil
+                table.insert(toolpaths, candidate)
             end
         end
-        if toolpath == nil then
-            return
+        for _, toolpath in ipairs(toolpaths) do
+            local geometry_selector = GeometrySelector()
+            -- GeometryFilterUsed is undocumented in the SDK PDF but registered in VCarvePro.exe;
+            -- it drives the 'Associate with toolpath' checkbox.
+            geometry_selector.GeometryFilterUsed = true
+            geometry_selector.OnlyOnLayers = true
+            geometry_selector.SelectClosed = select_closed
+            geometry_selector.SelectOpen = select_open
+            geometry_selector:AddLayerName(layer_name)
+            geometry_selector:SaveSelectorData(toolpath)
         end
-        local geometry_selector = GeometrySelector()
-        -- GeometryFilterUsed is undocumented in the SDK PDF but registered in VCarvePro.exe;
-        -- it drives the 'Associate with toolpath' checkbox.
-        geometry_selector.GeometryFilterUsed = true
-        geometry_selector.OnlyOnLayers = true
-        geometry_selector.SelectClosed = select_closed
-        geometry_selector.SelectOpen = select_open
-        geometry_selector:AddLayerName(layer_name)
-        geometry_selector:SaveSelectorData(toolpath)
     end)
     if not ok then
         PresentMessage("Alert", "Toolpath Processing",
