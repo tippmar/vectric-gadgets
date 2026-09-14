@@ -840,15 +840,7 @@ function FingerBoxFront(pta, ptb) -- Finger Box Front
 end -- function end
 -- =====================================================]]
 function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
-    local selection = Milling.job.Selection
-    selection:Clear()
-    local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
-    if layer == nil then
-        PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
-        return false
-    end
-    if not SelectVectorsOnLayer(layer, selection, true, false, true) then
-        PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+    if not SelectLayerVectors(layer_name, true, false) then
         return false
     end
     local tool = Tool(MillTool6.Name, Tool.END_MILL)
@@ -886,25 +878,16 @@ function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
     local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
         geometry_selector, create_2d_previews, display_warnings)
     if toolpath_id == nil then
-        PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+        PresentMessage("Error", "Toolpath Processing", "Error creating Blum Toolpath")
         return false
     end
+    AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)
     return true
 end
 -- =====================================================]]
 function CreateLayerDadoToolpath(name, layer_name, start_depth, cut_depth)
     if Milling.Dado then
-        local selection = Milling.job.Selection -- clear current selection
-        selection:Clear()
-        -- get layer
-        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
-        if layer == nil then
-            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
-            return false
-        end
-        -- select all closed vectors on the layer
-        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
-            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        if not SelectLayerVectors(layer_name, true, false) then
             return false
         end
         -- Create tool we will use to machine vectors
@@ -979,26 +962,17 @@ function CreateLayerDadoToolpath(name, layer_name, start_depth, cut_depth)
         local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, tool, area_clear_tool, pocket_data, pos_data,
             geometry_selector, create_2d_previews, display_warnings)
         if toolpath_id == nil then
-            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            PresentMessage("Error", "Toolpath Processing", "Error creating Dado Toolpath")
             return false
         end
+        AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)
     end
     return true
 end
 -- =====================================================]]
 function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
     if Milling.Finger then
-        local selection = Milling.job.Selection -- clear current selection
-        selection:Clear()
-        -- get layer
-        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
-        if layer == nil then
-            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
-            return false
-        end
-        -- select all closed vectors on the layer
-        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
-            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        if not SelectLayerVectors(layer_name, true, false) then
             return false
         end
         -- Create tool we will use to machine vectors
@@ -1070,6 +1044,7 @@ function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
             PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
             return false
         end
+        AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)
     end
     return true
 end
@@ -1077,17 +1052,7 @@ end
 function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut)
     if Milling.Profile then
         --  Please Note: CreateLayerProfileToolpath is provided by Vectric and can be found in the SDK and Sample Gadget files.
-        local selection = Milling.job.Selection -- clear current selection
-        selection:Clear()
-        -- get layer
-        local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
-        if layer == nil then
-            PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
-            return false
-        end
-        -- select all closed vectors on the layer
-        if not SelectVectorsOnLayer(layer, selection, true, false, true) then
-            PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        if not SelectLayerVectors(layer_name, true, false) then
             return false
         end
         -- Create tool we will use to machine vectors
@@ -1151,11 +1116,67 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         local toolpath_id = toolpath_manager:CreateProfilingToolpath(name, tool, profile_data, ramping_data,
             lead_in_out_data, pos_data, geometry_selector, create_2d_previews, display_warnings)
         if toolpath_id == nil then
-            PresentMessage("Error", "Toolpath Processing", "Error creating Finger Toolpath")
+            PresentMessage("Error", "Toolpath Processing", "Error creating Profile Toolpath")
             return false
         end
+        AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)
     end
     return true
+end
+-- =====================================================]]
+function SelectLayerVectors(layer_name, select_closed, select_open)
+    -- Selects the vectors on layer_name into the job selection so a toolpath creation call
+    -- (which always operates on the currently selected vectors) picks them up.
+    local selection = Milling.job.Selection
+    selection:Clear()
+    local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+    if layer == nil then
+        PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+        return false
+    end
+    if not SelectVectorsOnLayer(layer, selection, select_closed, select_open, true) then
+        PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        return false
+    end
+    return true
+end
+-- =====================================================]]
+function AssociateToolpathWithLayer(toolpath_manager, toolpath_name, layer_name, select_closed, select_open)
+    -- Best-effort: persist a layer-based GeometrySelector on the already-created toolpath,
+    -- so VCarve re-selects vectors from layer_name whenever the toolpath is recalculated
+    -- (equivalent to ticking 'Associate with toolpath' in the Vector Selector UI).
+    -- Looks the toolpath up by name (walking from the tail, since it was just created) rather
+    -- than by id, since Find(UUID)/GetAt(pos) overloads vary between VCarve builds.
+    -- Wrapped in pcall since this step is purely an enhancement - toolpath creation must not
+    -- fail because of it.
+    local ok, err = pcall(function()
+        local toolpath = nil
+        local pos = toolpath_manager:GetTailPosition()
+        while pos ~= nil do
+            local candidate
+            candidate, pos = toolpath_manager:GetPrev(pos)
+            if candidate ~= nil and candidate.Name == toolpath_name then
+                toolpath = candidate
+                break
+            end
+        end
+        if toolpath == nil then
+            return
+        end
+        local geometry_selector = GeometrySelector()
+        -- GeometryFilterUsed is undocumented in the SDK PDF but registered in VCarvePro.exe;
+        -- it drives the 'Associate with toolpath' checkbox.
+        geometry_selector.GeometryFilterUsed = true
+        geometry_selector.OnlyOnLayers = true
+        geometry_selector.SelectClosed = select_closed
+        geometry_selector.SelectOpen = select_open
+        geometry_selector:AddLayerName(layer_name)
+        geometry_selector:SaveSelectorData(toolpath)
+    end)
+    if not ok then
+        PresentMessage("Alert", "Toolpath Processing",
+            "Could not associate toolpath '" .. toolpath_name .. "' with layer " .. layer_name .. ": " .. tostring(err))
+    end
 end
 -- =====================================================]]
 function SelectVectorsOnLayer(layer, selection, select_closed, select_open, select_groups)
