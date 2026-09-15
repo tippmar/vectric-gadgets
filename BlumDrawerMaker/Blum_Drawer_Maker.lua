@@ -236,9 +236,6 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             SheetThick = Sheets[i]
             ActivateThicknessSheet(SheetThick)
             Drawer.WP = OpenSpaceStart()
-            DrawWriter("Material Thickness " .. tostring(SheetThick) .. " Thk.",
-                Polar2D(Point2D(Drawer.WP.x - 1.0 * Drawer.Cal, 0), 270.0, 3.5 * Drawer.Cal), 1.5 * Drawer.Cal,
-                Milling.LNDrawNotes, 0.0)
             if SheetThick == Drawer.PanelThickness then
                 ProcessBack();
                 ProcessSide();
@@ -248,6 +245,7 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
                 ProcessBottom()
             end
         end
+        SequenceToolpathsByTool()
         CutListfileWriterFooter()
         Sheet.ProgressBar:SetText("Complete") -- Sets the label to Complete
         Sheet.ProgressBar:Finished() -- Close Progress Bar

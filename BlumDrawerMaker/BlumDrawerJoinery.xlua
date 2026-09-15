@@ -135,6 +135,47 @@ function FindLatestToolpaths(toolpath_manager, toolpath_name)
     return toolpaths
 end
 -- =====================================================]]
+function SequenceToolpathsByTool()
+    -- Orders every toolpath in the job to minimise tool changes: clearance passes first (they rough out
+    -- before finishing), then other cuts, then profiles (parts are cut free last). Within each tier,
+    -- toolpaths sharing a tool stay together, in the order each tool first appears.
+    local toolpath_manager = ToolpathManager()
+    local tiers = {{order = {}, ids = {}}, {order = {}, ids = {}}, {order = {}, ids = {}}}
+    local pos = toolpath_manager:GetHeadPosition()
+    while pos ~= nil do
+        local toolpath
+        toolpath, pos = toolpath_manager:GetNext(pos)
+        local tier = tiers[2]
+        if string.find(toolpath.Name, "[Clear]", 1, true) then
+            tier = tiers[1]
+        elseif string.find(toolpath.Name, "-Profile", 1, true) then
+            tier = tiers[3]
+        end
+        local tool = toolpath.Tool
+        local key = tostring(tool.Name) .. "|" .. tostring(tool.ToolNumber) .. "|" .. tostring(tool.ToolDia)
+        if tier.ids[key] == nil then
+            tier.ids[key] = {}
+            table.insert(tier.order, key)
+        end
+        table.insert(tier.ids[key], toolpath.Id)
+    end
+    local ids = UUID_List()
+    for _, tier in ipairs(tiers) do
+        for _, key in ipairs(tier.order) do
+            for _, id in ipairs(tier.ids[key]) do
+                ids:AddTail(id)
+            end
+        end
+    end
+    local ok, reordered = pcall(function()
+        return toolpath_manager:ReorderToolpathList(ids)
+    end)
+    if not (ok and reordered) then
+        PresentMessage("Alert", "Toolpath Processing", "Could not reorder toolpaths by tool: " .. tostring(reordered))
+    end
+    return true
+end
+-- =====================================================]]
 function RecalculateExistingToolpath(name)
     -- A toolpath from an earlier run is already layer-associated, so recalculating it picks up the new parts.
     local toolpath_manager = ToolpathManager()
@@ -168,6 +209,8 @@ function Drawer_Side() -- Drawer Side LEFT
 
     -- Add the Part Note
     local pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.50 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("Drawer - Left Side", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
     pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("( " .. tostring(Drawer.PanelThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
@@ -215,6 +258,8 @@ function Drawer_Side() -- Drawer Side LEFT
     DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile)
 
     pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("Drawer - Right Side", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
     pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("( " .. tostring(Drawer.PanelThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
@@ -264,6 +309,8 @@ function Drawer_Front() -- Drawer Front
 
     -- Place Part Note
     pt1Text = Polar2D(Polar2D(pt1, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("Drawer - Front", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
     pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("( " .. tostring(Drawer.PanelThickness) .. " X " .. GetDistance(pt2, pt3) .. " X " ..
@@ -336,6 +383,8 @@ function Drawer_Back() -- Drawer Back
 
     -- Place Part Note
     pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
+    DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("Drawer - Back", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
     pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("( " .. tostring(Drawer.PanelThickness) .. " X " .. GetDistance(pt2, pt3) .. " x " ..
@@ -369,6 +418,8 @@ function Drawer_Bottom() -- Drawer Bottom
     DrawBox(pt1, pt2, pt3, pt4, Milling.LNBottomProfile)
     -- Place Part Note
     pt1Text = Polar2D(Polar2D(pt1, 45, 1.5 * Drawer.Cal), 0, 0.75 * Drawer.Cal)
+    DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
+    pt1Text = Polar2D(pt1Text, 0.0, 0.75 * Drawer.Cal)
     DrawWriter("Drawer - Bottom", pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
     pt1Text = Polar2D(pt1Text, 0, 0.75 * Drawer.Cal)
     DrawWriter("( " .. tostring(Drawer.BottomThickness) .. " X " .. GetDistance(pt2, pt3) .. " x " ..
