@@ -101,6 +101,10 @@ function OpenSpaceStart() -- Start point for new parts, right of anything alread
     return Point2D(start_x, 1.0 * Drawer.Cal)
 end
 -- =====================================================]]
+function IdKey(raw_id) -- String form of a UUID, usable as a table key
+    return luaUUID(raw_id):AsString()
+end
+-- =====================================================]]
 function ActivateThicknessSheet(thickness) -- Finds or creates the sheet for this material thickness
     local sheet_manager = Milling.job.SheetManager
     local sheet_name = FormatThickness(thickness) .. " Material"

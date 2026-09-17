@@ -135,29 +135,23 @@ function FindLatestToolpaths(toolpath_manager, toolpath_name)
     return toolpaths
 end
 -- =====================================================]]
-function SequenceToolpathsByTool()
-    -- Orders every toolpath in the job to minimise tool changes: clearance passes first (they rough out
+function ReorderByTool(toolpath_manager, entries)
+    -- Orders the given toolpaths to minimise tool changes: clearance passes first (they rough out
     -- before finishing), then other cuts, then profiles (parts are cut free last). Within each tier,
     -- toolpaths sharing a tool stay together, in the order each tool first appears.
-    local toolpath_manager = ToolpathManager()
     local tiers = {{order = {}, ids = {}}, {order = {}, ids = {}}, {order = {}, ids = {}}}
-    local pos = toolpath_manager:GetHeadPosition()
-    while pos ~= nil do
-        local toolpath
-        toolpath, pos = toolpath_manager:GetNext(pos)
+    for _, entry in ipairs(entries) do
         local tier = tiers[2]
-        if string.find(toolpath.Name, "[Clear]", 1, true) then
+        if string.find(entry.name, "[Clear]", 1, true) then
             tier = tiers[1]
-        elseif string.find(toolpath.Name, "-Profile", 1, true) then
+        elseif string.find(entry.name, "-Profile", 1, true) then
             tier = tiers[3]
         end
-        local tool = toolpath.Tool
-        local key = tostring(tool.Name) .. "|" .. tostring(tool.ToolNumber) .. "|" .. tostring(tool.ToolDia)
-        if tier.ids[key] == nil then
-            tier.ids[key] = {}
-            table.insert(tier.order, key)
+        if tier.ids[entry.tool] == nil then
+            tier.ids[entry.tool] = {}
+            table.insert(tier.order, entry.tool)
         end
-        table.insert(tier.ids[key], toolpath.Id)
+        table.insert(tier.ids[entry.tool], entry.id)
     end
     local ids = UUID_List()
     for _, tier in ipairs(tiers) do
@@ -170,8 +164,52 @@ function SequenceToolpathsByTool()
     local ok, reordered = pcall(function()
         return toolpath_manager:ReorderToolpathList(ids)
     end)
-    if not (ok and reordered) then
-        PresentMessage("Alert", "Toolpath Processing", "Could not reorder toolpaths by tool: " .. tostring(reordered))
+    return ok and reordered
+end
+-- =====================================================]]
+function SequenceToolpathsByTool()
+    -- Sequences every toolpath in the job by tool. A job-wide list is rejected once toolpaths span
+    -- several sheets, so fall back to ordering each sheet's own toolpaths in turn.
+    local toolpath_manager = ToolpathManager()
+    local entries = {}
+    local pos = toolpath_manager:GetHeadPosition()
+    while pos ~= nil do
+        local toolpath
+        toolpath, pos = toolpath_manager:GetNext(pos)
+        local tool = toolpath.Tool
+        table.insert(entries, {
+            id = toolpath.Id,
+            name = toolpath.Name,
+            sheet = IdKey(toolpath.SheetId),
+            tool = tostring(tool.Name) .. "|" .. tostring(tool.ToolNumber) .. "|" .. tostring(tool.ToolDia)
+        })
+    end
+    if ReorderByTool(toolpath_manager, entries) then
+        return true
+    end
+    local sheet_manager = Milling.job.SheetManager
+    local original_sheet = sheet_manager.ActiveSheetId
+    local failed = {}
+    for id in sheet_manager:GetSheetIds() do
+        local key = IdKey(id)
+        local on_sheet = {}
+        for _, entry in ipairs(entries) do
+            if entry.sheet == key then
+                table.insert(on_sheet, entry)
+            end
+        end
+        if #on_sheet > 0 then
+            sheet_manager.ActiveSheetId = id
+            if not ReorderByTool(toolpath_manager, on_sheet) then
+                table.insert(failed, sheet_manager:GetSheetName(id) .. " (" .. #on_sheet .. " toolpaths)")
+            end
+        end
+    end
+    sheet_manager.ActiveSheetId = original_sheet
+    Milling.job:Refresh2DView()
+    if #failed > 0 then
+        PresentMessage("Alert", "Toolpath Processing", "Could not reorder toolpaths by tool for the whole job (" ..
+            #entries .. " toolpaths) or on: " .. table.concat(failed, ", "))
     end
     return true
 end
