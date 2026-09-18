@@ -1620,6 +1620,36 @@ function ToolCheck() -- Checks if tooling was selected
     -- Blum hardware always generated; no conditional flag retained
 end
 -- =====================================================]]
+function FingerEdgeAllowance()
+    -- Finger geometry is not contained by the part profile. FingerBoxSide starts its pattern half a finger
+    -- before the part origin and MySideFingers widens that by half the finger clearance, so a left side hangs
+    -- that far past its left edge and a right side, whose pattern is laid out from the far corner, hangs the
+    -- same distance past its right edge. An odd finger count does it to the front's far edge too. Which edge
+    -- overhangs depends on the hand and the parity, so part spacing allows for one overhang on each side of
+    -- the gap. Without it the real clearance is Milling.PartGap less a whole finger, and parts overlap as soon
+    -- as the finger grows wider than the gap -- routine on a tall drawer now that fingers are sized from the
+    -- drawer height.
+    return Drawer.SideFingerWidth + Milling.FingerClearance
+end
+-- =====================================================]]
+function AutoFingerCount(height)
+    -- One finger per inch of side height. A finger count fixed by the user suits one drawer height and gets
+    -- steadily worse as the height changes: too few fingers on a tall drawer, too many on a short one. Sizing
+    -- the finger instead keeps it near an inch whatever the drawer, which is the usual proportion for a joint
+    -- like this and roughly halves the count a panel-thickness rule would give on a tall side.
+    local target = Drawer.Unit and 25.4 or 1.0
+    local count = math.floor(height / target + 0.5) -- Lua 5.1 has no math.round
+    -- Never exceed what the finger bit can cut: the same limit the dialog enforces on a hand-entered count
+    local max_count = math.floor(height / (Milling.FingerToolDia / 0.70))
+    if count > max_count then
+        count = max_count
+    end
+    if count < 3 then -- Matches the minimum the dialog clamps a hand-entered count to
+        count = 3
+    end
+    return count
+end
+-- =====================================================]]
 function Drawer_Math() -- All the math for Blum drawer box
     Project.DrawerID = StartDate()
     -- Keep Windows style backslashes for paths
@@ -1639,6 +1669,9 @@ function Drawer_Math() -- All the math for Blum drawer box
     Drawer.BackLength = Drawer.FrontLength - (Milling.DadoHeight * 2.0)
     Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
     Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
+    if Drawer.SideFingerAuto then
+        Drawer.SideFingerCount = AutoFingerCount(Drawer.Height)
+    end
     Drawer.SideFingerWidth = Drawer.Height / Drawer.SideFingerCount
     if (Drawer.SideFingerCount % 2 == 0) then
         Drawer.FrontFingerCount = math.floor(Drawer.SideFingerCount * 0.5) + 1 - 1

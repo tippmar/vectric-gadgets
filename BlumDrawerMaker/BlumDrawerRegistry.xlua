@@ -199,6 +199,7 @@ function RegistryReset() -- Reset All Settings
     Milling.LNSideProfileColor = "Green"
     Drawer.Count = 1
     Drawer.SideFingerCount = 9
+    Drawer.SideFingerAuto = true -- Size the fingers from the drawer height instead of using the count above
     MillTool1.Name = "Tool Not Selected"
     MillTool1.SpindleSpeed = 20000
     MillTool1.ToolNumber = 1
@@ -252,6 +253,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.OpeningHeight = RegistryRead:GetDouble("Drawer.OpeningHeight", 152.4)
         Drawer.OpeningWidth = RegistryRead:GetDouble("Drawer.OpeningWidth", 406.4)
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
+        Drawer.SideFingerAuto = RegistryRead:GetBool("Drawer.SideFingerAuto", true)
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 12.7)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 463.55)
         Drawer.PanelThickness = panel_thick_metric
@@ -332,6 +334,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.OpeningHeight = RegistryRead:GetDouble("Drawer.OpeningHeight", 6.0000)
         Drawer.OpeningWidth = RegistryRead:GetDouble("Drawer.OpeningWidth", 16.0000)
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
+        Drawer.SideFingerAuto = RegistryRead:GetBool("Drawer.SideFingerAuto", true)
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 0.5000)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 18.2500)
         Drawer.PanelThickness = panel_thick_imperial
@@ -578,6 +581,7 @@ function RegistryWriter() -- Write to Registry values
     RegValue = RegistryWrite:SetDouble("Drawer.Length", Drawer.Length)
     RegValue = RegistryWrite:SetInt("Drawer.Count", Drawer.Count)
     RegValue = RegistryWrite:SetInt("Drawer.SideFingerCount", Drawer.SideFingerCount)
+    RegValue = RegistryWrite:SetBool("Drawer.SideFingerAuto", Drawer.SideFingerAuto)
     RegValue = RegistryWrite:SetDouble("Drawer.SideFingerWidth", Drawer.SideFingerWidth)
     RegValue = RegistryWrite:SetDouble("Drawer.BottomThickness", Drawer.BottomThickness)
     RegValue = RegistryWrite:SetDouble("Drawer.SideWidth", Drawer.SideWidth)
@@ -637,6 +641,7 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.OpeningHeight = tonumber("]] .. ExD2S(Drawer.OpeningHeight) .. [[") ]] .. "\n")
     fileW:write([[Drawer.OpeningWidth = tonumber("]] .. ExD2S(Drawer.OpeningWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.SideFingerCount = tonumber("]] .. ExD2S(Drawer.SideFingerCount) .. [[") ]] .. "\n")
+    fileW:write([[Drawer.SideFingerAuto = ]] .. tostring(Drawer.SideFingerAuto) .. " \n")
     fileW:write([[Drawer.SideFingerWidth = tonumber("]] .. ExD2S(Drawer.SideFingerWidth) .. [[") ]] .. "\n")
     fileW:write([[Drawer.SideLength = tonumber("]] .. ExD2S(Drawer.SideLength) .. [[") ]] .. "\n")
     fileW:write([[Drawer.PanelThickness = tonumber("]] .. ExD2S(Drawer.PanelThickness) .. [[") ]] .. "\n")

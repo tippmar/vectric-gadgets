@@ -18,7 +18,7 @@ Beyond drawing the parts, it:
 - puts parts for each material thickness on a sheet named for that thickness, placed in open space to the right of anything already drawn, so the gadget can be run repeatedly in one file to build up a batch of drawers;
 - associates every toolpath it creates with the layer its vectors live on, so the toolpath picks up new parts when it is recalculated;
 - recalculates an existing toolpath rather than creating a duplicate when a later run uses the same material thickness;
-- orders the toolpaths to minimise tool changes — clearance passes first, then other cuts, then profiles, with toolpaths sharing a tool kept together;
+- orders the toolpaths to minimize tool changes — clearance passes first, then other cuts, then profiles, with toolpaths sharing a tool kept together;
 - writes a cut list.
 
 ## Blum Nesting Repair

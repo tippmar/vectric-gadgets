@@ -15,7 +15,9 @@
 function ProcessSide()
     for _ = 1, Drawer.Count do
         Drawer_Side()
-        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) -- Left Side
+        -- Past the right side, whose fingers overhang its right edge, towards a part whose fingers may overhang
+        -- its left edge
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance())
         Push()
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
@@ -43,7 +45,8 @@ function ProcessFront() -- Process Front
     for _ = 1, Drawer.Count do
         Push()
         Drawer_Front()
-        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap) --  Front Panel
+        -- An odd finger count leaves the front's last finger hanging past its right edge
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance())
     end
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
         CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
@@ -71,7 +74,8 @@ function ProcessBack() -- Process Back
     for _ = 1, Drawer.Count do
         Push()
         Drawer_Back()
-        Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap)) -- Back Panel
+        -- Backs have no fingers of their own, but the first side drawn after them does
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.FrontWidth + Milling.PartGap + FingerEdgeAllowance()))
     end
     CreateLayerBlumToolpath("Blum Pockets" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBlum, 0.0, Drawer.PanelThickness)
     Push()
@@ -136,7 +140,7 @@ function FindLatestToolpaths(toolpath_manager, toolpath_name)
 end
 -- =====================================================]]
 function ReorderByTool(toolpath_manager, entries)
-    -- Orders the given toolpaths to minimise tool changes: clearance passes first (they rough out
+    -- Orders the given toolpaths to minimize tool changes: clearance passes first (they rough out
     -- before finishing), then other cuts, then profiles (parts are cut free last). Within each tier,
     -- toolpaths sharing a tool stay together, in the order each tool first appears.
     local tiers = {{order = {}, ids = {}}, {order = {}, ids = {}}, {order = {}, ids = {}}}
@@ -283,7 +287,9 @@ function Drawer_Side() -- Drawer Side LEFT
     pt4 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
     DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
 
-    Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.SideWidth + Milling.PartGap)) -- Sets WP for other Side
+    -- Sets WP for other Side. An even finger count draws one finger more than the side is wide, so the left
+    -- side can overhang its right edge and the right side its left edge; allow for both
+    Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance()))
 
     Push()
 

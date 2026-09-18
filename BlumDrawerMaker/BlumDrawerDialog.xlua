@@ -791,13 +791,14 @@ table {
   <tr>
     <td class="h1-rP"><label title="Blum Undermount drawer slide length. (Cannot be blank)">Slide Length</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SlideLength" size="10" maxlength="10" /></td>
-    <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2)">Finger Count</label></td>
+    <td class="h1-rP"><label title="Total number of fingers per joint. (Cannot less then 2) Ignored while Auto Fingers is ticked.">Finger Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.SideFingerCount" size="10" maxlength="10" /></td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Number of this drawer size to be created. (Cannot be zero)">Count</label></td>
     <td class="h2-l"><input type="text" class="h1-l" id="Drawer.Count" size="10" maxlength="10" /></td>
-    <td colspan="2">&nbsp;</td>
+    <td class="h1-rP"><label title="Set the finger count from the drawer height, about one finger per inch. Untick to use the Finger Count above.">Auto Fingers</label></td>
+    <td class="h2-l"><input type="checkbox" class="LuaButton" id="SideFingerAutoCheck" value="active" /></td>
   </tr>
 </table>
 <table>
@@ -893,6 +894,20 @@ table {
     return true
 end -- Function End
 -- =====================================================]]
+function OnLuaButton_SideFingerAutoCheck() -- "Auto Fingers" check box
+    -- Show the count the drawer height gives as soon as the box is ticked, rather than making the user wait
+    -- until OK. The dialog only raises callbacks for buttons, so this cannot follow the opening height as it
+    -- is typed; Drawer_Math has the final say either way.
+    if Drawer.dialog:GetCheckBox("SideFingerAutoCheck") then
+        local opening = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningHeight"))
+        local height = opening - Drawer.HeightClearance
+        if height > 0 then
+            Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", AutoFingerCount(height))
+        end
+    end
+    return true
+end
+-- =====================================================]]
 function OnLuaButton_InquiryTooling() -- Clear All Button
     MillTool1.Name = "Tool Not Selected"
     MillTool2.Name = "Tool Not Selected"
@@ -920,6 +935,7 @@ function InquiryDrawer(Header) -- Main Menu
         Drawer.dialog:AddLabelField("Alert", "")
     end
     Drawer.dialog:AddIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+    Drawer.dialog:AddCheckBox("SideFingerAutoCheck", Drawer.SideFingerAuto)
     Drawer.dialog:AddDoubleField("Drawer.OpeningHeight", Drawer.OpeningHeight)
     Drawer.dialog:AddDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
     Drawer.dialog:AddDoubleField("Drawer.SlideLength", Drawer.SlideLength)
@@ -947,6 +963,7 @@ function InquiryDrawer(Header) -- Main Menu
     Drawer.dialog:AddToolPickerValidToolType("ToolChooseButton6", Tool.END_MILL)
     if Drawer.dialog:ShowDialog() then
         Drawer.SideFingerCount = math.abs(Drawer.dialog:GetIntegerField("Drawer.SideFingerCount"))
+        Drawer.SideFingerAuto = Drawer.dialog:GetCheckBox("SideFingerAutoCheck")
         Drawer.OpeningHeight = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningHeight"))
         Drawer.SlideLength = math.abs(Drawer.dialog:GetDoubleField("Drawer.SlideLength"))
         Drawer.OpeningWidth = math.abs(Drawer.dialog:GetDoubleField("Drawer.OpeningWidth"))
@@ -1100,6 +1117,7 @@ function OnLuaButton_InquiryReset() -- "Factory/Gadget Reset" Button
         Drawer.dialog:UpdateDoubleField("Drawer.OpeningWidth", Drawer.OpeningWidth)
         Drawer.dialog:UpdateDoubleField("Drawer.PanelThickness", Drawer.PanelThickness)
         Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+        Drawer.dialog:UpdateCheckBox("SideFingerAutoCheck", Drawer.SideFingerAuto)
         Drawer.dialog:UpdateTextField("Project.CabinetName", Project.CabinetName)
         Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
         Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
@@ -1176,6 +1194,7 @@ function OnLuaButton_InquiryImportSettings(Pdialog) -- Import Settings
             Drawer.dialog:UpdateDoubleField("Drawer.PanelThickness", Drawer.PanelThickness)
             Drawer.dialog:UpdateDoubleField("Drawer.BottomThickness", Drawer.BottomThickness)
             Drawer.dialog:UpdateIntegerField("Drawer.SideFingerCount", Drawer.SideFingerCount)
+            Drawer.dialog:UpdateCheckBox("SideFingerAutoCheck", Drawer.SideFingerAuto)
             Drawer.dialog:UpdateDoubleField("Drawer.Count", Drawer.Count)
             Drawer.dialog:UpdateLabelField("ToolNameLabel1", MillTool1.Name)
             Drawer.dialog:UpdateLabelField("ToolNameLabel2", MillTool2.Name)
