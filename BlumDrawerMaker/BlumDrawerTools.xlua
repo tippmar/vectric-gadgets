@@ -1640,6 +1640,37 @@ function FingerEdgeAllowance()
     return Drawer.SideFingerWidth + Milling.FingerClearance
 end
 -- =====================================================]]
+function DrawSidePocket(groove_left, groove_right)
+    -- The bottom groove and the back rabbet as ONE closed vector instead of two that meet end to end.
+    -- Both are cut by the same pocket toolpath, and two regions that touch are ambiguous to the pocket engine
+    -- as soon as a non-zero Allowance is in play: the allowance offsets each region outward, they grow into each
+    -- other, and VCarve silently drops the narrow one, leaving the side with no bottom groove. A single T has
+    -- nothing to resolve. The machined area is identical to the two rectangles it replaces.
+    -- groove_left and groove_right are offsets from Drawer.WP.x, which is why one call serves both hands.
+    local x0 = Drawer.WP.x
+    local y0 = Drawer.WP.y
+    local rabbet_left = x0 - Milling.PocketToolRadius
+    local rabbet_right = x0 + Drawer.SideWidth + Milling.PocketToolRadius
+    local rabbet_bottom = y0 + Drawer.SideLength - (Drawer.PanelThickness + Milling.BackDadoClearance)
+    local rabbet_top = y0 + Drawer.SideLength
+    local groove_bottom = y0 + Milling.DadoHeight
+    local gl = x0 + groove_left
+    local gr = x0 + groove_right
+    local layer = Milling.job.LayerManager:GetLayerWithName(Milling.LNSidePocket)
+    local line = Contour(0.0)
+    line:AppendPoint(Point2D(gl, groove_bottom))
+    line:LineTo(Point2D(gr, groove_bottom))
+    line:LineTo(Point2D(gr, rabbet_bottom))
+    line:LineTo(Point2D(rabbet_right, rabbet_bottom))
+    line:LineTo(Point2D(rabbet_right, rabbet_top))
+    line:LineTo(Point2D(rabbet_left, rabbet_top))
+    line:LineTo(Point2D(rabbet_left, rabbet_bottom))
+    line:LineTo(Point2D(gl, rabbet_bottom))
+    line:LineTo(Point2D(gl, groove_bottom))
+    layer:AddObject(CreateCadContour(line), true)
+    return true
+end
+-- =====================================================]]
 function PointAlong(pa, pb, fraction)
     -- Point a given fraction of the way from pa to pb
     return Point2D(pa.x + ((pb.x - pa.x) * fraction), pa.y + ((pb.y - pa.y) * fraction))

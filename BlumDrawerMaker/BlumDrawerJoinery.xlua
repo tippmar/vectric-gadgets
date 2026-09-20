@@ -291,26 +291,11 @@ function Drawer_Side(which) -- Drawer Side LEFT, then RIGHT unless which is "LEF
 
     FingerBoxSide(Drawer.WP, "L") -- Draw Left Side Fingers
 
-    -- Draw bottom dado
+    -- Bottom groove and back rabbet, drawn as one T-shaped vector. The back panel's groove keeps its own
+    -- clearance: it is glued and wants to be snug, where the bottom is captive on four sides and wants to float.
     -- Fixed style: Captive Bottom (Dado)
-    pt1 = Drawer.WP
-    pt2 = Polar2D(pt1, 0.0, Drawer.SideWidth - Drawer.BottomDadoInset)
-    pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer bottom panel center point
-    pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-    pt2 = Polar2D(pt1, 180.0, Drawer.BottomThickness + Milling.DadoClearance)
-    pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-    pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
-
-    -- Draw Back Dado. The groove that holds the back panel gets its own clearance: it is glued and wants
-    -- to be snug, where the bottom panel is captive on four sides and wants room to float.
-    pt1 = Drawer.WP
-    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
-    pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
-    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.BackDadoClearance)
-    pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
-    pt4 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    DrawSidePocket(Drawer.SideWidth - Drawer.BottomDadoInset - (Drawer.BottomThickness + Milling.DadoClearance),
+        Drawer.SideWidth - Drawer.BottomDadoInset)
 
     if which == "LEFT" then -- Test cut: one side proves the joint, and a second will not fit the offcut
         return true
@@ -339,16 +324,9 @@ function Drawer_Side(which) -- Drawer Side LEFT, then RIGHT unless which is "LEF
 
     FingerBoxSide(pt4, "R") -- Draw Right Side Fingers
 
-    -- Draw Bottom Dado or Rabbet
+    -- Bottom groove and back rabbet, drawn as one T-shaped vector, as on the left side
     -- Fixed style: Captive Bottom (Dado)
-    pt1 = Drawer.WP --
-    pt2 = Polar2D(pt1, 0.0, Drawer.BottomDadoInset)
-    pt2 = Polar2D(pt2, 90.0, H(Drawer.SideLength)) -- find drawer center point
-    pt1 = Polar2D(pt2, 270.0, H(Drawer.SideLength) - Milling.DadoHeight)
-    pt2 = Polar2D(pt1, 0.0, Drawer.BottomThickness + Milling.DadoClearance)
-    pt4 = Polar2D(pt1, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-    pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
+    DrawSidePocket(Drawer.BottomDadoInset, Drawer.BottomDadoInset + (Drawer.BottomThickness + Milling.DadoClearance))
 
     -- Post to the BOM
     if Drawer.RSide == 1 then
@@ -356,16 +334,6 @@ function Drawer_Side(which) -- Drawer Side LEFT, then RIGHT unless which is "LEF
             GetDistance(pt2, pt3), GetDistance(pt3, pt4))
         Drawer.RSide = Drawer.RSide + 1
     end -- if end
-
-    -- Draw Back Dado. The groove that holds the back panel gets its own clearance: it is glued and wants
-    -- to be snug, where the bottom panel is captive on four sides and wants room to float.
-    pt1 = Drawer.WP
-    pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
-    pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
-    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.BackDadoClearance)
-    pt3 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
-    pt4 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
-    DrawBox(pt1, pt2, pt4, pt3, Milling.LNSidePocket)
 
     return true
 end -- function end
