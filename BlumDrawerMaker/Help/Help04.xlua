@@ -39,6 +39,8 @@ function HTMLHelp04()
          <li class="h1-help"><strong>Bit Defaults - </strong>This is where the User inputs Bit Diameters for the Finger Joints and Profile Cuts.</li>
          <li class="h1-help"><strong>Part Milling - </strong>This is where the User inputs various clearance settings for Part Gap, Dadoes, and the Drawer Slide.</li>
          <li class="h1-help">*** Note: Dado Height is the amount of Material <strong>Remaining</strong> NOT the Material removed.</li>
+         <li class="h1-help"><strong>Joint Fit - </strong>A clearance and an allowance do different jobs. The clearance says how the joint should fit; the allowance corrects a bit that cuts narrow or wide, so it changes only when the bit does. The bottom dado and the back dado have their own clearances because the bottom is captive on four sides and wants to float, while the back is glued and wants to be snug.</li>
+         <li class="h1-help">*** Note: Allowances are signed and applied to each side of the pocket, so a dado width changes by twice the value and a finger joint fit by four times it. Delete and regenerate the toolpaths after changing them.</li>
          <li class="h1-help"><strong>Drawer Styling - </strong>This is where the User chooses Joint and Bottom Styling for the Drawer(s).</li>
         </ul>
 

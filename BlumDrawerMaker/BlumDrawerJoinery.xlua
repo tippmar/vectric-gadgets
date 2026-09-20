@@ -12,14 +12,7 @@
 -- ====================================================================================================================================
 -- Blum Drawer Maker is based on Easy Drawer Maker, originally written by JimAndi Gadgets of Houston Texas 2019
 -- =====================================================]]
-function ProcessSide()
-    for _ = 1, Drawer.Count do
-        Drawer_Side()
-        -- Past the right side, whose fingers overhang its right edge, towards a part whose fingers may overhang
-        -- its left edge
-        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance())
-        Push()
-    end
+function SideToolpaths() -- Side toolpaths for this sheet; shared by the full run and the test cut
     if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
         CreateLayerDadoToolpath("Side Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
@@ -28,16 +21,65 @@ function ProcessSide()
         CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true)
         Push()
     else
         CreateLayerDadoToolpath("Side Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT")
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true)
         Push()
     end
+end -- function End
+-- =====================================================]]
+function FrontToolpaths() -- Front toolpaths for this sheet; shared by the full run and the test cut
+    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        Push()
+        CreateLayerFingerToolpath("Front Blind" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontBlind, 0.0,
+            Drawer.PanelThickness - Milling.BlindTabThickness)
+        Push()
+        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0,
+            Drawer.PanelThickness - Milling.BlindTabThickness)
+        Push()
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        Push()
+    else
+        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
+        Push()
+        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
+        Push()
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        Push()
+    end
+end -- function End
+-- =====================================================]]
+function ProcessTest()
+    -- A pair of stub ends for proving finger fit and dado widths before committing a sheet. The drawer height is
+    -- real, so the finger count and finger width match production exactly; only the depth and width are cut down.
+    -- The stubs stack in Y instead of stepping in X: at a real drawer height a row of parts needs about 27in of
+    -- sheet, and the whole point of a test cut is that it fits an offcut.
+    local start = Drawer.WP
+    Drawer_Side("LEFT") -- One side is enough; the front it mates with is what proves the joint
+    Push()
+    Drawer.WP = Point2D(start.x, start.y + Drawer.SideLength + Milling.PartGap)
+    Drawer_Front()
+    Push()
+    SideToolpaths()
+    FrontToolpaths()
+    return true
+end -- function End
+-- =====================================================]]
+function ProcessSide()
+    for _ = 1, Drawer.Count do
+        Drawer_Side()
+        -- Past the right side, whose fingers overhang its right edge, towards a part whose fingers may overhang
+        -- its left edge
+        Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance())
+        Push()
+    end
+    SideToolpaths()
     return true
 end -- function End
 -- =====================================================]]
@@ -48,25 +90,7 @@ function ProcessFront() -- Process Front
         -- An odd finger count leaves the front's last finger hanging past its right edge
         Drawer.WP = Polar2D(Drawer.WP, 0.0, Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance())
     end
-    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
-        Push()
-        CreateLayerFingerToolpath("Front Blind" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontBlind, 0.0,
-            Drawer.PanelThickness - Milling.BlindTabThickness)
-        Push()
-        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0,
-            Drawer.PanelThickness - Milling.BlindTabThickness)
-        Push()
-        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
-        Push()
-    else
-        CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
-        Push()
-        CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
-        Push()
-        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT")
-        Push()
-    end
+    FrontToolpaths()
     return true
 end -- function End
 -- =====================================================]]
@@ -81,7 +105,7 @@ function ProcessBack() -- Process Back
     Push()
     CreateLayerDadoToolpath("Back Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBackPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
     Push()
-    CreateLayerProfileToolpath("Back-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBackProfile, 0.0, Drawer.PanelThickness, "OUT")
+    CreateLayerProfileToolpath("Back-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNBackProfile, 0.0, Drawer.PanelThickness, "OUT", true)
     Push()
     return true
 end -- function End
@@ -92,7 +116,7 @@ function ProcessBottom() -- Process Bottom
         Drawer_Bottom()
         Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.BottomPanelWidth + Milling.PartGap)) -- Draw Panel Bottom
     end
-    CreateLayerProfileToolpath("Bottom-Profile" .. ThicknessTag(Drawer.BottomThickness), Milling.LNBottomProfile, 0.0, Drawer.BottomThickness, "OUT")
+    CreateLayerProfileToolpath("Bottom-Profile" .. ThicknessTag(Drawer.BottomThickness), Milling.LNBottomProfile, 0.0, Drawer.BottomThickness, "OUT", false)
     Push()
     return true
 end -- function End
@@ -240,14 +264,14 @@ function RecalculateExistingToolpath(name)
     return true
 end
 -- =====================================================]]
-function Drawer_Side() -- Drawer Side LEFT
+function Drawer_Side(which) -- Drawer Side LEFT, then RIGHT unless which is "LEFT"
     Push()
     -- Draw Left Side Profile
     local pt1 = Drawer.WP
     local pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
     local pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth)
     local pt4 = Polar2D(pt3, 270.0, Drawer.SideLength)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile)
+    AddProfileTabs(DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile), pt1, pt2, pt3, pt4)
 
     -- Add the Part Note
     local pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.50 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
@@ -278,15 +302,19 @@ function Drawer_Side() -- Drawer Side LEFT
     pt3 = Polar2D(pt2, 90.0, (Drawer.SideLength - Milling.DadoHeight) + Milling.PocketToolRadius)
     DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
 
-    -- Draw Back Dado
+    -- Draw Back Dado. The groove that holds the back panel gets its own clearance: it is glued and wants
+    -- to be snug, where the bottom panel is captive on four sides and wants room to float.
     pt1 = Drawer.WP
     pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
     pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
-    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.DadoClearance)
+    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.BackDadoClearance)
     pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
     pt4 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
     DrawBox(pt1, pt2, pt3, pt4, Milling.LNSidePocket)
 
+    if which == "LEFT" then -- Test cut: one side proves the joint, and a second will not fit the offcut
+        return true
+    end
     -- Sets WP for other Side. An even finger count draws one finger more than the side is wide, so the left
     -- side can overhang its right edge and the right side its left edge; allow for both
     Drawer.WP = Polar2D(Drawer.WP, 0.0, (Drawer.SideWidth + Milling.PartGap + FingerEdgeAllowance()))
@@ -299,7 +327,7 @@ function Drawer_Side() -- Drawer Side LEFT
     pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
     pt3 = Polar2D(pt2, 0.0, Drawer.SideWidth)
     pt4 = Polar2D(pt3, 270.0, Drawer.SideLength)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile)
+    AddProfileTabs(DrawBox(pt1, pt2, pt3, pt4, Milling.LNSideProfile), pt1, pt2, pt3, pt4)
 
     pt1Text = Polar2D(Polar2D(Drawer.WP, 45.0, 1.5 * Drawer.Cal), 0.0, 0.75 * Drawer.Cal)
     DrawWriter(Project.CabinetName, pt1Text, 0.350 * Drawer.Cal, Milling.LNPartLabels, 90.0)
@@ -329,11 +357,12 @@ function Drawer_Side() -- Drawer Side LEFT
         Drawer.RSide = Drawer.RSide + 1
     end -- if end
 
-    -- Draw Back Dado
+    -- Draw Back Dado. The groove that holds the back panel gets its own clearance: it is glued and wants
+    -- to be snug, where the bottom panel is captive on four sides and wants room to float.
     pt1 = Drawer.WP
     pt2 = Polar2D(pt1, 90.0, Drawer.SideLength)
     pt1 = Polar2D(pt2, 180.0, Milling.PocketToolRadius)
-    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.DadoClearance)
+    pt2 = Polar2D(pt1, 270.0, Drawer.PanelThickness + Milling.BackDadoClearance)
     pt3 = Polar2D(pt1, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
     pt4 = Polar2D(pt2, 0.0, Drawer.SideWidth + Milling.PocketToolDia)
     DrawBox(pt1, pt2, pt4, pt3, Milling.LNSidePocket)
@@ -348,7 +377,7 @@ function Drawer_Front() -- Drawer Front
     local pt2 = Polar2D(pt1, 90.0, Drawer.FrontLength)
     local pt3 = Polar2D(pt2, 0.0, Drawer.FrontWidth)
     local pt4 = Polar2D(pt3, 270.0, Drawer.FrontLength)
-    DrawBox(pt1, pt2, pt3, pt4, Milling.LNFrontProfile)
+    AddProfileTabs(DrawBox(pt1, pt2, pt3, pt4, Milling.LNFrontProfile), pt1, pt2, pt3, pt4)
     FingerBoxFront(pt1, pt2)
 
     -- Place Part Note
@@ -420,7 +449,12 @@ function Drawer_Back() -- Drawer Back
     line:LineTo(pt3);
     line:LineTo(pt4);
     line:LineTo(pt5)
-    layer:AddObject(CreateCadContour(line), true)
+    local cad_contour = CreateCadContour(line)
+    layer:AddObject(cad_contour, true)
+    -- The back outline is hand built rather than drawn with DrawBox, so it takes its tabs here. pt1..pt4 are
+    -- still the part bounding corners at this point. The left edge runs past the Blum cutouts, so a tab aimed
+    -- at it snaps to the straight section between them -- worth checking in the toolpath preview.
+    AddProfileTabs(cad_contour, pt1, pt2, pt3, pt4)
 
     DrawCircle(pt11, Drawer.BlumDia * 0.5, Milling.LNBlum)
     DrawCircle(pt12, Drawer.BlumDia * 0.5, Milling.LNBlum)
@@ -968,14 +1002,21 @@ function FingerBoxSide(pt, hand) -- Finger Box Side
 end -- function end
 -- =====================================================]]
 function FingerBoxFront(pta, ptb) -- Finger Box Front
-    local pt1 = Polar2D(pta, 0.0, Drawer.SideFingerWidth * 0.5)
-    local pt2 = pt1
-    for _ = 1, Drawer.FrontFingerCount do
-        pt2 = MyFrontFingers(pt1, 90.0)
-        pt1 = Polar2D(pt2, 0.0, Drawer.SideFingerWidth)
-    end
-    if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
-        BlindPocket(pta, 0.0, Milling.LNFrontBlind, "Bottom")
+    local pt1, pt2
+    if not Drawer.TestCut then
+        -- A test cut needs only one finger set, and it has to be the ptb end, not this one. Every part is drawn
+        -- with its fingers cut into its bottom edge, so the side stub's fingers open downward and only ptb, cut
+        -- into the front's top edge, faces them; the two stubs then mesh by sliding together, with both bottom
+        -- dados on the inside. ptb is also the front's left end, which is the end that meets the left side in
+        -- the drawer. Cutting pta as well doubles the finger pocketing for a joint that never gets assembled.
+        pt1 = Polar2D(pta, 0.0, Drawer.SideFingerWidth * 0.5)
+        for _ = 1, Drawer.FrontFingerCount do
+            pt2 = MyFrontFingers(pt1, 90.0)
+            pt1 = Polar2D(pt2, 0.0, Drawer.SideFingerWidth)
+        end
+        if string.sub(Milling.JointStyleName, 1, 5) == "Blind" then
+            BlindPocket(pta, 0.0, Milling.LNFrontBlind, "Bottom")
+        end
     end
     pt1 = Polar2D(ptb, 0.0, Drawer.SideFingerWidth * 0.5)
     for _ = 1, Drawer.FrontFingerCount do
@@ -1015,7 +1056,7 @@ function CreateLayerBlumToolpath(name, layer_name, start_depth, cut_depth)
     pocket_data.StartDepth = start_depth
     pocket_data.CutDepth = cut_depth
     pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
-    pocket_data.Allowance = 0.0
+    pocket_data.Allowance = 0.0 -- Blum hardware holes are cut to the hardware's own size, so no allowance is dialed in
     pocket_data.DoRasterClearance = false
     pocket_data.RasterAngle = 0
     pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
@@ -1074,8 +1115,9 @@ function CreateLayerDadoToolpath(name, layer_name, start_depth, cut_depth)
         pocket_data.CutDepth = cut_depth
         -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
         pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
-        -- Allowance to leave on when machining
-        pocket_data.Allowance = 0.0
+        -- Allowance to leave on when machining, applied to each side of the pocket. Positive leaves material,
+        -- negative enlarges the pocket, so this cancels a bit that cuts narrow or wide. Dado width moves by 2x it.
+        pocket_data.Allowance = Milling.DadoAllowance
         -- if true use raster Clearance strategy , else use offset area Clearance
         pocket_data.DoRasterClearance = false -- true
         -- angle for raster if using raster Clearance
@@ -1160,8 +1202,10 @@ function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
         pocket_data.CutDepth = cut_depth
         -- direction of cut for offet Clearance - ProfileParameterData.CLIMB_DIRECTION or ProfileParameterData.CONVENTIONAL_DIRECTION - NOTE: enum from ProfileParameterData
         pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
-        -- Allowance to leave on when machining
-        pocket_data.Allowance = 0.0
+        -- Allowance to leave on when machining, applied to each side of the pocket. Positive leaves material,
+        -- negative enlarges the pocket, so this cancels a bit that cuts narrow or wide. The notch and the
+        -- finger both move, so joint clearance moves by 4x it.
+        pocket_data.Allowance = Milling.FingerAllowance
         -- if true use raster Clearance strategy , else use offset area Clearance
         pocket_data.DoRasterClearance = false -- true
         -- angle for raster if using raster Clearance
@@ -1207,7 +1251,7 @@ function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
     return true
 end
 -- =====================================================]]
-function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut)
+function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut, use_tabs)
     if Milling.Profile then
         --  Please Note: CreateLayerProfileToolpath is provided by Vectric and can be found in the SDK and Sample Gadget files.
         if not SelectLayerVectors(layer_name, true, false) then
@@ -1230,9 +1274,15 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         -- tool.VBitAngle     = Carrier.MillTool.VBitAngle     -- 90.0 -- used for vbit only
         -- tool.ClearStepover = tool_dia * 0.5                 -- used for vbit only
         -- Create object used to set home position and safez gap above material surface
+        -- Home and safe Z come from the material block, exactly as the three pocketing functions above do. The
+        -- 5.0 that used to be here is from Vectric's metric sample code, where it means 5mm. In an imperial job
+        -- it means 5 INCHES, so every profile toolpath ended with a rapid to Z+5.5 and tripped the soft limit.
+        local mtl_block = MaterialBlock()
+        local mtl_box = mtl_block.MaterialBox
+        local mtl_box_blc = mtl_box.BLC
         local pos_data = ToolpathPosData()
-        pos_data:SetHomePosition(0, 0, 5.0)
-        pos_data.SafeZGap = 5.0
+        pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+        pos_data.SafeZGap = mtl_block.Thickness * 0.1
         -- Create object used to pass profile options
         local profile_data = ProfileParameterData()
         -- start depth for toolpath
@@ -1250,9 +1300,15 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         profile_data.KeepStartPoints = false -- true to preserve start point positions, false to reorder start points to minimise toolpath length
         profile_data.CreateSquareCorners = false -- true if want to create 'square' external corners on toolpath
         profile_data.CornerSharpen = false -- true to perform corner sharpening on internal corners (only with v-bits)
-        profile_data.UseTabs = false -- UseTab -- true to use tabs (position of tabs must already have been defined on vectors)
-        profile_data.TabLength = 0.5 -- length for tabs if being used
-        profile_data.TabThickness = 0.25
+        -- The bottom panel is given no tabs, and VCarve rejects a profile toolpath that asks for tabs on vectors
+        -- that have none, so the caller says whether this part had any placed on it.
+        local do_tabs = false
+        if use_tabs and Milling.ProfileTabs then
+            do_tabs = true
+        end
+        profile_data.UseTabs = do_tabs
+        profile_data.TabLength = Milling.TabLength -- length for tabs if being used
+        profile_data.TabThickness = Milling.TabThickness
         profile_data.Use3dTabs = true -- if true then create 3d tabs else 2d tabs
         profile_data.ProjectToolpath = false -- if true in Aspire, project toolpath onto composite model
         local ramping_data = RampingData() -- Create object used to control ramping

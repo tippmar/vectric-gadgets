@@ -139,6 +139,11 @@ function GetDistance(objA, objB) -- Get the length for each of the components x 
 end
 -- =====================================================]]
 function DrawWriter(what, where, size, lay, ang)
+    if Drawer.TestCut then
+        -- Test stubs are only a couple of inches long, so the part labels land on top of the geometry and get in
+        -- the way. No caller reads the return value, so skipping the draw entirely is enough.
+        return true
+    end
     local group
     --[[ How to use tester:
   |    local TextMessage = "Your Text Here"
@@ -1434,9 +1439,12 @@ end -- function end
     line:LineTo(p3);
     line:LineTo(p4);
     line:LineTo(p1);
-    layer:AddObject(CreateCadContour(line), true)
+    local cad_contour = CreateCadContour(line)
+    layer:AddObject(cad_contour, true)
     job:Refresh2DView()
-    return true
+    -- Returned so a caller that needs to attach toolpath tabs has the contour. Callers that ignore it are
+    -- unaffected: a CadContour is as truthy as the "true" this used to return.
+    return cad_contour
 end -- function end
 -- =====================================================]]
 function DrawCircle(Pt1, CenterRadius, Layer)
@@ -1632,6 +1640,39 @@ function FingerEdgeAllowance()
     return Drawer.SideFingerWidth + Milling.FingerClearance
 end
 -- =====================================================]]
+function PointAlong(pa, pb, fraction)
+    -- Point a given fraction of the way from pa to pb
+    return Point2D(pa.x + ((pb.x - pa.x) * fraction), pa.y + ((pb.y - pa.y) * fraction))
+end
+-- =====================================================]]
+function TabCountForEdge(edge_length)
+    -- One tab per foot of edge, never fewer than two. A single tab lets the part pivot around it, so two on
+    -- each of the two clean edges is the least that holds a part square while the profile pass cuts it free.
+    -- More than that is only extra nubs to pare off by hand afterward.
+    local spacing = Drawer.Unit and 304.8 or 12.0
+    local count = math.floor((edge_length / spacing) + 0.5) -- Lua 5.1 has no math.round
+    if count < 2 then
+        count = 2
+    end
+    return count
+end
+-- =====================================================]]
+function AddProfileTabs(cad_contour, pt1, pt2, pt3, pt4)
+    -- Holds a part in the sheet while its profile pass cuts it free. Tabs go only on the two edges that run the
+    -- length of the part (pt1->pt2 and pt3->pt4). The other two, pt2->pt3 and pt4->pt1, carry the finger joints,
+    -- and a tab left on a mating surface would have to be pared off before the joint would close.
+    if (not Milling.ProfileTabs) or (cad_contour == nil) then
+        return false
+    end
+    local count = TabCountForEdge(GetDistance(pt1, pt2))
+    for i = 1, count do
+        local fraction = (i - 0.5) / count -- evenly spaced along the edge, and never on a corner
+        cad_contour:InsertToolpathTabAtPoint(PointAlong(pt1, pt2, fraction))
+        cad_contour:InsertToolpathTabAtPoint(PointAlong(pt4, pt3, fraction))
+    end
+    return true
+end
+-- =====================================================]]
 function AutoFingerCount(height)
     -- One finger per inch of side height. A finger count fixed by the user suits one drawer height and gets
     -- steadily worse as the height changes: too few fingers on a tall drawer, too many on a short one. Sizing
@@ -1667,6 +1708,18 @@ function Drawer_Math() -- All the math for Blum drawer box
     Drawer.SideLength = Drawer.SlideLength
     Drawer.FrontLength = Drawer.Width -- front/outside width matches computed outside width
     Drawer.BackLength = Drawer.FrontLength - (Milling.DadoHeight * 2.0)
+    if Drawer.TestCut then
+        -- Stub ends for a test cut. The height is deliberately left alone: it sets the finger count and finger
+        -- width, so a shrunken height would prove nothing about the joint that gets cut for real. Only the two
+        -- dimensions that merely add length are cut down -- a side long enough to carry its back dado past the
+        -- fingers, and a front long enough to carry its finger set and a usable length of bottom dado.
+        Drawer.Count = 1
+        Drawer.SideLength = 2.5 * Drawer.Cal
+        Drawer.FrontLength = 3.0 * Drawer.Cal
+        Drawer.Length = Drawer.SideLength
+        Drawer.Width = Drawer.FrontLength
+        Drawer.BackLength = Drawer.FrontLength - (Milling.DadoHeight * 2.0)
+    end
     Drawer.BottomPanelLength = Drawer.Length - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
     Drawer.BottomPanelWidth = Drawer.Width - ((Milling.DadoHeight * 2.0) + Milling.DadoClearance)
     if Drawer.SideFingerAuto then

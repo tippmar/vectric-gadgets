@@ -19,6 +19,9 @@ Beyond drawing the parts, it:
 - associates every toolpath it creates with the layer its vectors live on, so the toolpath picks up new parts when it is recalculated;
 - recalculates an existing toolpath rather than creating a duplicate when a later run uses the same material thickness;
 - orders the toolpaths to minimize tool changes — clearance passes first, then other cuts, then profiles, with toolpaths sharing a tool kept together;
+- holds parts in the sheet with tabs while the profile pass cuts them free, placing them on the two edges of each part that carry no finger joints;
+- separates joint fit from machine error: the clearance settings say how a joint should fit, and a pocket allowance per bit cancels a cutter that comes out over or under size (see [`docs/clearance-reference.md`](docs/clearance-reference.md));
+- can cut a test pair instead of a drawer — one side stub and one front stub, at the real drawer height so the finger count and finger width match production — to prove the joint on an offcut before committing a sheet;
 - writes a cut list.
 
 ## Blum Nesting Repair
@@ -28,7 +31,7 @@ A toolpath belongs to exactly one sheet, and `Toolpath.SheetId` is read-only. So
 - **parts on the new sheet have no toolpaths**, and Recalculate All will not create them; and
 - **toolpaths whose parts all moved away are left empty**, and warn on Recalculate All.
 
-This gadget fixes both. For every toolpath that uses layer association, it gives each sheet holding parts on those layers a copy of the toolpath, and deletes each copy sitting on a sheet with no parts left on its layers. Copies are made from a template of the existing toolpath, so the tools and settings you chose carry over. It then re-sequences the toolpaths by tool.
+This gadget fixes both. For every toolpath that uses layer association, it gives each sheet holding parts on those layers a copy of the toolpath, and deletes each copy sitting on a sheet with no parts left on its layers. Copies are made from a template of the existing toolpath, so the tools and settings you chose carry over. It then recalculates every toolpath in the job — nesting also leaves the surviving toolpaths pointing at vectors that have moved, and adding the missing ones does not refresh those — and re-sequences them by tool.
 
 It is generic: it handles any toolpath using the **Associate with toolpath** geometry selection, not only ones Blum Drawer Maker creates.
 

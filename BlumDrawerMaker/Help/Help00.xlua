@@ -57,6 +57,8 @@ function HTMLHelp00()
           <li class="h1-help"><strong>Width - </strong> This is the horizontal dimension of the drawer opening.</li>
           <li class="h1-help"><strong>Depth - </strong> This this is overall length of drawer. Note: The drawer may need to be lesss than the actual depth of the cabinet to accommodate the drawer slide hardware.</li>
           <li class="h1-help"><strong>Count - </strong> provide the number of drawers of these given sizes.</li>
+          <li class="h1-help"><strong>Auto Fingers - </strong> Ticked, the finger count is set from the drawer height, about one finger per inch, and the Finger Count box above is ignored. Untick it to enter the count yourself.</li>
+          <li class="h1-help"><strong>Test Cut - </strong> Cuts a test pair instead of a drawer: one side stub and one front stub, for checking finger fit and dado widths on an offcut before committing a sheet. Count, Width and Depth are ignored, but Height is used exactly as entered, so the finger count and finger width match the real drawer. The setting is never saved.</li>
         </ul>
          <div><hr /></div>
       </div>

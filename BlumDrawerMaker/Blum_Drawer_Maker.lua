@@ -237,11 +237,15 @@ function main(script_path) -- Gadget Start Point, Error and Alert Messages
             ActivateThicknessSheet(SheetThick)
             Drawer.WP = OpenSpaceStart()
             if SheetThick == Drawer.PanelThickness then
-                ProcessBack();
-                ProcessSide();
-                ProcessFront()
+                if Drawer.TestCut then
+                    ProcessTest() -- Stub ends only: no back, no Blum pockets and no bottom
+                else
+                    ProcessBack();
+                    ProcessSide();
+                    ProcessFront()
+                end
             end
-            if SheetThick == Drawer.BottomThickness then
+            if SheetThick == Drawer.BottomThickness and not Drawer.TestCut then
                 ProcessBottom()
             end
         end

@@ -455,6 +455,18 @@ function main(script_path)
     if sheet_ids[original_sheet] ~= nil then
         sheet_manager.ActiveSheetId = sheet_ids[original_sheet]
     end
+
+    -- Nesting leaves the toolpaths on every other sheet pointing at vectors that have since moved, and creating
+    -- the missing ones does not refresh those, so recalculate the whole job before sequencing. This replaces
+    -- every toolpath object in the job, so nothing collected before this point can be reused after it.
+    local calc_ok, calc_result = pcall(function()
+        return toolpath_manager:RecalculateAllToolpaths()
+    end)
+    if calc_ok and calc_result then
+        table.insert(actions, "Recalculated all toolpaths in the job")
+    else
+        table.insert(problems, "Could not recalculate all toolpaths: " .. tostring(calc_result))
+    end
     SequenceToolpathsByTool(problems, sheet_manager, sheet_ids, sheet_names)
     job:Refresh2DView()
 

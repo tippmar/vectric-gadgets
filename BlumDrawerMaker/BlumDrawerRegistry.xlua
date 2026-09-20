@@ -36,8 +36,14 @@ function RegistryReset() -- Reset All Settings
         Drawer.Width = 324.6000
         Milling.BlindTabThickness = 2.5400
         Milling.DadoClearance = 1.2700
+        Milling.DadoAllowance = 0.0000
+        Milling.BackDadoClearance = 1.2700
+        Milling.ProfileTabs = true
+        Milling.TabLength = 6.0000
+        Milling.TabThickness = 3.0000
         Milling.DadoHeight = 6.3500
         Milling.FingerClearance = 0.1270
+        Milling.FingerAllowance = 0.0000
         Milling.FingerToolDia = 3.0000
         Milling.FingerToolRadius = 1.5875
         Milling.PartGap = 19.0500
@@ -110,10 +116,16 @@ function RegistryReset() -- Reset All Settings
         Milling.DadoHeight = 0.2500
         Milling.BlindTabThickness = 0.1000
         Milling.FingerClearance = 0.0050
+        Milling.FingerAllowance = 0.0000
         Milling.FingerToolDia = 0.1250
         Milling.FingerToolRadius = 0.0625
         Milling.PartGap = 0.7500
         Milling.DadoClearance = 0.0500
+        Milling.DadoAllowance = 0.0000
+        Milling.BackDadoClearance = 0.0500
+        Milling.ProfileTabs = true
+        Milling.TabLength = 0.2500
+        Milling.TabThickness = 0.1250
         Milling.PocketToolDia = 0.2500
         Milling.ProfileToolDia = 0.2500
         Milling.ProfileToolRadius = 0.1250
@@ -163,7 +175,7 @@ function RegistryReset() -- Reset All Settings
     DialogWindow.AboutXY = "719 x 581"
     DialogWindow.DrawerXY = "580 x 493"
     DialogWindow.LayersXY = "495 x 453"
-    DialogWindow.MillingXY = "578 x 337"
+    DialogWindow.MillingXY = "578 x 600"
     DialogWindow.ProjectXY = "576 x 298"
     DialogWindow.HelpMainXY = "785 x 639"
     DialogWindow.HelpSubXY = "781 x 643"
@@ -200,6 +212,7 @@ function RegistryReset() -- Reset All Settings
     Drawer.Count = 1
     Drawer.SideFingerCount = 9
     Drawer.SideFingerAuto = true -- Size the fingers from the drawer height instead of using the count above
+    Drawer.TestCut = false -- Run mode, never persisted: a saved test flag would quietly cut a sheet of stubs
     MillTool1.Name = "Tool Not Selected"
     MillTool1.SpindleSpeed = 20000
     MillTool1.ToolNumber = 1
@@ -254,6 +267,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.OpeningWidth = RegistryRead:GetDouble("Drawer.OpeningWidth", 406.4)
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
         Drawer.SideFingerAuto = RegistryRead:GetBool("Drawer.SideFingerAuto", true)
+        Drawer.TestCut = false -- Run mode, never persisted: a saved test flag would quietly cut a sheet of stubs
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 12.7)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 463.55)
         Drawer.PanelThickness = panel_thick_metric
@@ -262,10 +276,18 @@ function RegistryRead() -- Read from Registry values
         Milling.DadoHeight = RegistryRead:GetDouble("Milling.DadoHeight", 6.35)
         Milling.BlindTabThickness = RegistryRead:GetDouble("Milling.BlindTabThickness", 2.54)
         Milling.FingerClearance = RegistryRead:GetDouble("Milling.FingerClearance", 0.127)
+        Milling.FingerAllowance = RegistryRead:GetDouble("Milling.FingerAllowance", 0.0)
         Milling.FingerToolDia = RegistryRead:GetDouble("Milling.FingerToolDia", 3.0)
         Milling.FingerToolRadius = RegistryRead:GetDouble("Milling.FingerToolRadius", 1.5875)
         Milling.PartGap = RegistryRead:GetDouble("Milling.PartGap", 19.05)
         Milling.DadoClearance = RegistryRead:GetDouble("Milling.DadoClearance", 1.27)
+        Milling.DadoAllowance = RegistryRead:GetDouble("Milling.DadoAllowance", 0.0)
+        -- Falls back to DadoClearance, read just above, so the first run after the split keeps the back
+        -- groove exactly the width it had rather than jumping to a factory value.
+        Milling.BackDadoClearance = RegistryRead:GetDouble("Milling.BackDadoClearance", Milling.DadoClearance)
+        Milling.ProfileTabs = RegistryRead:GetBool("Milling.ProfileTabs", true)
+        Milling.TabLength = RegistryRead:GetDouble("Milling.TabLength", 6.0)
+        Milling.TabThickness = RegistryRead:GetDouble("Milling.TabThickness", 3.0)
         Milling.PocketToolDia = RegistryRead:GetDouble("Milling.PocketToolDia", 6.0)
         Milling.ProfileToolDia = RegistryRead:GetDouble("Milling.ProfileToolDia", 6.0)
         Milling.ProfileToolRadius = RegistryRead:GetDouble("Milling.ProfileToolRadius", 3.175)
@@ -335,6 +357,7 @@ function RegistryRead() -- Read from Registry values
         Drawer.OpeningWidth = RegistryRead:GetDouble("Drawer.OpeningWidth", 16.0000)
         Drawer.SideFingerCount = RegistryRead:GetInt("Drawer.SideFingerCount", 9)
         Drawer.SideFingerAuto = RegistryRead:GetBool("Drawer.SideFingerAuto", true)
+        Drawer.TestCut = false -- Run mode, never persisted: a saved test flag would quietly cut a sheet of stubs
         Drawer.SideFingerWidth = RegistryRead:GetDouble("Drawer.SideFingerWidth", 0.5000)
         Drawer.SideLength = RegistryRead:GetDouble("Drawer.SideLength", 18.2500)
         Drawer.PanelThickness = panel_thick_imperial
@@ -343,10 +366,18 @@ function RegistryRead() -- Read from Registry values
         Milling.DadoHeight = RegistryRead:GetDouble("Milling.DadoHeight", 0.2500)
         Milling.BlindTabThickness = RegistryRead:GetDouble("Milling.BlindTabThickness", 0.1000)
         Milling.FingerClearance = RegistryRead:GetDouble("Milling.FingerClearance", 0.0050)
+        Milling.FingerAllowance = RegistryRead:GetDouble("Milling.FingerAllowance", 0.0)
         Milling.FingerToolDia = RegistryRead:GetDouble("Milling.FingerToolDia", 0.1250)
         Milling.FingerToolRadius = RegistryRead:GetDouble("Milling.FingerToolRadius", 0.0625)
         Milling.PartGap = RegistryRead:GetDouble("Milling.PartGap", 0.7500)
         Milling.DadoClearance = RegistryRead:GetDouble("Milling.DadoClearance", 0.0500)
+        Milling.DadoAllowance = RegistryRead:GetDouble("Milling.DadoAllowance", 0.0)
+        -- Falls back to DadoClearance, read just above, so the first run after the split keeps the back
+        -- groove exactly the width it had rather than jumping to a factory value.
+        Milling.BackDadoClearance = RegistryRead:GetDouble("Milling.BackDadoClearance", Milling.DadoClearance)
+        Milling.ProfileTabs = RegistryRead:GetBool("Milling.ProfileTabs", true)
+        Milling.TabLength = RegistryRead:GetDouble("Milling.TabLength", 0.2500)
+        Milling.TabThickness = RegistryRead:GetDouble("Milling.TabThickness", 0.1250)
         Milling.PocketToolDia = RegistryRead:GetDouble("Milling.PocketToolDia", 0.2500)
         Milling.ProfileToolDia = RegistryRead:GetDouble("Milling.ProfileToolDia", 0.2500)
         Milling.ProfileToolRadius = RegistryRead:GetDouble("Milling.ProfileToolRadius", 0.1250)
@@ -458,7 +489,7 @@ function RegistryRead() -- Read from Registry values
     DialogWindow.AboutXY = RegistryRead:GetString("DialogWindow.AboutXY", "719 x 581")
     DialogWindow.DrawerXY = RegistryRead:GetString("DialogWindow.DrawerXY", "580 x 493")
     DialogWindow.LayersXY = RegistryRead:GetString("DialogWindow.LayersXY", "495 x 453")
-    DialogWindow.MillingXY = RegistryRead:GetString("DialogWindow.MillingXY", "578 x 337")
+    DialogWindow.MillingXY = RegistryRead:GetString("DialogWindow.MillingXY", "578 x 600")
     DialogWindow.ProjectXY = RegistryRead:GetString("DialogWindow.ProjectXY", "576 x 298")
     DialogWindow.HelpMainXY = RegistryRead:GetString("DialogWindow.HelpMainXY", "785 x 639")
     DialogWindow.HelpSubXY = RegistryRead:GetString("DialogWindow.HelpSubXY", "781 x 643")
@@ -497,7 +528,13 @@ function RegistryWriter() -- Write to Registry values
     RegValue = RegistryWrite:SetDouble("Milling.FingerToolDia", Milling.FingerToolDia)
     RegValue = RegistryWrite:SetDouble("Milling.ProfileToolDia", Milling.ProfileToolDia)
     RegValue = RegistryWrite:SetDouble("Milling.DadoClearance", Milling.DadoClearance)
+    RegValue = RegistryWrite:SetDouble("Milling.DadoAllowance", Milling.DadoAllowance)
+    RegValue = RegistryWrite:SetDouble("Milling.BackDadoClearance", Milling.BackDadoClearance)
+    RegValue = RegistryWrite:SetBool("Milling.ProfileTabs", Milling.ProfileTabs)
+    RegValue = RegistryWrite:SetDouble("Milling.TabLength", Milling.TabLength)
+    RegValue = RegistryWrite:SetDouble("Milling.TabThickness", Milling.TabThickness)
     RegValue = RegistryWrite:SetDouble("Milling.FingerClearance", Milling.FingerClearance)
+    RegValue = RegistryWrite:SetDouble("Milling.FingerAllowance", Milling.FingerAllowance)
     RegValue = RegistryWrite:SetDouble("Milling.DadoHeight", Milling.DadoHeight)
     RegValue = RegistryWrite:SetDouble("Milling.BlindTabThickness", Milling.BlindTabThickness)
     RegValue = RegistryWrite:SetString("Milling.DrawerStyleName", Milling.DrawerStyleName)
@@ -649,9 +686,15 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Drawer.Width = tonumber("]] .. ExD2S(Drawer.Width) .. [[") ]] .. "\n")
     fileW:write([[Milling.BlindTabThickness = tonumber("]] .. ExD2S(Milling.BlindTabThickness) .. [[") ]] .. "\n")
     fileW:write([[Milling.DadoClearance = tonumber("]] .. ExD2S(Milling.DadoClearance) .. [[") ]] .. "\n")
+    fileW:write([[Milling.DadoAllowance = tonumber("]] .. ExD2S(Milling.DadoAllowance) .. [[") ]] .. "\n")
+    fileW:write([[Milling.BackDadoClearance = tonumber("]] .. ExD2S(Milling.BackDadoClearance) .. [[") ]] .. "\n")
+    fileW:write([[Milling.ProfileTabs = ]] .. tostring(Milling.ProfileTabs) .. " \n")
+    fileW:write([[Milling.TabLength = tonumber("]] .. ExD2S(Milling.TabLength) .. [[") ]] .. "\n")
+    fileW:write([[Milling.TabThickness = tonumber("]] .. ExD2S(Milling.TabThickness) .. [[") ]] .. "\n")
     fileW:write([[Milling.DadoHeight = tonumber("]] .. ExD2S(Milling.DadoHeight) .. [[") ]] .. "\n")
     fileW:write([[Milling.DrawerStyleName = "]] .. Milling.DrawerStyleName .. [[" ]] .. "\n")
     fileW:write([[Milling.FingerClearance = tonumber("]] .. ExD2S(Milling.FingerClearance) .. [[") ]] .. "\n")
+    fileW:write([[Milling.FingerAllowance = tonumber("]] .. ExD2S(Milling.FingerAllowance) .. [[") ]] .. "\n")
     fileW:write([[Milling.FingerToolDia = tonumber("]] .. ExD2S(Milling.FingerToolDia) .. [[") ]] .. "\n")
     fileW:write([[Milling.JointStyleName = "]] .. Milling.JointStyleName .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBackPocket = "]] .. Milling.LNBackPocket .. [[" ]] .. "\n")
