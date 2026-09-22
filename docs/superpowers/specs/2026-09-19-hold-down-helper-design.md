@@ -49,10 +49,12 @@ A candidate point is **unsafe** if, for any qualifying vector on the active shee
 where
 
 ```
-R = (assumed tool diameter / 2) + (screw head diameter / 2) + margin
+R = assumed tool diameter + (screw head diameter / 2) + margin
 ```
 
-At the defaults (0.25 tool, 0.25 head, 0.125 margin) `R` is 0.375".
+At the defaults (0.25 tool, 0.25 head, 0.125 margin) `R` is 0.5". The full tool diameter, not half of
+it, is required because an outside profile runs the cutter center a half-diameter outside the vector, so
+the cutter's far edge reaches a full diameter beyond the vector; `R` must cover that reach.
 
 The inside test forbids fasteners through a part. The distance test forbids fasteners in the
 band the cutter sweeps around a vector, and in a gap between two parts too narrow to take one.

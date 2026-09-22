@@ -251,8 +251,10 @@ function SettingsWrite()
 end
 -- =====================================================]]
 function ClearanceRadius()
-    -- R = half the cutter + half the screw head + margin. At the imperial defaults this is 0.375".
-    return (HoldDown.ToolDiameter * 0.5) + (HoldDown.HeadDiameter * 0.5) + HoldDown.Margin
+    -- R = the full cutter diameter + half the screw head + margin. An outside profile runs the cutter
+    -- center a half-diameter outside the vector, so its far edge reaches a FULL diameter beyond it; R
+    -- must cover that, not half of it. At the imperial defaults this is 0.5".
+    return HoldDown.ToolDiameter + (HoldDown.HeadDiameter * 0.5) + HoldDown.Margin
 end
 -- =====================================================]]
 function SettingsHtml()
