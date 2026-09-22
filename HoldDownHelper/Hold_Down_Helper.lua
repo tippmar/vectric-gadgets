@@ -300,6 +300,114 @@ function ValidateSettings()
     return nil
 end
 -- =====================================================]]
+function SheetBounds()
+    local mtl_box = MaterialBlock().MaterialBox
+    return mtl_box.BLC.x, mtl_box.BLC.y, mtl_box.TRC.x, mtl_box.TRC.y
+end
+-- =====================================================]]
+function PerimeterCount(side_length)
+    local count = math.floor((side_length / HoldDown.PerimeterSpacing) + 0.5)
+    if count < 2 then
+        count = 2
+    end
+    return count
+end
+-- =====================================================]]
+function PerimeterTargets(min_x, min_y, max_x, max_y)
+    local inset = HoldDown.EdgeInset
+    local width = max_x - min_x
+    local height = max_y - min_y
+    local targets = {}
+
+    local across = PerimeterCount(width)
+    for i = 1, across do
+        local fraction = (i - 0.5) / across
+        local x = min_x + (width * fraction)
+        table.insert(targets, {x = x, y = min_y + inset, kind = "perimeter", edge = "bottom"})
+        table.insert(targets, {x = x, y = max_y - inset, kind = "perimeter", edge = "top"})
+    end
+
+    local up = PerimeterCount(height)
+    for i = 1, up do
+        local fraction = (i - 0.5) / up
+        local y = min_y + (height * fraction)
+        table.insert(targets, {x = min_x + inset, y = y, kind = "perimeter", edge = "left"})
+        table.insert(targets, {x = max_x - inset, y = y, kind = "perimeter", edge = "right"})
+    end
+    return targets
+end
+-- =====================================================]]
+function FieldTargets(min_x, min_y, max_x, max_y)
+    local count = HoldDown.FieldCount
+    if count < 1 then
+        return {}
+    end
+    -- Center 50% of the sheet
+    local width = (max_x - min_x) * 0.5
+    local height = (max_y - min_y) * 0.5
+    local region_x = min_x + ((max_x - min_x) * 0.25)
+    local region_y = min_y + ((max_y - min_y) * 0.25)
+
+    local columns = math.ceil(math.sqrt(count))
+    local rows = math.ceil(count / columns)
+    local targets = {}
+    local placed = 0
+    for row = 1, rows do
+        for column = 1, columns do
+            if placed < count then
+                placed = placed + 1
+                table.insert(targets, {
+                    x = region_x + (width * ((column - 0.5) / columns)),
+                    y = region_y + (height * ((row - 0.5) / rows)),
+                    kind = "field"
+                })
+            end
+        end
+    end
+    return targets
+end
+-- =====================================================]]
+function DrawMarker(layer, x, y)
+    local center = Point2D(x, y)
+    local radius = HoldDown.MarkerDiameter * 0.5
+    local left = Polar2D(center, 180.0, radius)
+    local right = Polar2D(center, 0.0, radius)
+    local circle = Contour(0.0)
+    circle:AppendPoint(left)
+    circle:ArcTo(right, 1)
+    circle:ArcTo(left, 1)
+    layer:AddObject(CreateCadContour(circle), true)
+end
+-- =====================================================]]
+function ClearHoldDownLayer()
+    -- Re-running must rebuild rather than accumulate. Only this sheet's markers are removed: the layer
+    -- spans every sheet, and markers on other sheets belong to runs this one is not responsible for.
+    -- Objects are collected first because removing them mid-walk would invalidate the position.
+    local layer = HoldDown.job.LayerManager:FindLayerWithName(HoldDown.LayerName)
+    if layer == nil then
+        return
+    end
+    local sheet_key = IdKey(HoldDown.job.SheetManager.ActiveSheetId)
+    local doomed = {}
+    local pos = layer:GetHeadPosition()
+    while pos ~= nil do
+        local object
+        object, pos = layer:GetNext(pos)
+        if IdKey(object.SheetId) == sheet_key then
+            table.insert(doomed, object)
+        end
+    end
+    for _, object in ipairs(doomed) do
+        layer:RemoveObject(object)
+    end
+end
+-- =====================================================]]
+function HoldDownLayer()
+    local layer = HoldDown.job.LayerManager:GetLayerWithName(HoldDown.LayerName)
+    layer:SetColor(255, 0, 255) -- magenta: not a color the Blum gadgets use, so markers stand out
+    return layer
+end
+-- =====================================================]]
 function main(script_path)
     local job = VectricJob()
     if not job.Exists then
@@ -335,9 +443,21 @@ function main(script_path)
             "Hold Down Helper is intended for full sheets. It will carry on, but check the positions it marks.")
     end
 
-    MessageBox("Hold Down Helper\n\nV-bit: " .. tostring(HoldDown.Tool.Name) ..
-        "\nClearance radius R: " .. string.format("%.4f", ClearanceRadius()) ..
-        "\nVectors to keep clear of: " .. #vectors)
+    local min_x, min_y, max_x, max_y = SheetBounds()
+    local targets = PerimeterTargets(min_x, min_y, max_x, max_y)
+    for _, target in ipairs(FieldTargets(min_x, min_y, max_x, max_y)) do
+        table.insert(targets, target)
+    end
+
+    ClearHoldDownLayer()
+    local layer = HoldDownLayer()
+    for _, target in ipairs(targets) do
+        DrawMarker(layer, target.x, target.y)
+    end
+    HoldDown.job:Refresh2DView()
+
+    MessageBox("Hold Down Helper\n\nMarked " .. #targets .. " position(s) on layer '" .. HoldDown.LayerName ..
+        "'.\n\nThese are the ideal positions; nothing has been checked for clearance yet.")
     return true
 end
 -- =============== End of File =========================]]
