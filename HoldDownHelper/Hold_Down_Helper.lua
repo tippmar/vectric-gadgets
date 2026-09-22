@@ -182,7 +182,8 @@ local IMPERIAL_DEFAULTS = {
     FieldCount = 4,
     MaxSearch = 3.0,
     DimpleDepth = 0.1,
-    MarkerDiameter = 0.125
+    MarkerDiameter = 0.125,
+    SafeZGap = 0.25
 }
 local METRIC_DEFAULTS = {
     ToolDiameter = 6.0,
@@ -193,7 +194,8 @@ local METRIC_DEFAULTS = {
     FieldCount = 4,
     MaxSearch = 76.2,
     DimpleDepth = 2.5,
-    MarkerDiameter = 3.0
+    MarkerDiameter = 3.0,
+    SafeZGap = 6.0
 }
 -- =====================================================]]
 function SettingDefaults()
@@ -264,6 +266,7 @@ function SettingsRead()
     HoldDown.MaxSearch = registry:GetDouble(SettingsKey("MaxSearch"), defaults.MaxSearch)
     HoldDown.DimpleDepth = registry:GetDouble(SettingsKey("DimpleDepth"), defaults.DimpleDepth)
     HoldDown.MarkerDiameter = registry:GetDouble(SettingsKey("MarkerDiameter"), defaults.MarkerDiameter)
+    HoldDown.SafeZGap = registry:GetDouble(SettingsKey("SafeZGap"), defaults.SafeZGap)
     ToolRead()
 end
 -- =====================================================]]
@@ -278,6 +281,7 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("MaxSearch"), HoldDown.MaxSearch)
     registry:SetDouble(SettingsKey("DimpleDepth"), HoldDown.DimpleDepth)
     registry:SetDouble(SettingsKey("MarkerDiameter"), HoldDown.MarkerDiameter)
+    registry:SetDouble(SettingsKey("SafeZGap"), HoldDown.SafeZGap)
     ToolWrite()
 end
 -- =====================================================]]
@@ -321,6 +325,8 @@ td.unit { color: #666666; }
     <td><input type="text" id="DimpleDepth" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="Size of the marker circle drawn per position">Marker diameter:</label></td>
     <td><input type="text" id="MarkerDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Height above the sheet for moves between dimples. An unfastened sheet may not lie flat, so leave room">Safe Z gap:</label></td>
+    <td><input type="text" id="SafeZGap" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 </table>
 <div class="note"><b>Type values, do not paste them.</b> VCarve discards a pasted value unless you type it
 and tab out of the field.</div>
@@ -330,7 +336,7 @@ and tab out of the field.</div>
 end
 -- =====================================================]]
 function ShowSettingsDialog()
-    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 430, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
+    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 460, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
     dialog:AddLabelField("ToolNameLabel", HoldDown.Tool.Name)
     dialog:AddToolPicker("ToolChooseButton", "ToolNameLabel", HoldDownToolId)
     dialog:AddToolPickerValidToolType("ToolChooseButton", Tool.VBIT)
@@ -343,6 +349,7 @@ function ShowSettingsDialog()
     dialog:AddDoubleField("MaxSearch", HoldDown.MaxSearch)
     dialog:AddDoubleField("DimpleDepth", HoldDown.DimpleDepth)
     dialog:AddDoubleField("MarkerDiameter", HoldDown.MarkerDiameter)
+    dialog:AddDoubleField("SafeZGap", HoldDown.SafeZGap)
     if not dialog:ShowDialog() then
         return false
     end
@@ -359,6 +366,7 @@ function ShowSettingsDialog()
     HoldDown.MaxSearch = math.abs(dialog:GetDoubleField("MaxSearch"))
     HoldDown.DimpleDepth = math.abs(dialog:GetDoubleField("DimpleDepth"))
     HoldDown.MarkerDiameter = math.abs(dialog:GetDoubleField("MarkerDiameter"))
+    HoldDown.SafeZGap = math.abs(dialog:GetDoubleField("SafeZGap"))
     return true
 end
 -- =====================================================]]
@@ -377,6 +385,13 @@ function ValidateSettings()
     end
     if HoldDown.MarkerDiameter <= 0.0 then
         return "Marker diameter must be greater than zero."
+    end
+    -- The sheet is not fastened yet when the dimples are cut, so it may not lie flat. The cap keeps a
+    -- typo from sending a rapid into the machine's Z soft limit.
+    local max_safe_z = 1.0 * HoldDown.Cal
+    if HoldDown.SafeZGap <= 0.0 or HoldDown.SafeZGap > max_safe_z then
+        return "Safe Z gap must be greater than zero and no more than " .. string.format("%.4f", max_safe_z) ..
+            " " .. HoldDown.UnitLabel .. "."
     end
     if ClearanceRadius() <= 0.0 then
         return "Tool diameter, screw head diameter and margin cannot all be zero."
@@ -865,15 +880,17 @@ function CreateDimpleToolpath()
     tool.VBit_Angle = picked.VBit_Angle -- the Tool property is VBit_Angle, per the SDK
     tool.ClearStepover = picked.ToolDia * 0.5
 
-    -- Home position and safe Z MUST come from the material block. The SDK's drilling sample
+    -- Home position and safe Z MUST be relative to the material block. The SDK's drilling sample
     -- hardcodes 5.0 here, which is 5mm in the metric sample it came from and 5 INCHES in an
     -- imperial job -- that exact bug produced a rapid to Z+5.5 and a soft limit trip.
     local mtl_block = MaterialBlock()
     local mtl_box = mtl_block.MaterialBox
     local mtl_box_blc = mtl_box.BLC
     local pos_data = ToolpathPosData()
-    pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
-    pos_data.SafeZGap = mtl_block.Thickness * 0.1
+    pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (HoldDown.SafeZGap * 2.0))
+    -- The gap is a setting rather than a fraction of the thickness: until the screws are in, the sheet
+    -- may bow or rock, and a V-bit traveling a hair above the nominal surface drags across the high spots.
+    pos_data.SafeZGap = HoldDown.SafeZGap
 
     local drill_data = DrillParameterData()
     drill_data.StartDepth = 0.0

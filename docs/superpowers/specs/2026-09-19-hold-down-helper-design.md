@@ -117,8 +117,11 @@ marker. It is never silently dropped.
   VCarve drills at the center of each closed vector, which is the marker circle's center.
   `marker_diameter` sizes only that vector. The width of the dimple actually cut is set by
   the V-bit angle and `dimple_depth` — roughly 0.2" for a 90 degree bit at 0.1" deep.
-- Home position and safe Z **must** be computed from `MaterialBlock()`, as
-  `mtl_box.TRC.z + (thickness * 0.2)` and `thickness * 0.1`. Vectric's sample code hardcodes
+- Home position and safe Z **must** be relative to `MaterialBlock()`: safe Z gap is the
+  `safe_z_gap` setting (default 0.25", capped at 1") and home Z is `mtl_box.TRC.z + 2 * safe_z_gap`.
+  The gap is a setting rather than a fraction of the thickness because the sheet is not yet
+  fastened when the dimples are cut: it may bow or rock, and a first test cut at
+  `thickness * 0.1` (0.05") dragged the V-bit between holes. Vectric's sample code hardcodes
   `5.0` here, which is 5mm in the metric sample it came from and 5 **inches** in an imperial
   job. That exact bug produced a rapid to Z+5.5 and a soft limit trip in Blum Drawer Maker.
 - A completion message reporting positions placed, positions that could not be placed, and
@@ -144,6 +147,7 @@ accumulating markers.
 | Max nudge search | 3.0 | 76.2 |
 | Dimple depth | 0.1 | 2.5 |
 | Marker diameter | 0.125 | 3.0 |
+| Safe Z gap | 0.25 | 6.0 |
 
 Persisted to the registry and restored on open, following the pattern in
 `BlumDrawerRegistry.xlua`. Unit handling follows the existing `Drawer.Cal` convention

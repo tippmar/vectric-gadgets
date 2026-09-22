@@ -80,6 +80,9 @@ to curves, are listed in a warning rather than silently ignored.
 
 Re-running replaces the active sheet's markers and toolpath rather than adding to them.
 
+The dimples are cut before the sheet is fastened, so it may not lie flat. Moves between dimples travel at the
+**Safe Z gap** setting (default 0.25") above the sheet; raise it if the V-bit drags on a bowed sheet.
+
 What it does not do:
 
 - **It does not detect waste islands.** Clearance from every vector does not prove the material under a
