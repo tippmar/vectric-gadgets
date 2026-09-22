@@ -10,6 +10,20 @@
 -- re-zeroing -- the dimples are in job coordinates, so a re-zero invalidates every one of them.
 ]] -- =====================================================]]
 require "strict"
+-- Resolved against VCarve Pro V12.5 by the Task 2 probe on 2026-09-22. The SDK PDF does not document
+-- all of these; these are the signatures the running application actually accepts.
+--   GetDefaultContourTolerance()          -> number (4e-05 in an imperial job)
+--   Contour:CreatePolygonizedCopy(tolerance, max_line_len) -> Contour; both arguments required
+--   Contour:IsPointInside(Point2D, tolerance) -> bool; undefined for open contours
+--   Contour bounding box                  -> contour.BoundingBox2D (.MinX .MinY .MaxX .MaxY)
+--   Contour point iteration               -> contour:GetHeadPosition() / contour:GetNext(pos) -> span, pos;
+--                                            span.StartPoint2D / span.EndPoint2D (span.StartPoint is nil)
+--   Contour open/closed                   -> contour.IsOpen, contour.IsClosed
+--   Layer visibility                      -> layer.Visible (layer.IsVisible is nil)
+--   Clearing a layer                      -> no layer:Clear(); layer:RemoveObject(CadObject) removes one object
+--   Grouped objects                       -> GetContour() is nil; ClassName "vcCadObjectGroup",
+--                                            CastCadObjectToCadObjectGroup(obj), then GetHeadPosition/GetNext
+--   DrillParameterData()                  -> object; toolpath_manager.CreateDrillingToolpath is a function
 
 HoldDown = {}
 HoldDown.ProgramVersion = "1.0"
@@ -41,15 +55,55 @@ function ReadUnits()
 end
 -- =====================================================]]
 function IsLayerVisible(layer)
-    -- Unverified until the Task 2 probe confirms the property name. Failing to read it means
-    -- "visible", so an unknown layer still blocks fasteners instead of being ignored.
+    -- layer.Visible, per the Task 2 probe. Failing to read it means "visible", so an unknown
+    -- layer still blocks fasteners instead of being ignored.
     local ok, visible = pcall(function()
-        return layer.IsVisible
+        return layer.Visible
     end)
     if ok and visible ~= nil then
         return visible
     end
     return true
+end
+-- =====================================================]]
+function CollectObject(object, layer_name, vectors, skipped)
+    -- A group has no contour of its own, so its members are collected instead. Anything else without
+    -- a contour (text, bitmaps) is recorded as skipped by class, never silently dropped.
+    local contour = object:GetContour()
+    if contour ~= nil then
+        table.insert(vectors, {contour = contour, layer = layer_name})
+    elseif object.ClassName == "vcCadObjectGroup" then
+        local group = CastCadObjectToCadObjectGroup(object)
+        local pos = group:GetHeadPosition()
+        while pos ~= nil do
+            local member
+            member, pos = group:GetNext(pos)
+            CollectObject(member, layer_name, vectors, skipped)
+        end
+    else
+        table.insert(skipped, object.ClassName .. " on layer '" .. layer_name .. "'")
+    end
+end
+-- =====================================================]]
+function SkippedWarning(skipped)
+    -- One line per distinct kind of skipped object, or "" when nothing was skipped
+    if #skipped == 0 then
+        return ""
+    end
+    local counts = {}
+    local order = {}
+    for _, entry in ipairs(skipped) do
+        if counts[entry] == nil then
+            counts[entry] = 0
+            table.insert(order, entry)
+        end
+        counts[entry] = counts[entry] + 1
+    end
+    local text = "\n\nWARNING: " .. #skipped .. " object(s) have no outline to keep clear of and were ignored:"
+    for _, entry in ipairs(order) do
+        text = text .. "\n  " .. counts[entry] .. " x " .. entry
+    end
+    return text .. "\nHide those layers if that is intended, or convert the objects to vectors."
 end
 -- =====================================================]]
 function CollectSheetVectors(job)
@@ -68,12 +122,7 @@ function CollectSheetVectors(job)
                 local object
                 object, object_pos = layer:GetNext(object_pos)
                 if IdKey(object.SheetId) == sheet_key then
-                    local contour = object:GetContour()
-                    if contour ~= nil then
-                        table.insert(vectors, {contour = contour, layer = layer.Name})
-                    else
-                        table.insert(skipped, layer.Name)
-                    end
+                    CollectObject(object, layer.Name, vectors, skipped)
                 end
             end
         end
@@ -103,10 +152,7 @@ function main(script_path)
         "Sheet: " .. string.format("%.3f", mtl_block.Width) .. " x " .. string.format("%.3f", mtl_block.Height) ..
         " x " .. string.format("%.3f", mtl_block.Thickness) .. "\n" ..
         "Vectors to keep clear of: " .. #vectors
-    if #skipped > 0 then
-        message = message .. "\n\nWARNING: " .. #skipped .. " object(s) have no readable outline and were ignored. " ..
-            "Grouped vectors do this. Ungroup them before trusting the result."
-    end
+    message = message .. SkippedWarning(skipped)
     MessageBox(message)
     return true
 end
