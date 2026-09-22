@@ -516,6 +516,7 @@ function PrepareObstacles(vectors, radius)
                     points = points,
                     closed = not entry.contour.IsOpen,
                     contour = entry.contour,
+                    layer = entry.layer,
                     min_x = min_x, min_y = min_y, max_x = max_x, max_y = max_y
                 })
             else
@@ -529,6 +530,7 @@ function PrepareObstacles(vectors, radius)
 end
 -- =====================================================]]
 function IsPointSafe(obstacles, x, y, radius)
+    -- Returns true, or false plus the obstacle that blocked the point and why, so a rejection can be explained
     for _, obstacle in ipairs(obstacles) do
         -- Skip anything whose bounding box is further than R away without polygon math
         if not (x < obstacle.min_x - radius or x > obstacle.max_x + radius or
@@ -538,23 +540,23 @@ function IsPointSafe(obstacles, x, y, radius)
                     return obstacle.contour:IsPointInside(Point2D(x, y), GetDefaultContourTolerance())
                 end)
                 if not ok then
-                    return false -- a failed inside test is unsafe: never through the middle of a part
+                    return false, obstacle, "inside test failed for" -- a failed inside test is unsafe: never through the middle of a part
                 end
                 if inside then
-                    return false -- never through a part
+                    return false, obstacle, "inside" -- never through a part
                 end
             end
             local points = obstacle.points
             for i = 1, #points - 3, 2 do
                 if PointSegmentDistance(x, y, points[i], points[i + 1], points[i + 2], points[i + 3]) < radius then
-                    return false -- inside the band the cutter sweeps, or in too narrow a gap
+                    return false, obstacle, "too close to" -- inside the band the cutter sweeps, or in too narrow a gap
                 end
             end
             if obstacle.closed and #points >= 4 then
                 -- Close the loop: the last point back to the first
                 local last = #points - 1
                 if PointSegmentDistance(x, y, points[last], points[last + 1], points[1], points[2]) < radius then
-                    return false
+                    return false, obstacle, "too close to"
                 end
             end
         end
@@ -611,7 +613,8 @@ function PlaceTargets(obstacles, targets, radius)
     local placed = {}
     local rejected = {}
     for _, target in ipairs(targets) do
-        if IsPointSafe(obstacles, target.x, target.y, radius) then
+        local safe, blocker, reason = IsPointSafe(obstacles, target.x, target.y, radius)
+        if safe then
             table.insert(placed, {x = target.x, y = target.y})
         else
             local x, y
@@ -623,7 +626,11 @@ function PlaceTargets(obstacles, targets, radius)
             if x ~= nil then
                 table.insert(placed, {x = x, y = y})
             else
-                table.insert(rejected, {x = target.x, y = target.y, kind = target.kind})
+                -- Name what blocked the original position, so the user knows which layer to look at
+                local why = reason .. " a vector on layer '" .. blocker.layer .. "' spanning " ..
+                    string.format("%.2f", blocker.min_x) .. "," .. string.format("%.2f", blocker.min_y) .. " to " ..
+                    string.format("%.2f", blocker.max_x) .. "," .. string.format("%.2f", blocker.max_y)
+                table.insert(rejected, {x = target.x, y = target.y, kind = target.kind, why = why})
             end
         end
     end
@@ -803,9 +810,12 @@ function main(script_path)
     end
     DeleteDimpleToolpath()
     local toolpath_made = CreateDimpleToolpath()
+    -- The toolpath needed the markers selected; left selected, VCarve draws a direction arrow larger than each marker
+    HoldDown.job.Selection:Clear()
     HoldDown.job:Refresh2DView()
 
-    local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'."
+    local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'," ..
+        " each at least " .. string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " (R) from every vector."
     if toolpath_made then
         message = message .. "\nCreated the '" .. HoldDown.ToolpathName .. "' toolpath."
     end
@@ -813,7 +823,8 @@ function main(script_path)
         message = message .. "\n\nCould not place " .. #rejected .. " position(s):"
         for _, position in ipairs(rejected) do
             message = message .. "\n  " .. position.kind .. " at " ..
-                string.format("%.3f", position.x) .. ", " .. string.format("%.3f", position.y)
+                string.format("%.3f", position.x) .. ", " .. string.format("%.3f", position.y) ..
+                "\n      " .. position.why
         end
     end
     message = message .. SkippedWarning(skipped)
