@@ -34,6 +34,8 @@ HoldDown.job = nil
 HoldDown.Cal = 1.0
 HoldDown.InMM = false
 HoldDown.UnitLabel = "inches"
+HoldDownToolId = ToolDBId()
+HoldDown.Tool = {Name = "Tool Not Selected"}
 -- =====================================================]]
 function IdKey(raw_id) -- String form of a UUID, usable as a table key
     return luaUUID(raw_id):AsString()
@@ -201,6 +203,103 @@ function ClearanceRadius()
     return (HoldDown.ToolDiameter * 0.5) + (HoldDown.HeadDiameter * 0.5) + HoldDown.Margin
 end
 -- =====================================================]]
+function SettingsHtml()
+    local unit = HoldDown.UnitLabel
+    return [[<html><head><style>
+body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F0; }
+table { border-collapse: collapse; }
+td { padding: 2px 6px; }
+td.label { text-align: right; }
+td.unit { color: #666666; }
+.note { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px; margin-top: 8px; }
+.buttons { text-align: right; margin-top: 8px; }
+</style></head><body>
+<table>
+<tr><td class="label"><label title="The V-bit that cuts the dimples">V-Bit:</label></td>
+    <td bgcolor="#33FFFF"><span id="ToolNameLabel">-</span></td>
+    <td><input id="ToolChooseButton" class="ToolPicker" type="button" value="Tool"></td></tr>
+<tr><td class="label"><label title="Largest cutter used anywhere in the job">Assumed tool diameter:</label></td>
+    <td><input type="text" id="ToolDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Diameter of the fastener head">Screw head diameter:</label></td>
+    <td><input type="text" id="HeadDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Extra clearance added on top of the cutter and head">Margin:</label></td>
+    <td><input type="text" id="Margin" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="How far in from the sheet edge perimeter fasteners sit">Edge inset:</label></td>
+    <td><input type="text" id="EdgeInset" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Target spacing between perimeter fasteners">Perimeter spacing target:</label></td>
+    <td><input type="text" id="PerimeterSpacing" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Fasteners placed in the middle of the sheet">Field count:</label></td>
+    <td><input type="text" id="FieldCount" size="10" maxlength="10" /></td><td class="unit">&nbsp;</td></tr>
+<tr><td class="label"><label title="How far a rejected position may move looking for a safe one">Max nudge search:</label></td>
+    <td><input type="text" id="MaxSearch" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="How deep the V-bit cuts each dimple">Dimple depth:</label></td>
+    <td><input type="text" id="DimpleDepth" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Size of the marker circle drawn per position">Marker diameter:</label></td>
+    <td><input type="text" id="MarkerDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+</table>
+<div class="note"><b>Type values, do not paste them.</b> VCarve discards a pasted value unless you type it
+and tab out of the field.</div>
+<p class="buttons"><input id="ButtonOK" class="FormButton" type="button" value="Mark Positions">
+<input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
+</body></html>]]
+end
+-- =====================================================]]
+function ShowSettingsDialog()
+    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 430, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
+    dialog:AddLabelField("ToolNameLabel", HoldDown.Tool.Name)
+    dialog:AddToolPicker("ToolChooseButton", "ToolNameLabel", HoldDownToolId)
+    dialog:AddToolPickerValidToolType("ToolChooseButton", Tool.VBIT)
+    dialog:AddDoubleField("ToolDiameter", HoldDown.ToolDiameter)
+    dialog:AddDoubleField("HeadDiameter", HoldDown.HeadDiameter)
+    dialog:AddDoubleField("Margin", HoldDown.Margin)
+    dialog:AddDoubleField("EdgeInset", HoldDown.EdgeInset)
+    dialog:AddDoubleField("PerimeterSpacing", HoldDown.PerimeterSpacing)
+    dialog:AddIntegerField("FieldCount", HoldDown.FieldCount)
+    dialog:AddDoubleField("MaxSearch", HoldDown.MaxSearch)
+    dialog:AddDoubleField("DimpleDepth", HoldDown.DimpleDepth)
+    dialog:AddDoubleField("MarkerDiameter", HoldDown.MarkerDiameter)
+    if not dialog:ShowDialog() then
+        return false
+    end
+    if dialog:GetTool("ToolChooseButton") then
+        HoldDown.Tool = dialog:GetTool("ToolChooseButton")
+    end
+    -- Every distance is a magnitude; a negative one is always a typo, never a signed offset.
+    HoldDown.ToolDiameter = math.abs(dialog:GetDoubleField("ToolDiameter"))
+    HoldDown.HeadDiameter = math.abs(dialog:GetDoubleField("HeadDiameter"))
+    HoldDown.Margin = math.abs(dialog:GetDoubleField("Margin"))
+    HoldDown.EdgeInset = math.abs(dialog:GetDoubleField("EdgeInset"))
+    HoldDown.PerimeterSpacing = math.abs(dialog:GetDoubleField("PerimeterSpacing"))
+    HoldDown.FieldCount = math.abs(dialog:GetIntegerField("FieldCount"))
+    HoldDown.MaxSearch = math.abs(dialog:GetDoubleField("MaxSearch"))
+    HoldDown.DimpleDepth = math.abs(dialog:GetDoubleField("DimpleDepth"))
+    HoldDown.MarkerDiameter = math.abs(dialog:GetDoubleField("MarkerDiameter"))
+    SettingsWrite()
+    return true
+end
+-- =====================================================]]
+function ValidateSettings()
+    -- Returns an error string, or nil when the settings can be used.
+    if HoldDown.Tool == nil or HoldDown.Tool.Name == "Tool Not Selected" then
+        return "Choose a V-bit before marking positions.\n\n" ..
+            "The gadget needs one to create the dimpling toolpath."
+    end
+    if HoldDown.Tool.InMM ~= HoldDown.InMM then
+        return "The V-bit's units do not match the job's units.\n\n" ..
+            "Choose a bit defined in " .. HoldDown.UnitLabel .. "."
+    end
+    if HoldDown.PerimeterSpacing <= 0.0 then
+        return "Perimeter spacing target must be greater than zero."
+    end
+    if HoldDown.MarkerDiameter <= 0.0 then
+        return "Marker diameter must be greater than zero."
+    end
+    if ClearanceRadius() <= 0.0 then
+        return "Tool diameter, screw head diameter and margin cannot all be zero."
+    end
+    return nil
+end
+-- =====================================================]]
 function main(script_path)
     local job = VectricJob()
     if not job.Exists then
@@ -218,16 +317,27 @@ function main(script_path)
         return false
     end
 
+    while true do
+        if not ShowSettingsDialog() then
+            return false
+        end
+        local problem = ValidateSettings()
+        if problem == nil then
+            break
+        end
+        DisplayMessageBox(problem)
+    end
+
     local mtl_block = MaterialBlock()
-    local message = "Hold Down Helper\n\n" ..
-        "Units: " .. HoldDown.UnitLabel .. "\n" ..
-        "Sheet: " .. string.format("%.3f", mtl_block.Width) .. " x " .. string.format("%.3f", mtl_block.Height) ..
-        " x " .. string.format("%.3f", mtl_block.Thickness) .. "\n" ..
-        "Vectors to keep clear of: " .. #vectors
-    message = message .. "\nClearance radius R: " .. string.format("%.4f", ClearanceRadius())
-    message = message .. SkippedWarning(skipped)
-    SettingsWrite()
-    MessageBox(message)
+    local small = 24.0 * HoldDown.Cal
+    if mtl_block.Width < small or mtl_block.Height < small then
+        DisplayMessageBox("This sheet is smaller than 24 x 24.\n\n" ..
+            "Hold Down Helper is intended for full sheets. It will carry on, but check the positions it marks.")
+    end
+
+    MessageBox("Hold Down Helper\n\nV-bit: " .. tostring(HoldDown.Tool.Name) ..
+        "\nClearance radius R: " .. string.format("%.4f", ClearanceRadius()) ..
+        "\nVectors to keep clear of: " .. #vectors)
     return true
 end
 -- =============== End of File =========================]]
