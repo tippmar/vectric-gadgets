@@ -183,7 +183,7 @@ function ToolRead()
         Name = name,
         InMM = registry:GetBool(SettingsKey("Tool.InMM"), HoldDown.InMM),
         ToolDia = registry:GetDouble(SettingsKey("Tool.ToolDia"), 0.0),
-        VBitAngle = registry:GetDouble(SettingsKey("Tool.VBitAngle"), 90.0),
+        VBit_Angle = registry:GetDouble(SettingsKey("Tool.VBitAngle"), 90.0),
         Stepdown = registry:GetDouble(SettingsKey("Tool.Stepdown"), 0.0),
         Stepover = registry:GetDouble(SettingsKey("Tool.Stepover"), 0.0),
         RateUnits = registry:GetInt(SettingsKey("Tool.RateUnits"), 4),
@@ -203,7 +203,7 @@ function ToolWrite()
     end
     registry:SetBool(SettingsKey("Tool.InMM"), tool.InMM)
     registry:SetDouble(SettingsKey("Tool.ToolDia"), tool.ToolDia)
-    registry:SetDouble(SettingsKey("Tool.VBitAngle"), tool.VBitAngle)
+    registry:SetDouble(SettingsKey("Tool.VBitAngle"), tool.VBit_Angle) -- the Tool property is VBit_Angle, per the SDK
     registry:SetDouble(SettingsKey("Tool.Stepdown"), tool.Stepdown)
     registry:SetDouble(SettingsKey("Tool.Stepover"), tool.Stepover)
     registry:SetInt(SettingsKey("Tool.RateUnits"), tool.RateUnits)
