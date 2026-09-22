@@ -368,10 +368,10 @@ function FieldTargets(min_x, min_y, max_x, max_y)
 end
 -- =====================================================]]
 function DrawMarker(layer, x, y)
-    local center = Point2D(x, y)
+    -- Polar2D is a Blum Drawer Maker helper, not part of the Vectric API, so the two points are built directly
     local radius = HoldDown.MarkerDiameter * 0.5
-    local left = Polar2D(center, 180.0, radius)
-    local right = Polar2D(center, 0.0, radius)
+    local left = Point2D(x - radius, y)
+    local right = Point2D(x + radius, y)
     local circle = Contour(0.0)
     circle:AppendPoint(left)
     circle:ArcTo(right, 1)
