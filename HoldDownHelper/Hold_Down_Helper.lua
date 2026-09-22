@@ -106,8 +106,10 @@ function CollectObject(object, layer_name, vectors, skipped)
                 box = {min_x = box.MinX, min_y = box.MinY, max_x = box.MaxX, max_y = box.MaxY},
                 layer = layer_name
             })
+            table.insert(skipped, class_name .. " on layer '" .. layer_name .. "'")
+        else
+            table.insert(skipped, class_name .. " on layer '" .. layer_name .. "' -- NOT TESTED")
         end
-        table.insert(skipped, class_name .. " on layer '" .. layer_name .. "'")
     end
 end
 -- =====================================================]]
@@ -125,8 +127,9 @@ function SkippedWarning(skipped)
         end
         counts[entry] = counts[entry] + 1
     end
+    -- Entries ending "NOT TESTED" had no readable bounding box either, so nothing kept positions clear of them
     local text = "\n\nNOTE: " .. #skipped .. " object(s) have no vector outline. Positions were kept clear of " ..
-        "each one's bounding box instead:"
+        "each one's bounding box instead, except those marked NOT TESTED, which were ignored:"
     for _, entry in ipairs(order) do
         text = text .. "\n  " .. counts[entry] .. " x " .. entry
     end
@@ -946,7 +949,7 @@ function main(script_path)
     local radius = ClearanceRadius()
     local obstacles, failed = PrepareObstacles(vectors, radius)
     for _, name in ipairs(failed) do
-        table.insert(skipped, "unreadable vector on layer '" .. name .. "'")
+        table.insert(skipped, "unreadable vector on layer '" .. name .. "' -- NOT TESTED")
     end
     if #obstacles == 0 then
         DisplayMessageBox("No vector on the active sheet could be read, so nothing can be checked for clearance.\n\n" ..
