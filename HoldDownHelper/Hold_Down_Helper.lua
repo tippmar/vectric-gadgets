@@ -42,6 +42,10 @@ HoldDown.job = nil
 HoldDown.Cal = 1.0
 HoldDown.InMM = false
 HoldDown.UnitLabel = "inches"
+HoldDown.SheetMinX = 0.0
+HoldDown.SheetMinY = 0.0
+HoldDown.SheetMaxX = 0.0
+HoldDown.SheetMaxY = 0.0
 HoldDownToolId = ToolDBId()
 HoldDown.Tool = {Name = "Tool Not Selected"}
 -- =====================================================]]
@@ -78,7 +82,9 @@ end
 -- =====================================================]]
 function CollectObject(object, layer_name, vectors, skipped)
     -- A group has no contour of its own, so its members are collected instead. Anything else without
-    -- a contour (text, bitmaps) is recorded as skipped by class, never silently dropped.
+    -- a contour (text, bitmaps) is recorded as skipped by class, never silently dropped -- and if it has
+    -- a readable bounding box, that box is kept as a conservative obstacle too (I1), so a hold-down
+    -- position is never accepted next to an object the test simply could not shape more precisely.
     local contour = object:GetContour()
     if contour ~= nil then
         table.insert(vectors, {contour = contour, layer = layer_name})
@@ -91,7 +97,17 @@ function CollectObject(object, layer_name, vectors, skipped)
             CollectObject(member, layer_name, vectors, skipped)
         end
     else
-        table.insert(skipped, object.ClassName .. " on layer '" .. layer_name .. "'")
+        local class_name = tostring(object.ClassName)
+        local ok, box = pcall(function()
+            return object:GetBoundingBox()
+        end)
+        if ok and box ~= nil then
+            table.insert(vectors, {
+                box = {min_x = box.MinX, min_y = box.MinY, max_x = box.MaxX, max_y = box.MaxY},
+                layer = layer_name
+            })
+        end
+        table.insert(skipped, class_name .. " on layer '" .. layer_name .. "'")
     end
 end
 -- =====================================================]]
@@ -109,35 +125,47 @@ function SkippedWarning(skipped)
         end
         counts[entry] = counts[entry] + 1
     end
-    local text = "\n\nWARNING: " .. #skipped .. " object(s) have no outline to keep clear of and were ignored:"
+    local text = "\n\nNOTE: " .. #skipped .. " object(s) have no vector outline. Positions were kept clear of " ..
+        "each one's bounding box instead:"
     for _, entry in ipairs(order) do
         text = text .. "\n  " .. counts[entry] .. " x " .. entry
     end
-    return text .. "\nHide those layers if that is intended, or convert the objects to vectors."
+    return text .. "\nConvert them to vectors for a tighter fit, or hide their layers if they are not cut."
 end
 -- =====================================================]]
 function CollectSheetVectors(job)
-    -- Every visible vector on the active sheet, on any layer, except the gadget's own layer.
+    -- Every visible vector on the active sheet, on any layer, except the gadget's own layer. A layer
+    -- skipped only because it is hidden is reported back (I4) rather than silently excluded, so the
+    -- escape hatch documented in the spec is visible in the completion message when it is used.
     local sheet_key = IdKey(job.SheetManager.ActiveSheetId)
     local layer_manager = job.LayerManager
     local vectors = {}
     local skipped = {}
+    local hidden = {}
     local pos = layer_manager:GetHeadPosition()
     while pos ~= nil do
         local layer
         layer, pos = layer_manager:GetNext(pos)
-        if (not layer.IsSystemLayer) and layer.Name ~= HoldDown.LayerName and IsLayerVisible(layer) then
+        if (not layer.IsSystemLayer) and layer.Name ~= HoldDown.LayerName then
+            local visible = IsLayerVisible(layer)
+            local has_sheet_object = false
             local object_pos = layer:GetHeadPosition()
             while object_pos ~= nil do
                 local object
                 object, object_pos = layer:GetNext(object_pos)
                 if IdKey(object.SheetId) == sheet_key then
-                    CollectObject(object, layer.Name, vectors, skipped)
+                    has_sheet_object = true
+                    if visible then
+                        CollectObject(object, layer.Name, vectors, skipped)
+                    end
                 end
+            end
+            if (not visible) and has_sheet_object then
+                table.insert(hidden, layer.Name)
             end
         end
     end
-    return vectors, skipped
+    return vectors, skipped, hidden
 end
 -- =====================================================]]
 -- Defaults are per unit system and are stored in job units, never normalized to mm. The metric
@@ -328,7 +356,6 @@ function ShowSettingsDialog()
     HoldDown.MaxSearch = math.abs(dialog:GetDoubleField("MaxSearch"))
     HoldDown.DimpleDepth = math.abs(dialog:GetDoubleField("DimpleDepth"))
     HoldDown.MarkerDiameter = math.abs(dialog:GetDoubleField("MarkerDiameter"))
-    SettingsWrite()
     return true
 end
 -- =====================================================]]
@@ -350,6 +377,24 @@ function ValidateSettings()
     end
     if ClearanceRadius() <= 0.0 then
         return "Tool diameter, screw head diameter and margin cannot all be zero."
+    end
+    if HoldDown.FieldCount > 36 then
+        return "Field count must be 36 or less."
+    end
+    local min_spacing = 1.0 * HoldDown.Cal
+    if HoldDown.PerimeterSpacing < min_spacing then
+        return "Perimeter spacing target must be at least " .. string.format("%.4f", min_spacing) .. " " ..
+            HoldDown.UnitLabel .. "."
+    end
+    local max_search_limit = 100.0 * ClearanceRadius()
+    if HoldDown.MaxSearch > max_search_limit then
+        return "Max nudge search must be at most " .. string.format("%.4f", max_search_limit) .. " " ..
+            HoldDown.UnitLabel .. " (100 x R)."
+    end
+    local thickness = MaterialBlock().Thickness
+    if HoldDown.DimpleDepth <= 0.0 or HoldDown.DimpleDepth >= thickness then
+        return "Dimple depth must be greater than zero and less than the material thickness (" ..
+            string.format("%.4f", thickness) .. " " .. HoldDown.UnitLabel .. ")."
     end
     return nil
 end
@@ -502,17 +547,57 @@ function ContourPoints(contour)
     return points
 end
 -- =====================================================]]
+function BoxObstaclePoints(box)
+    -- The rectangle's 4 corners in order, so the existing edge-distance and point-in-polygon code can
+    -- treat a bounding-box obstacle exactly like a polygonized vector.
+    return {box.min_x, box.min_y, box.max_x, box.min_y, box.max_x, box.max_y, box.min_x, box.max_y}
+end
+-- =====================================================]]
+function PointInPolygon(points, x, y)
+    -- Even-odd ray casting over a flat x,y array, with the last point joined back to the first. Used for
+    -- closed obstacles that have no contour to ask (a bounding box, or an open vector closed by I2).
+    local inside = false
+    local j = #points - 1
+    local i = 1
+    while i <= #points - 1 do
+        local xi, yi = points[i], points[i + 1]
+        local xj, yj = points[j], points[j + 1]
+        if ((yi > y) ~= (yj > y)) and (x < (((xj - xi) * (y - yi)) / (yj - yi)) + xi) then
+            inside = not inside
+        end
+        j = i
+        i = i + 2
+    end
+    return inside
+end
+-- =====================================================]]
 function PrepareObstacles(vectors, radius)
     local tolerance = GetDefaultContourTolerance()
     local obstacles = {}
     local failed = {}
     for _, entry in ipairs(vectors) do
-        local ok, polygonized = pcall(function()
-            return entry.contour:CreatePolygonizedCopy(tolerance, radius)
-        end)
-        if ok and polygonized ~= nil then
-            local points = ContourPoints(polygonized)
-            if #points >= 4 then
+        if entry.box ~= nil then
+            -- Already a bounding box (I1): a non-vector object collected only as a conservative rectangle.
+            table.insert(obstacles, {
+                points = BoxObstaclePoints(entry.box),
+                closed = true,
+                contour = nil,
+                layer = entry.layer,
+                min_x = entry.box.min_x, min_y = entry.box.min_y,
+                max_x = entry.box.max_x, max_y = entry.box.max_y
+            })
+        else
+            local ok, polygonized = pcall(function()
+                return entry.contour:CreatePolygonizedCopy(tolerance, radius)
+            end)
+            local points = nil
+            if ok and polygonized ~= nil then
+                points = ContourPoints(polygonized)
+                if #points < 4 then
+                    points = nil
+                end
+            end
+            if points ~= nil then
                 local min_x, min_y = points[1], points[2]
                 local max_x, max_y = points[1], points[2]
                 for i = 3, #points, 2 do
@@ -522,38 +607,78 @@ function PrepareObstacles(vectors, radius)
                     if y < min_y then min_y = y end
                     if y > max_y then max_y = y end
                 end
+                local closed = not entry.contour.IsOpen
+                local contour = entry.contour
+                if not closed then
+                    -- I2: an open vector whose ends nearly meet gets no inside-test protection unless it
+                    -- is treated as closed. A gap smaller than radius is not a real opening a fastener
+                    -- could sit in; test it with PointInPolygon since IsPointInside is undefined for open
+                    -- contours.
+                    local last = #points - 1
+                    local dx = points[1] - points[last]
+                    local dy = points[2] - points[last + 1]
+                    local gap = math.sqrt((dx * dx) + (dy * dy))
+                    if gap <= radius then
+                        closed = true
+                        contour = nil
+                    end
+                end
                 table.insert(obstacles, {
                     points = points,
-                    closed = not entry.contour.IsOpen,
-                    contour = entry.contour,
+                    closed = closed,
+                    contour = contour,
                     layer = entry.layer,
                     min_x = min_x, min_y = min_y, max_x = max_x, max_y = max_y
                 })
             else
-                table.insert(failed, entry.layer)
+                -- Could not polygonize the vector; fall back to its bounding box rather than drop it (I1).
+                local box_ok, box = pcall(function()
+                    return entry.contour.BoundingBox2D
+                end)
+                if box_ok and box ~= nil then
+                    table.insert(obstacles, {
+                        points = BoxObstaclePoints({
+                            min_x = box.MinX, min_y = box.MinY, max_x = box.MaxX, max_y = box.MaxY
+                        }),
+                        closed = true,
+                        contour = nil,
+                        layer = entry.layer,
+                        min_x = box.MinX, min_y = box.MinY, max_x = box.MaxX, max_y = box.MaxY
+                    })
+                else
+                    table.insert(failed, entry.layer)
+                end
             end
-        else
-            table.insert(failed, entry.layer)
         end
     end
     return obstacles, failed
 end
 -- =====================================================]]
 function IsPointSafe(obstacles, x, y, radius)
-    -- Returns true, or false plus the obstacle that blocked the point and why, so a rejection can be explained
+    -- Returns true, or false plus the obstacle that blocked the point (nil for the sheet edge itself) and
+    -- why, so a rejection can be explained.
+    local half_head = HoldDown.HeadDiameter * 0.5
+    if x < HoldDown.SheetMinX + half_head or x > HoldDown.SheetMaxX - half_head or
+        y < HoldDown.SheetMinY + half_head or y > HoldDown.SheetMaxY - half_head then
+        return false, nil, "too close to the sheet edge" -- M1: never drill off the material box
+    end
     for _, obstacle in ipairs(obstacles) do
         -- Skip anything whose bounding box is further than R away without polygon math
         if not (x < obstacle.min_x - radius or x > obstacle.max_x + radius or
                 y < obstacle.min_y - radius or y > obstacle.max_y + radius) then
             if obstacle.closed then
-                local ok, inside = pcall(function()
-                    return obstacle.contour:IsPointInside(Point2D(x, y), GetDefaultContourTolerance())
-                end)
-                if not ok then
-                    return false, obstacle, "inside test failed for" -- a failed inside test is unsafe: never through the middle of a part
-                end
-                if inside then
-                    return false, obstacle, "inside" -- never through a part
+                if obstacle.contour ~= nil then
+                    local ok, inside = pcall(function()
+                        return obstacle.contour:IsPointInside(Point2D(x, y), GetDefaultContourTolerance())
+                    end)
+                    if not ok then
+                        return false, obstacle, "inside test failed for" -- a failed inside test is unsafe: never through the middle of a part
+                    end
+                    if inside then
+                        return false, obstacle, "inside" -- never through a part
+                    end
+                elseif PointInPolygon(obstacle.points, x, y) then
+                    return false, obstacle, "inside" -- never through a part (a bounding box or a nearly-closed outline, I1/I2)
                 end
             end
             local points = obstacle.points
@@ -636,15 +761,33 @@ function PlaceTargets(obstacles, targets, radius)
             if x ~= nil then
                 table.insert(placed, {x = x, y = y})
             else
-                -- Name what blocked the original position, so the user knows which layer to look at
-                local why = reason .. " a vector on layer '" .. blocker.layer .. "' spanning " ..
-                    string.format("%.2f", blocker.min_x) .. "," .. string.format("%.2f", blocker.min_y) .. " to " ..
-                    string.format("%.2f", blocker.max_x) .. "," .. string.format("%.2f", blocker.max_y)
+                -- Name what blocked the original position, so the user knows which layer to look at.
+                -- A nil blocker means the sheet edge itself (M1), which has no layer to name.
+                local why
+                if blocker == nil then
+                    why = reason
+                else
+                    why = reason .. " a vector on layer '" .. blocker.layer .. "' spanning " ..
+                        string.format("%.2f", blocker.min_x) .. "," .. string.format("%.2f", blocker.min_y) .. " to " ..
+                        string.format("%.2f", blocker.max_x) .. "," .. string.format("%.2f", blocker.max_y)
+                end
                 table.insert(rejected, {x = target.x, y = target.y, kind = target.kind, why = why})
             end
         end
     end
     return placed, rejected
+end
+-- =====================================================]]
+function RejectedList(rejected)
+    -- The "Could not place N position(s)" block, factored out (I3) so it can appear in both the normal
+    -- completion message and the all-rejected message.
+    local text = "Could not place " .. #rejected .. " position(s):"
+    for _, position in ipairs(rejected) do
+        text = text .. "\n  " .. position.kind .. " at " ..
+            string.format("%.3f", position.x) .. ", " .. string.format("%.3f", position.y) ..
+            "\n      " .. position.why
+    end
+    return text
 end
 -- =====================================================]]
 function DeleteDimpleToolpath()
@@ -670,7 +813,7 @@ function DeleteDimpleToolpath()
             deleted = deleted + 1
         end
     end
-    return deleted
+    return deleted, #doomed
 end
 -- =====================================================]]
 function SelectHoldDownMarkers()
@@ -767,10 +910,10 @@ function main(script_path)
     ReadUnits()
     SettingsRead()
 
-    local vectors, skipped = CollectSheetVectors(job)
+    local vectors, skipped, hidden = CollectSheetVectors(job)
     if #vectors == 0 then
         DisplayMessageBox("There are no visible vectors on the active sheet, so there is nothing to keep clear of.\n\n" ..
-            "Hold Down Helper made no changes.")
+            "Hold Down Helper made no changes." .. SkippedWarning(skipped))
         return false
     end
 
@@ -784,15 +927,17 @@ function main(script_path)
         end
         DisplayMessageBox(problem)
     end
+    SettingsWrite() -- M5: only after validation passes, so a rejected value is never persisted
 
     local mtl_block = MaterialBlock()
     local small = 24.0 * HoldDown.Cal
     if mtl_block.Width < small or mtl_block.Height < small then
-        DisplayMessageBox("This sheet is smaller than 24 x 24.\n\n" ..
+        DisplayMessageBox("This sheet is smaller than 24 x 24 inches (610 x 610 mm).\n\n" ..
             "Hold Down Helper is intended for full sheets. It will carry on, but check the positions it marks.")
     end
 
     local min_x, min_y, max_x, max_y = SheetBounds()
+    HoldDown.SheetMinX, HoldDown.SheetMinY, HoldDown.SheetMaxX, HoldDown.SheetMaxY = min_x, min_y, max_x, max_y
     local targets = PerimeterTargets(min_x, min_y, max_x, max_y)
     for _, target in ipairs(FieldTargets(min_x, min_y, max_x, max_y)) do
         table.insert(targets, target)
@@ -803,13 +948,21 @@ function main(script_path)
     for _, name in ipairs(failed) do
         table.insert(skipped, "unreadable vector on layer '" .. name .. "'")
     end
+    if #obstacles == 0 then
+        DisplayMessageBox("No vector on the active sheet could be read, so nothing can be checked for clearance.\n\n" ..
+            "Hold Down Helper made no changes." .. SkippedWarning(skipped))
+        return false
+    end
     local placed, rejected = PlaceTargets(obstacles, targets, radius)
 
     if #placed == 0 then
         DisplayMessageBox("Every position was rejected: none of the " .. #targets .. " target(s) is at least " ..
             string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " clear of all " .. #obstacles ..
             " vector(s) on this sheet.\n\nNothing was drawn and nothing was deleted.\n\n" ..
-            "Hide layers you do not need kept clear, such as part labels or construction lines, and run again.")
+            "Markers and a '" .. HoldDown.ToolpathName .. "' toolpath from an earlier run, if any, were left " ..
+            "in place. They were placed for the job as it was then and may no longer be safe: delete them " ..
+            "before cutting.\n\n" .. RejectedList(rejected) ..
+            "\n\nHide layers you do not need kept clear, such as part labels or construction lines, and run again.")
         return false
     end
 
@@ -818,32 +971,45 @@ function main(script_path)
     for _, position in ipairs(placed) do
         DrawMarker(layer, position.x, position.y)
     end
-    DeleteDimpleToolpath()
+    local toolpath_deleted, toolpath_found = DeleteDimpleToolpath()
     local toolpath_made = CreateDimpleToolpath()
     -- The toolpath needed the markers selected; left selected, VCarve draws a direction arrow larger than each marker
     HoldDown.job.Selection:Clear()
     HoldDown.job:Refresh2DView()
 
+    local vector_clause = "from every vector."
+    if #skipped > 0 then
+        vector_clause = "from every vector it could read."
+    end
     local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'," ..
-        " each at least " .. string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " (R) from every vector."
+        " each at least " .. string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " (R) " .. vector_clause
     if toolpath_made then
         message = message .. "\nCreated the '" .. HoldDown.ToolpathName .. "' toolpath."
     end
-    if #rejected > 0 then
-        message = message .. "\n\nCould not place " .. #rejected .. " position(s):"
-        for _, position in ipairs(rejected) do
-            message = message .. "\n  " .. position.kind .. " at " ..
-                string.format("%.3f", position.x) .. ", " .. string.format("%.3f", position.y) ..
-                "\n      " .. position.why
-        end
+    if toolpath_deleted < toolpath_found then
+        message = message .. "\nAn earlier '" .. HoldDown.ToolpathName .. "' toolpath could not be deleted " ..
+            "and must be removed by hand."
     end
     message = message .. SkippedWarning(skipped)
+    if #hidden > 0 then
+        message = message .. "\n\nNot tested (hidden layers): " .. table.concat(hidden, ", ")
+    end
+    if #rejected > 0 then
+        message = message .. "\n\n" .. RejectedList(rejected)
+    end
     message = message .. "\n\nLook at the marked positions before you drill. This gadget keeps every fastener " ..
         "clear of every vector, but it cannot tell whether the material under one comes free during the job. " ..
         "A screw in a piece that is cut loose is worse than no screw at all." ..
-        "\n\nDO NOT RE-ZERO between running this toolpath and running the job. Zero X and Y, run only " ..
-        "'" .. HoldDown.ToolpathName .. "', drive the screws at the dimples, then run the job toolpaths " ..
-        "WITHOUT re-zeroing. The dimples are in job coordinates; re-zeroing invalidates every one of them."
+        "\n\nDO NOT RE-ZERO between drilling the dimples and running the job. "
+    if toolpath_made then
+        message = message .. "Zero X and Y, run only '" .. HoldDown.ToolpathName ..
+            "', drive the screws at the dimples, then run the job toolpaths WITHOUT re-zeroing."
+    else
+        message = message .. "Zero X and Y, create a drilling toolpath over the '" .. HoldDown.LayerName ..
+            "' layer by hand, run only that toolpath, drive the screws at the dimples, then run the job " ..
+            "toolpaths WITHOUT re-zeroing."
+    end
+    message = message .. " The dimples are in job coordinates; re-zeroing invalidates every one of them."
     MessageBox(message)
     return true
 end
