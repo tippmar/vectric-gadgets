@@ -6,6 +6,7 @@ Gadgets for use with Vectric CNC software, developed and tested against **VCarve
 |---|---|---|
 | Blum Drawer Maker | [`BlumDrawerMaker/`](BlumDrawerMaker/) | Designs drawer boxes for Blum under-mount slides: draws the parts and creates their toolpaths. |
 | Blum Nesting Repair | [`BlumNestingRepair/`](BlumNestingRepair/) | Run after nesting to fix toolpaths that nesting left behind on the wrong sheets. |
+| Hold Down Helper | [`HoldDownHelper/`](HoldDownHelper/) | Finds places to screw a sheet to the spoilboard where no cutter will reach, and dimples them with a V-bit. |
 
 The two are meant to be used in sequence: build drawers with Blum Drawer Maker, nest the job, then run Blum Nesting Repair to put the toolpaths back in order.
 
@@ -38,6 +39,56 @@ It is generic: it handles any toolpath using the **Associate with toolpath** geo
 It shows you the planned additions and removals before changing anything.
 
 > **While it runs, VCarve asks "Do you want to apply the template to all sheets?" once per toolpath added. Answer No every time.** The gadget's confirmation dialog says how many prompts to expect. `LoadToolpathTemplate` has a single overload with no way to suppress the prompt, and it is the only API that can place a toolpath on a chosen sheet, so the prompts are unavoidable. Answering Yes copies toolpaths onto sheets that should not have them.
+
+## Hold Down Helper
+
+Screwing a full sheet to the spoilboard means guessing where a fastener will not be hit by a cutter later.
+Getting it wrong destroys a bit, the part, or both, and nothing tells you until the cut reaches the screw.
+
+This gadget finds positions on the active sheet that are clear of everything being cut, marks each one with a
+circle on a `Hold Down` layer, and creates a single `Hold Down Dimples` drilling toolpath over those markers.
+
+The workflow it supports:
+
+1. Lay the sheet on the spoilboard and align it approximately.
+2. Zero X and Y.
+3. Run **only** the toolpath this gadget produces, with a V-bit. It marks shallow dimples.
+4. Drive screws at the dimples.
+5. Load and run the real job toolpaths, **without re-zeroing**.
+
+> **Step 5 is load bearing.** The dimples are in job coordinates, so re-zeroing between steps 3 and 5
+> invalidates every one of them.
+
+A position is rejected if it falls inside any closed vector, or if it comes within `R` of any vector, where
+`R` is half the assumed cutter diameter plus half the screw head diameter plus a margin — 0.375" at the
+defaults. Rejected perimeter positions slide along their own edge, never inward; rejected field positions
+spiral outward. A position with nowhere safe to go is reported by coordinate rather than silently dropped.
+
+The completion message states the `R` in use and, for each position it could not place, names the layer and
+extent of the vector that blocked it. When far more positions are rejected than expected, check the margin
+first: `R` grows with it, and a test value left in the dialog is remembered between runs, as is the chosen
+V-bit.
+
+Every **visible** vector on the active sheet is tested, on any layer. Hiding a layer excludes it, which is the
+way to recover usable area when too many positions are rejected: hide part labels or construction lines, not
+the parts themselves.
+
+Grouped vectors are read member by member. Objects with no outline, such as text that has not been converted
+to curves, are listed in a warning rather than silently ignored.
+
+Re-running replaces the active sheet's markers and toolpath rather than adding to them.
+
+What it does not do:
+
+- **It does not detect waste islands.** Clearance from every vector does not prove the material under a
+  fastener stays attached to the sheet. A region fully enclosed by cut lines comes free during the job, and a
+  screw in it releases a loose piece under a spinning cutter. Look at the positions before drilling.
+- **It assumes one tool diameter for the whole sheet.** A job mixing a 1/8" and a 1/4" bit is tested as though
+  the 1/4" ran everywhere. That loses usable area and never errs toward danger.
+- **It does not read toolpaths.** A vector with no toolpath on it still blocks placement, and a toolpath whose
+  vector was deleted does not.
+- **It works on the active sheet only.** Re-running removes only the active sheet's markers and
+  `Hold Down Dimples` toolpath; markers and toolpaths on other sheets are left alone.
 
 ## Installing
 
