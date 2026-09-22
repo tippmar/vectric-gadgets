@@ -630,6 +630,116 @@ function PlaceTargets(obstacles, targets, radius)
     return placed, rejected
 end
 -- =====================================================]]
+function DeleteDimpleToolpath()
+    -- Re-running rebuilds rather than accumulates. Walks from the tail because the toolpath being
+    -- looked for is the most recently created one; Find(UUID) fails overload resolution in V12.5.
+    local toolpath_manager = ToolpathManager()
+    local sheet_key = IdKey(HoldDown.job.SheetManager.ActiveSheetId)
+    local doomed = {}
+    local pos = toolpath_manager:GetTailPosition()
+    while pos ~= nil do
+        local toolpath
+        toolpath, pos = toolpath_manager:GetPrev(pos)
+        if toolpath ~= nil and toolpath.Name == HoldDown.ToolpathName and IdKey(toolpath.SheetId) == sheet_key then
+            table.insert(doomed, toolpath)
+        end
+    end
+    local deleted = 0
+    for _, toolpath in ipairs(doomed) do
+        local ok, removed = pcall(function()
+            return toolpath_manager:DeleteToolpath(toolpath)
+        end)
+        if ok and removed then
+            deleted = deleted + 1
+        end
+    end
+    return deleted
+end
+-- =====================================================]]
+function SelectHoldDownMarkers()
+    local selection = HoldDown.job.Selection
+    selection:Clear()
+    local layer = HoldDown.job.LayerManager:FindLayerWithName(HoldDown.LayerName)
+    if layer == nil then
+        return false
+    end
+    local sheet_key = IdKey(HoldDown.job.SheetManager.ActiveSheetId)
+    local selected = false
+    local pos = layer:GetHeadPosition()
+    while pos ~= nil do
+        local object
+        object, pos = layer:GetNext(pos)
+        if IdKey(object.SheetId) == sheet_key then
+            local contour = object:GetContour()
+            if contour ~= nil and not contour.IsOpen then
+                selection:Add(object, true, true)
+                selected = true
+            end
+        end
+    end
+    if selected then
+        selection:GroupSelectionFinished()
+    end
+    return selected
+end
+-- =====================================================]]
+function CreateDimpleToolpath()
+    if not SelectHoldDownMarkers() then
+        return false
+    end
+
+    local picked = HoldDown.Tool
+    local tool = Tool(picked.Name, Tool.VBIT)
+    tool.InMM = picked.InMM
+    tool.ToolDia = picked.ToolDia
+    tool.Stepdown = picked.Stepdown
+    tool.Stepover = picked.Stepover
+    tool.RateUnits = picked.RateUnits
+    tool.FeedRate = picked.FeedRate
+    tool.PlungeRate = picked.PlungeRate
+    tool.SpindleSpeed = picked.SpindleSpeed
+    tool.ToolNumber = picked.ToolNumber
+    tool.VBit_Angle = picked.VBit_Angle -- the Tool property is VBit_Angle, per the SDK
+    tool.ClearStepover = picked.ToolDia * 0.5
+
+    -- Home position and safe Z MUST come from the material block. The SDK's drilling sample
+    -- hardcodes 5.0 here, which is 5mm in the metric sample it came from and 5 INCHES in an
+    -- imperial job -- that exact bug produced a rapid to Z+5.5 and a soft limit trip.
+    local mtl_block = MaterialBlock()
+    local mtl_box = mtl_block.MaterialBox
+    local mtl_box_blc = mtl_box.BLC
+    local pos_data = ToolpathPosData()
+    pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_box.TRC.z + (mtl_block.Thickness * 0.2))
+    pos_data.SafeZGap = mtl_block.Thickness * 0.1
+
+    local drill_data = DrillParameterData()
+    drill_data.StartDepth = 0.0
+    drill_data.CutDepth = HoldDown.DimpleDepth
+    drill_data.DoPeckDrill = false
+    drill_data.PeckRetractGap = 0.0
+    drill_data.ProjectToolpath = false
+
+    local geometry_selector = GeometrySelector()
+    local create_2d_previews = true
+    local display_warnings = true -- this call is new to this repo; let VCarve say why it refused
+    local toolpath_manager = ToolpathManager()
+    local ok, toolpath_id = pcall(function()
+        return toolpath_manager:CreateDrillingToolpath(HoldDown.ToolpathName, tool, drill_data, pos_data,
+            geometry_selector, create_2d_previews, display_warnings)
+    end)
+    if not ok then
+        DisplayMessageBox("Could not create the '" .. HoldDown.ToolpathName .. "' toolpath: " .. tostring(toolpath_id))
+        return false
+    end
+    if toolpath_id == nil then
+        DisplayMessageBox("VCarve refused to create the '" .. HoldDown.ToolpathName .. "' toolpath.\n\n" ..
+            "The markers are drawn on layer '" .. HoldDown.LayerName .. "'. You can create a drilling " ..
+            "toolpath over them by hand.")
+        return false
+    end
+    return true
+end
+-- =====================================================]]
 function main(script_path)
     local job = VectricJob()
     if not job.Exists then
@@ -691,9 +801,14 @@ function main(script_path)
     for _, position in ipairs(placed) do
         DrawMarker(layer, position.x, position.y)
     end
+    DeleteDimpleToolpath()
+    local toolpath_made = CreateDimpleToolpath()
     HoldDown.job:Refresh2DView()
 
     local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'."
+    if toolpath_made then
+        message = message .. "\nCreated the '" .. HoldDown.ToolpathName .. "' toolpath."
+    end
     if #rejected > 0 then
         message = message .. "\n\nCould not place " .. #rejected .. " position(s):"
         for _, position in ipairs(rejected) do
@@ -702,6 +817,12 @@ function main(script_path)
         end
     end
     message = message .. SkippedWarning(skipped)
+    message = message .. "\n\nLook at the marked positions before you drill. This gadget keeps every fastener " ..
+        "clear of every vector, but it cannot tell whether the material under one comes free during the job. " ..
+        "A screw in a piece that is cut loose is worse than no screw at all." ..
+        "\n\nDO NOT RE-ZERO between running this toolpath and running the job. Zero X and Y, run only " ..
+        "'" .. HoldDown.ToolpathName .. "', drive the screws at the dimples, then run the job toolpaths " ..
+        "WITHOUT re-zeroing. The dimples are in job coordinates; re-zeroing invalidates every one of them."
     MessageBox(message)
     return true
 end
