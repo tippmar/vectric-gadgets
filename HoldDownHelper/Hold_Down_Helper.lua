@@ -24,6 +24,14 @@ require "strict"
 --   Grouped objects                       -> GetContour() is nil; ClassName "vcCadObjectGroup",
 --                                            CastCadObjectToCadObjectGroup(obj), then GetHeadPosition/GetNext
 --   DrillParameterData()                  -> object; toolpath_manager.CreateDrillingToolpath is a function
+--   Tool V-bit angle                      -> tool.VBit_Angle (VBitAngle does not exist)
+--   Polar2D                               -> not Vectric API; it is a Blum Drawer Maker helper
+-- Observed in VCarve on 2026-09-22 (Masso post, 0.485 sheet, Z zero on the table):
+--   Drilling drills at the vector center  -> yes; G-code drill points equal the marker centers
+--   CreateDrillingToolpath accepts VBIT   -> yes
+--   VBit_Angle drives the dimple width    -> yes, about 0.2 wide at 90 degrees and 0.1 deep
+--   Marker circle vs tool diameter        -> no objection to a 0.125 circle under a larger V-bit
+--   Safe Z from the material block        -> Z0.5335 = top + thickness * 0.1; cut at Z0.385
 
 HoldDown = {}
 HoldDown.ProgramVersion = "1.0"
