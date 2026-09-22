@@ -60,9 +60,11 @@ The workflow it supports:
 > invalidates every one of them.
 
 A position is rejected if it falls inside any closed vector, or if it comes within `R` of any vector, where
-`R` is half the assumed cutter diameter plus half the screw head diameter plus a margin — 0.375" at the
-defaults. Rejected perimeter positions slide along their own edge, never inward; rejected field positions
-spiral outward. A position with nowhere safe to go is reported by coordinate rather than silently dropped.
+`R` is the assumed cutter diameter plus half the screw head diameter plus a margin — 0.5" at the defaults.
+The full cutter diameter, not half of it, is required because an outside profile's cutter reaches a full
+diameter beyond the vector it cuts. Rejected perimeter positions slide along their own edge, never inward;
+rejected field positions spiral outward. A position with nowhere safe to go is reported by coordinate rather
+than silently dropped.
 
 The completion message states the `R` in use and, for each position it could not place, names the layer and
 extent of the vector that blocked it. When far more positions are rejected than expected, check the margin
@@ -87,8 +89,14 @@ What it does not do:
   the 1/4" ran everywhere. That loses usable area and never errs toward danger.
 - **It does not read toolpaths.** A vector with no toolpath on it still blocks placement, and a toolpath whose
   vector was deleted does not.
+- **It does not model toolpath extras.** Lead-ins, ramps, overcuts and machining allowances can reach beyond
+  `R`; raise the margin to cover them.
 - **It works on the active sheet only.** Re-running removes only the active sheet's markers and
   `Hold Down Dimples` toolpath; markers and toolpaths on other sheets are left alone.
+
+Do not draw on the `Hold Down` layer: re-running removes everything on it for the active sheet.
+
+The chosen V-bit is remembered as a snapshot; after editing its feeds in the tool database, pick it again.
 
 ## Installing
 

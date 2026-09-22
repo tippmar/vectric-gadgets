@@ -170,6 +170,9 @@ tested as though the 1/4" ran everywhere. This loses usable area and never errs 
 **Toolpaths are not read.** The test is driven by vectors, so a vector with no toolpath on it
 still blocks placement, and a toolpath whose vector was deleted does not.
 
+**Toolpath extras are not modeled.** Lead-ins, ramps, overcuts and machining allowances can move
+the cutter beyond anything `R` accounts for. Raise the margin to cover them.
+
 ## Risks
 
 - `CreateDrillingToolpath` has a documented SDK sample but has not been exercised in this
