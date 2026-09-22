@@ -171,6 +171,48 @@ function SettingsKey(name)
     return "Imperial." .. name
 end
 -- =====================================================]]
+function ToolRead()
+    -- The last V-bit chosen, restored as a plain table carrying the fields CreateDimpleToolpath copies
+    local registry = Registry(HoldDown.RegName)
+    local name = registry:GetString(SettingsKey("Tool.Name"), "Tool Not Selected")
+    if name == "Tool Not Selected" then
+        HoldDown.Tool = {Name = name}
+        return
+    end
+    HoldDown.Tool = {
+        Name = name,
+        InMM = registry:GetBool(SettingsKey("Tool.InMM"), HoldDown.InMM),
+        ToolDia = registry:GetDouble(SettingsKey("Tool.ToolDia"), 0.0),
+        VBitAngle = registry:GetDouble(SettingsKey("Tool.VBitAngle"), 90.0),
+        Stepdown = registry:GetDouble(SettingsKey("Tool.Stepdown"), 0.0),
+        Stepover = registry:GetDouble(SettingsKey("Tool.Stepover"), 0.0),
+        RateUnits = registry:GetInt(SettingsKey("Tool.RateUnits"), 4),
+        FeedRate = registry:GetDouble(SettingsKey("Tool.FeedRate"), 0.0),
+        PlungeRate = registry:GetDouble(SettingsKey("Tool.PlungeRate"), 0.0),
+        SpindleSpeed = registry:GetInt(SettingsKey("Tool.SpindleSpeed"), 18000),
+        ToolNumber = registry:GetInt(SettingsKey("Tool.ToolNumber"), 1)
+    }
+end
+-- =====================================================]]
+function ToolWrite()
+    local registry = Registry(HoldDown.RegName)
+    local tool = HoldDown.Tool
+    registry:SetString(SettingsKey("Tool.Name"), tool.Name)
+    if tool.Name == "Tool Not Selected" then
+        return
+    end
+    registry:SetBool(SettingsKey("Tool.InMM"), tool.InMM)
+    registry:SetDouble(SettingsKey("Tool.ToolDia"), tool.ToolDia)
+    registry:SetDouble(SettingsKey("Tool.VBitAngle"), tool.VBitAngle)
+    registry:SetDouble(SettingsKey("Tool.Stepdown"), tool.Stepdown)
+    registry:SetDouble(SettingsKey("Tool.Stepover"), tool.Stepover)
+    registry:SetInt(SettingsKey("Tool.RateUnits"), tool.RateUnits)
+    registry:SetDouble(SettingsKey("Tool.FeedRate"), tool.FeedRate)
+    registry:SetDouble(SettingsKey("Tool.PlungeRate"), tool.PlungeRate)
+    registry:SetInt(SettingsKey("Tool.SpindleSpeed"), tool.SpindleSpeed)
+    registry:SetInt(SettingsKey("Tool.ToolNumber"), tool.ToolNumber)
+end
+-- =====================================================]]
 function SettingsRead()
     local registry = Registry(HoldDown.RegName)
     local defaults = SettingDefaults()
@@ -183,6 +225,7 @@ function SettingsRead()
     HoldDown.MaxSearch = registry:GetDouble(SettingsKey("MaxSearch"), defaults.MaxSearch)
     HoldDown.DimpleDepth = registry:GetDouble(SettingsKey("DimpleDepth"), defaults.DimpleDepth)
     HoldDown.MarkerDiameter = registry:GetDouble(SettingsKey("MarkerDiameter"), defaults.MarkerDiameter)
+    ToolRead()
 end
 -- =====================================================]]
 function SettingsWrite()
@@ -196,6 +239,7 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("MaxSearch"), HoldDown.MaxSearch)
     registry:SetDouble(SettingsKey("DimpleDepth"), HoldDown.DimpleDepth)
     registry:SetDouble(SettingsKey("MarkerDiameter"), HoldDown.MarkerDiameter)
+    ToolWrite()
 end
 -- =====================================================]]
 function ClearanceRadius()
