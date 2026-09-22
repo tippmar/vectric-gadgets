@@ -452,6 +452,184 @@ function HoldDownLayer()
     return layer
 end
 -- =====================================================]]
+function PointSegmentDistance(px, py, ax, ay, bx, by)
+    -- Distance from (px,py) to the segment ab, clamping the projection to the segment's ends.
+    local dx = bx - ax
+    local dy = by - ay
+    local length_squared = (dx * dx) + (dy * dy)
+    local t = 0.0
+    if length_squared > 0.0 then
+        t = (((px - ax) * dx) + ((py - ay) * dy)) / length_squared
+        if t < 0.0 then
+            t = 0.0
+        elseif t > 1.0 then
+            t = 1.0
+        end
+    end
+    local cx = ax + (t * dx)
+    local cy = ay + (t * dy)
+    return math.sqrt(((px - cx) * (px - cx)) + ((py - cy) * (py - cy)))
+end
+-- =====================================================]]
+function ContourPoints(contour)
+    -- Flat array of x,y pairs along a polygonized contour: every span's start, then the last span's end,
+    -- so an open contour keeps its final segment. Span points are StartPoint2D/EndPoint2D per the Task 2 probe.
+    local points = {}
+    local last_end = nil
+    local pos = contour:GetHeadPosition()
+    while pos ~= nil do
+        local span
+        span, pos = contour:GetNext(pos)
+        local start_point = span.StartPoint2D
+        table.insert(points, start_point.x)
+        table.insert(points, start_point.y)
+        last_end = span.EndPoint2D
+    end
+    if last_end ~= nil then
+        table.insert(points, last_end.x)
+        table.insert(points, last_end.y)
+    end
+    return points
+end
+-- =====================================================]]
+function PrepareObstacles(vectors, radius)
+    local tolerance = GetDefaultContourTolerance()
+    local obstacles = {}
+    local failed = {}
+    for _, entry in ipairs(vectors) do
+        local ok, polygonized = pcall(function()
+            return entry.contour:CreatePolygonizedCopy(tolerance, radius)
+        end)
+        if ok and polygonized ~= nil then
+            local points = ContourPoints(polygonized)
+            if #points >= 4 then
+                local min_x, min_y = points[1], points[2]
+                local max_x, max_y = points[1], points[2]
+                for i = 3, #points, 2 do
+                    local x, y = points[i], points[i + 1]
+                    if x < min_x then min_x = x end
+                    if x > max_x then max_x = x end
+                    if y < min_y then min_y = y end
+                    if y > max_y then max_y = y end
+                end
+                table.insert(obstacles, {
+                    points = points,
+                    closed = not entry.contour.IsOpen,
+                    contour = entry.contour,
+                    min_x = min_x, min_y = min_y, max_x = max_x, max_y = max_y
+                })
+            else
+                table.insert(failed, entry.layer)
+            end
+        else
+            table.insert(failed, entry.layer)
+        end
+    end
+    return obstacles, failed
+end
+-- =====================================================]]
+function IsPointSafe(obstacles, x, y, radius)
+    for _, obstacle in ipairs(obstacles) do
+        -- Skip anything whose bounding box is further than R away without polygon math
+        if not (x < obstacle.min_x - radius or x > obstacle.max_x + radius or
+                y < obstacle.min_y - radius or y > obstacle.max_y + radius) then
+            if obstacle.closed then
+                local ok, inside = pcall(function()
+                    return obstacle.contour:IsPointInside(Point2D(x, y), GetDefaultContourTolerance())
+                end)
+                if not ok then
+                    return false -- a failed inside test is unsafe: never through the middle of a part
+                end
+                if inside then
+                    return false -- never through a part
+                end
+            end
+            local points = obstacle.points
+            for i = 1, #points - 3, 2 do
+                if PointSegmentDistance(x, y, points[i], points[i + 1], points[i + 2], points[i + 3]) < radius then
+                    return false -- inside the band the cutter sweeps, or in too narrow a gap
+                end
+            end
+            if obstacle.closed and #points >= 4 then
+                -- Close the loop: the last point back to the first
+                local last = #points - 1
+                if PointSegmentDistance(x, y, points[last], points[last + 1], points[1], points[2]) < radius then
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function NudgePerimeter(obstacles, target, radius)
+    -- Slides along its own edge, alternating to either side in R/2 steps. Never moves inward.
+    local step = radius * 0.5
+    if step <= 0.0 then
+        return nil
+    end
+    local along_x, along_y = 1.0, 0.0
+    if target.edge == "left" or target.edge == "right" then
+        along_x, along_y = 0.0, 1.0
+    end
+    local distance = step
+    while distance <= HoldDown.MaxSearch do
+        for _, sign in ipairs({1.0, -1.0}) do
+            local x = target.x + (along_x * distance * sign)
+            local y = target.y + (along_y * distance * sign)
+            if IsPointSafe(obstacles, x, y, radius) then
+                return x, y
+            end
+        end
+        distance = distance + step
+    end
+    return nil
+end
+-- =====================================================]]
+function NudgeField(obstacles, target, radius)
+    -- Spirals outward, testing rings at R/2 intervals, 8 angles per ring, first safe point wins.
+    local step = radius * 0.5
+    if step <= 0.0 then
+        return nil
+    end
+    local distance = step
+    while distance <= HoldDown.MaxSearch do
+        for i = 0, 7 do
+            local angle = (math.pi * 2.0 * i) / 8.0
+            local x = target.x + (distance * math.cos(angle))
+            local y = target.y + (distance * math.sin(angle))
+            if IsPointSafe(obstacles, x, y, radius) then
+                return x, y
+            end
+        end
+        distance = distance + step
+    end
+    return nil
+end
+-- =====================================================]]
+function PlaceTargets(obstacles, targets, radius)
+    local placed = {}
+    local rejected = {}
+    for _, target in ipairs(targets) do
+        if IsPointSafe(obstacles, target.x, target.y, radius) then
+            table.insert(placed, {x = target.x, y = target.y})
+        else
+            local x, y
+            if target.kind == "perimeter" then
+                x, y = NudgePerimeter(obstacles, target, radius)
+            else
+                x, y = NudgeField(obstacles, target, radius)
+            end
+            if x ~= nil then
+                table.insert(placed, {x = x, y = y})
+            else
+                table.insert(rejected, {x = target.x, y = target.y, kind = target.kind})
+            end
+        end
+    end
+    return placed, rejected
+end
+-- =====================================================]]
 function main(script_path)
     local job = VectricJob()
     if not job.Exists then
@@ -493,15 +671,38 @@ function main(script_path)
         table.insert(targets, target)
     end
 
+    local radius = ClearanceRadius()
+    local obstacles, failed = PrepareObstacles(vectors, radius)
+    for _, name in ipairs(failed) do
+        table.insert(skipped, "unreadable vector on layer '" .. name .. "'")
+    end
+    local placed, rejected = PlaceTargets(obstacles, targets, radius)
+
+    if #placed == 0 then
+        DisplayMessageBox("Every position was rejected: none of the " .. #targets .. " target(s) is at least " ..
+            string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " clear of all " .. #obstacles ..
+            " vector(s) on this sheet.\n\nNothing was drawn and nothing was deleted.\n\n" ..
+            "Hide layers you do not need kept clear, such as part labels or construction lines, and run again.")
+        return false
+    end
+
     ClearHoldDownLayer()
     local layer = HoldDownLayer()
-    for _, target in ipairs(targets) do
-        DrawMarker(layer, target.x, target.y)
+    for _, position in ipairs(placed) do
+        DrawMarker(layer, position.x, position.y)
     end
     HoldDown.job:Refresh2DView()
 
-    MessageBox("Hold Down Helper\n\nMarked " .. #targets .. " position(s) on layer '" .. HoldDown.LayerName ..
-        "'.\n\nThese are the ideal positions; nothing has been checked for clearance yet.")
+    local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'."
+    if #rejected > 0 then
+        message = message .. "\n\nCould not place " .. #rejected .. " position(s):"
+        for _, position in ipairs(rejected) do
+            message = message .. "\n  " .. position.kind .. " at " ..
+                string.format("%.3f", position.x) .. ", " .. string.format("%.3f", position.y)
+        end
+    end
+    message = message .. SkippedWarning(skipped)
+    MessageBox(message)
     return true
 end
 -- =============== End of File =========================]]
