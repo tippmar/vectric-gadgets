@@ -47,6 +47,7 @@ Getting it wrong destroys a bit, the part, or both, and nothing tells you until 
 
 This gadget finds positions on the active sheet that are clear of everything being cut, marks each one with a
 circle on a `Hold Down` layer, and creates a single `Hold Down Dimples` drilling toolpath over those markers.
+The **Help** button in its dialog covers every setting, how to read the result, and the gotchas below.
 
 The workflow it supports:
 

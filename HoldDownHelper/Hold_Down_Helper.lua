@@ -48,6 +48,7 @@ HoldDown.SheetMaxX = 0.0
 HoldDown.SheetMaxY = 0.0
 HoldDownToolId = ToolDBId()
 HoldDown.Tool = {Name = "Tool Not Selected"}
+HoldDown.AppPath = "" -- the installed gadget folder, set from main's script_path; the Help page lives under it
 -- =====================================================]]
 function IdKey(raw_id) -- String form of a UUID, usable as a table key
     return luaUUID(raw_id):AsString()
@@ -330,7 +331,8 @@ td.unit { color: #666666; }
 </table>
 <div class="note"><b>Type values, do not paste them.</b> VCarve discards a pasted value unless you type it
 and tab out of the field.</div>
-<p class="buttons"><input id="ButtonOK" class="FormButton" type="button" value="Mark Positions">
+<p class="buttons"><input id="InquiryHelp" class="LuaButton" type="button" value="Help">
+<input id="ButtonOK" class="FormButton" type="button" value="Mark Positions">
 <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
 </body></html>]]
 end
@@ -920,7 +922,23 @@ function CreateDimpleToolpath()
     return true
 end
 -- =====================================================]]
+function OnLuaButton_InquiryHelp(dialog)
+    -- Called by HTML_Dialog when the Help button is pressed. The page is loaded on demand, the way
+    -- Blum Drawer Maker loads its Help/*.xlua pages, so the help text costs nothing on a normal run.
+    local ok, loader = pcall(loadfile, HoldDown.AppPath .. "/Help/HelpMain.xlua")
+    if not ok or loader == nil then
+        DisplayMessageBox("The Hold Down Helper help page is missing from:\n" .. HoldDown.AppPath .. "/Help\n\n" ..
+            "Reinstall the gadget to restore it.")
+        return true
+    end
+    loader()
+    local help = HTML_Dialog(true, HoldDownHelpHtml(), 760, 640, "Hold Down Helper Help")
+    help:ShowDialog()
+    return true
+end
+-- =====================================================]]
 function main(script_path)
+    HoldDown.AppPath = (string.gsub(script_path, "\\", "/"))
     local job = VectricJob()
     if not job.Exists then
         DisplayMessageBox("Hold Down Helper needs a job.\n\nOpen or create one, then run the gadget again.")

@@ -1,0 +1,148 @@
+-- =====================================================]]
+--[[
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- ====================================================================================================================================
+-- Hold Down Helper help page. Loaded on demand by OnLuaButton_InquiryHelp in Hold_Down_Helper.lua, the same way
+-- Blum Drawer Maker loads its Help/*.xlua pages, and shown in an HTML_Dialog. ButtonOK is the dialog's Close button.
+]] -- =====================================================]]
+function HoldDownHelpHtml()
+    return [==[<!DOCTYPE html><html lang="en"><head><title>Hold Down Helper Help</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background-color: #FFFFFF; color: #000000; margin: 0; }
+.layout { overflow: auto; height: 540px; padding: 4px 14px 4px 10px; }
+h1 { font-size: 20px; margin: 10px 0 4px 0; }
+h2 { font-size: 16px; margin: 16px 0 4px 0; border-bottom: 1px solid #999999; }
+p, li { line-height: 1.35; }
+table { border-collapse: collapse; margin: 4px 0; }
+th, td { border: 1px solid #BBBBBB; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background-color: #EEEEEE; }
+.warn { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px 8px; margin: 8px 0; }
+.danger { background-color: #FDE2E1; border: 1px solid #C0392B; padding: 6px 8px; margin: 8px 0; }
+.foot { text-align: center; padding: 8px; border-top: 1px solid #999999; }
+.FormButton { font-weight: bold; font-size: 12px; }
+</style></head>
+<body>
+<div class="layout">
+
+<h1>Hold Down Helper</h1>
+<p>Screwing a full sheet to the spoilboard means guessing where a fastener will not be hit by a cutter later.
+This gadget finds positions on the <b>active sheet</b> that are clear of everything being cut, marks each one
+with a small circle on a <b>Hold Down</b> layer, and creates one <b>Hold Down Dimples</b> drilling toolpath
+that marks each position with a shallow V-bit dimple.</p>
+
+<h2>The workflow</h2>
+<ol>
+<li>Draw and nest the job as usual, then run Hold Down Helper on the sheet you are about to cut.</li>
+<li>Lay the sheet on the spoilboard and align it approximately.</li>
+<li>Zero X and Y.</li>
+<li>Run <b>only</b> the <b>Hold Down Dimples</b> toolpath, with the V-bit you chose.</li>
+<li>Drive a screw at each dimple.</li>
+<li>Load and run the real job toolpaths <b>without re-zeroing</b>.</li>
+</ol>
+<div class="danger"><b>Do not re-zero between steps 4 and 6.</b> The dimples are in job coordinates. Re-zeroing
+X or Y moves every cut relative to the screws, and a cutter can then run straight into one.</div>
+
+<h2>Before you run it</h2>
+<ul>
+<li>Have a <b>V-bit</b> in the tool database, defined in the <b>same units as the job</b>. The gadget refuses a
+bit whose units do not match.</li>
+<li>Show every layer that will be cut. <b>Hidden layers are not tested</b>. That is deliberate: it is how you
+exclude part labels or construction lines. The completion message lists any hidden layers so a parts layer
+hidden by accident is noticed.</li>
+<li>Do not draw on the <b>Hold Down</b> layer. Re-running removes everything on it for the active sheet.</li>
+</ul>
+
+<h2>Settings</h2>
+<p>All values are in the job's units. They are remembered between runs, separately for inch and metric jobs.
+<b>Type each value and tab out of the field</b>. VCarve discards a pasted value.</p>
+<table>
+<tr><th>Setting</th><th>Inch default</th><th>mm default</th><th>What it does</th></tr>
+<tr><td>V-Bit</td><td colspan="2">none</td><td>The bit that cuts the dimples. Only V-bits are offered. The
+choice is remembered, as a snapshot: after editing the bit's feeds in the tool database, pick it again.</td></tr>
+<tr><td>Assumed tool diameter</td><td>0.25</td><td>6.0</td><td>The <b>largest</b> cutter used anywhere in the
+job. The whole sheet is tested as if that cutter ran everywhere.</td></tr>
+<tr><td>Screw head diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the fastener head.</td></tr>
+<tr><td>Margin</td><td>0.125</td><td>3.0</td><td>Extra clearance on top of the cutter and the head.</td></tr>
+<tr><td>Edge inset</td><td>1.25</td><td>32.0</td><td>How far in from the sheet edge the perimeter screws
+sit.</td></tr>
+<tr><td>Perimeter spacing target</td><td>16.0</td><td>406.4</td><td>The spacing aimed for along each edge. Each
+side gets at least 2 screws; a 48" side gets 3.</td></tr>
+<tr><td>Field count</td><td>4</td><td>4</td><td>Screws in the middle of the sheet, up to 36. Zero places
+perimeter screws only.</td></tr>
+<tr><td>Max nudge search</td><td>3.0</td><td>76.2</td><td>How far a rejected position may move looking for a
+safe spot.</td></tr>
+<tr><td>Dimple depth</td><td>0.1</td><td>2.5</td><td>How deep the V-bit cuts. Must be less than the sheet
+thickness. A 90 degree bit at 0.1" leaves a dimple about 0.2" wide.</td></tr>
+<tr><td>Marker diameter</td><td>0.125</td><td>3.0</td><td>The size of the circle drawn at each position. It
+only gives the drilling toolpath something to drill at; the V-bit drills at its center.</td></tr>
+<tr><td>Safe Z gap</td><td>0.25</td><td>6.0</td><td>The height above the sheet for moves between dimples, up to
+1" (25.4 mm). The sheet is not fastened yet, so it may bow or rock; raise this if the bit drags.</td></tr>
+</table>
+
+<h2>How a position is judged safe</h2>
+<p>A position is rejected if it is <b>inside</b> any closed vector (never through a part), or closer than
+<b>R</b> to any vector, where</p>
+<p style="margin-left: 20px;"><b>R = assumed tool diameter + half the screw head diameter + margin</b>
+&nbsp;(0.5" at the inch defaults)</p>
+<p>The <b>full</b> tool diameter is used, not half of it, because an outside profile runs the cutter beside the
+vector: its far edge reaches a whole diameter beyond the line.</p>
+<p>Positions must also keep half a screw head away from the sheet edge.</p>
+
+<h2>Where it tries to put screws</h2>
+<ul>
+<li><b>Perimeter:</b> evenly spaced along each edge at the edge inset, never in a corner.</li>
+<li><b>Field:</b> a grid in the middle half of the sheet. 4 makes a 2 x 2 grid, 6 a 2 x 3.</li>
+<li><b>Nudging:</b> a rejected <b>perimeter</b> position slides along its own edge, a step at a time in either
+direction, and <b>never moves inward</b>: a screw that wandered into the field would no longer hold the edge
+down. A rejected <b>field</b> position searches outward in rings.</li>
+<li>A position with nowhere safe within the max nudge search is <b>reported, not placed</b>.</li>
+</ul>
+
+<h2>Reading the result</h2>
+<ul>
+<li>The message states the <b>R</b> in use. If far more positions are rejected than you expect, check R first.
+A test value left in the dialog, such as a large margin, is remembered and quietly shrinks the usable area.</li>
+<li>Each position it could not place is listed with the <b>layer and extent of the vector that blocked it</b>,
+or "too close to the sheet edge".</li>
+<li>A <b>NOTE</b> lists objects with no vector outline, such as text that has not been converted to curves.
+Positions are kept clear of each one's bounding box instead. Anything marked <b>NOT TESTED</b> could not even
+be bounded and was ignored, so look at those areas yourself.</li>
+<li>If every position is rejected, nothing is drawn and nothing is deleted. Markers and a toolpath from an
+earlier run stay in place and may no longer be safe: delete them before cutting.</li>
+</ul>
+
+<h2>Re-running</h2>
+<p>Each run that places at least one position removes the active sheet's markers and its Hold Down Dimples
+toolpath, then builds new ones, so changed settings replace the old dimples rather than adding to them.
+Pressing Cancel changes nothing. Other sheets are never touched. Dimples already cut into a sheet stay there, of
+course: drive screws only at the dimples from the latest run.</p>
+
+<h2>Gotchas</h2>
+<ul>
+<li><b>Edge inset versus your nesting margin.</b> If parts are nested close to the sheet edge, the perimeter
+positions land on or near them and are rejected all along that edge. Lower the edge inset so the screws sit in
+the strip between the parts and the sheet edge. With the defaults, that strip must be wider than the inset plus
+R.</li>
+<li><b>Waste islands are not detected.</b> Clearance from every vector does not prove the material under a
+screw stays attached to the sheet. A region fully enclosed by cuts comes free during the job, and a screw in it
+releases a loose piece under a spinning cutter. <b>Look at the positions before you drill.</b></li>
+<li><b>One tool diameter for the whole sheet.</b> A job mixing a 1/8" and a 1/4" bit is tested as though the
+1/4" ran everywhere. That costs usable area but never errs toward danger.</li>
+<li><b>Toolpaths are not read.</b> The test uses vectors. A vector with no toolpath still blocks placement, and
+a toolpath whose vector was deleted does not.</li>
+<li><b>Toolpath extras are not modeled.</b> Lead-ins, ramps, overcuts and machining allowances can reach beyond
+R. Raise the margin to cover them.</li>
+<li><b>Active sheet only.</b> Run it once per sheet, on the sheet you are about to cut.</li>
+<li><b>Small sheets.</b> The gadget is meant for full sheets and warns below 24 x 24 inches (610 x 610 mm), but
+carries on.</li>
+</ul>
+
+</div>
+<div class="foot">
+<input id="ButtonOK" class="FormButton" name="ButtonOK" type="button" value="Close">
+</div>
+</body></html>]==]
+end
+-- =============== End of File =========================]]

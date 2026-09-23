@@ -34,9 +34,13 @@ Limitations).
 ```
 HoldDownHelper/
     Hold_Down_Helper.lua     -- entry point; must begin with "-- VECTRIC LUA SCRIPT"
+    Help/
+        HelpMain.xlua        -- the Help button's page, loaded on demand
 ```
 
-Single file. The gadget shares no code with the two Blum gadgets and does not depend on
+The code is a single file. The help page follows Blum Drawer Maker's pattern: a `Help/*.xlua`
+file that builds the page's HTML, loaded with `loadfile` when the dialog's Help button is
+pressed. The gadget shares no code with the two Blum gadgets and does not depend on
 them. Packaged with the existing `deploy.ps1 -SourceFolder HoldDownHelper`.
 
 ## Safety test
