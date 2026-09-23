@@ -439,7 +439,12 @@ table {
             <td>
                 <input type="text" class="h1-l" id="Milling.BackDadoClearance" size="10" maxlength="10" />
             </td>
-            <td colspan="2">&nbsp;</td>
+            <td class="h1-rP">
+                <label title="Splits each side and front profile into a roughing pass that leaves this much on every edge, then a full-depth finishing pass that takes it off. The bit deflects when it goes from air between the fingers into material; a thin, even finishing cut removes most of that. Zero turns it off (one profile pass). Try 0.010 to 0.020 in (0.25 to 0.5 mm). Existing toolpaths must be deleted and regenerated to pick it up.">Profile Finish Allowance</label>
+            </td>
+            <td>
+                <input type="text" class="h1-l" id="Milling.ProfileFinishAllowance" size="10" maxlength="10" />
+            </td>
         </tr>
   <!-- Blum hardware features always enabled (Soft Close & Hole) -->
         <tr>
@@ -1211,6 +1216,7 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
     dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
     dialog:AddDoubleField("Milling.FingerClearance", Milling.FingerClearance)
     dialog:AddDoubleField("Milling.FingerAllowance", Milling.FingerAllowance)
+    dialog:AddDoubleField("Milling.ProfileFinishAllowance", Milling.ProfileFinishAllowance)
     dialog:AddDoubleField("Milling.ProfileToolDia", Milling.ProfileToolDia)
     dialog:AddDoubleField("Milling.FingerToolDia", Milling.FingerToolDia)
     dialog:AddDoubleField("Milling.BlindTabThickness", Milling.BlindTabThickness)
@@ -1226,6 +1232,8 @@ function OnLuaButton_InquiryMilling() -- "Milling" Button
         -- Allowances are signed, like the clearances above: no math.abs here.
         Milling.DadoAllowance = dialog:GetDoubleField("Milling.DadoAllowance")
         Milling.FingerAllowance = dialog:GetDoubleField("Milling.FingerAllowance")
+        -- Unlike the fit allowances this is a thickness of material left for a second pass, never negative
+        Milling.ProfileFinishAllowance = math.abs(dialog:GetDoubleField("Milling.ProfileFinishAllowance"))
         Milling.DadoHeight = math.abs(dialog:GetDoubleField("Milling.DadoHeight"))
         Milling.PartGap = math.abs(dialog:GetDoubleField("Milling.PartGap"))
         Milling.ProfileToolDia = math.abs(dialog:GetDoubleField("Milling.ProfileToolDia"))

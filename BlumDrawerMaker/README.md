@@ -7,6 +7,7 @@ This folder contains the Blum Drawer Maker gadget for Vectric CNC software produ
 - Milling settings (tools, clearances, dado configurations, soft-close drilling options)
 - Separate fit and machine-error settings: a clearance per joint (finger, bottom dado, back dado) and a pocket allowance per bit
 - Profile tabs that hold parts in the sheet while they are cut free
+- An optional finishing pass on the side and front profiles, so bit deflection at the finger ends does not throw off the joint
 - A test-cut mode that draws one side stub and one front stub at the real drawer height, for proving the joint on scrap
 - Automated layer creation, vector generation, and toolpath processing
 - Export / import of drawer configuration profiles

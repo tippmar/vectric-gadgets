@@ -21,14 +21,14 @@ function SideToolpaths() -- Side toolpaths for this sheet; shared by the full ru
         CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true, true)
         Push()
     else
         CreateLayerDadoToolpath("Side Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSidePocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Side-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Side-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        CreateLayerProfileToolpath("Side-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNSideProfile, 0.0, Drawer.PanelThickness, "OUT", true, true)
         Push()
     end
 end -- function End
@@ -43,14 +43,14 @@ function FrontToolpaths() -- Front toolpaths for this sheet; shared by the full 
         CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0,
             Drawer.PanelThickness - Milling.BlindTabThickness)
         Push()
-        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true, true)
         Push()
     else
         CreateLayerDadoToolpath("Front Dado" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontPocket, 0.0, (Drawer.PanelThickness - Milling.DadoHeight))
         Push()
         CreateLayerFingerToolpath("Front-Fingers" .. ThicknessTag(Drawer.PanelThickness), "Front-" .. Milling.LNFingerBox, 0.0, Drawer.PanelThickness)
         Push()
-        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true)
+        CreateLayerProfileToolpath("Front-Profile" .. ThicknessTag(Drawer.PanelThickness), Milling.LNFrontProfile, 0.0, Drawer.PanelThickness, "OUT", true, true)
         Push()
     end
 end -- function End
@@ -1219,8 +1219,32 @@ function CreateLayerFingerToolpath(name, layer_name, start_depth, cut_depth)
     return true
 end
 -- =====================================================]]
-function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut, use_tabs)
-    if Milling.Profile then
+function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, InOrOut, use_tabs, finish)
+    -- A profile, or with finish set and a Profile Finish Allowance above zero, a roughing profile that leaves
+    -- that allowance on every edge followed by a full-depth "<name> Finish" profile that takes it off. Between
+    -- the fingers the bit runs in air, then bites into a finger end and deflects; a thin, even finishing cut
+    -- barely loads it, so the edge lands where it is drawn. The finish name keeps "-Profile", so
+    -- SequenceToolpathsByTool still runs it with the profiles, after its roughing pass, in creation order.
+    if not Milling.Profile then
+        return true
+    end
+    local allowance = 0.0
+    if finish and Milling.ProfileFinishAllowance > 0.0 then
+        allowance = Milling.ProfileFinishAllowance
+    end
+    if not CreateProfilePass(name, layer_name, start_depth, cut_depth, InOrOut, use_tabs, allowance, false) then
+        return false
+    end
+    if allowance > 0.0 then
+        return CreateProfilePass(name .. " Finish", layer_name, start_depth, cut_depth, InOrOut, use_tabs, 0.0, true)
+    end
+    return true
+end
+-- =====================================================]]
+function CreateProfilePass(name, layer_name, start_depth, cut_depth, InOrOut, use_tabs, allowance, single_pass)
+    -- One profiling toolpath. allowance is left on every edge; single_pass cuts the full depth in one pass,
+    -- which a finishing cut can afford because it takes only the allowance off the side.
+    do
         --  Please Note: CreateLayerProfileToolpath is provided by Vectric and can be found in the SDK and Sample Gadget files.
         if not SelectLayerVectors(layer_name, true, false) then
             return false
@@ -1233,6 +1257,9 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         tool.InMM = MillTool1.InMM -- tool_in_mm
         tool.ToolDia = MillTool1.ToolDia -- tool_dia
         tool.Stepdown = MillTool1.Stepdown -- tool_stepdown
+        if single_pass then
+            tool.Stepdown = cut_depth
+        end
         tool.Stepover = MillTool1.Stepover -- tool_dia * 0.25
         tool.RateUnits = MillTool1.RateUnits -- Tool.MM_SEC -- MM_SEC, MM_MIN, METRES_MIN, INCHES_SEC ...
         tool.FeedRate = MillTool1.FeedRate -- 30
@@ -1264,7 +1291,7 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         else -- InOrOut == "ON"
             profile_data.ProfileSide = ProfileParameterData.PROFILE_ON
         end
-        profile_data.Allowance = 0.0 -- Allowance to leave on when machining
+        profile_data.Allowance = allowance -- Allowance to leave on when machining; nonzero only on a roughing pass
         profile_data.KeepStartPoints = false -- true to preserve start point positions, false to reorder start points to minimise toolpath length
         profile_data.CreateSquareCorners = false -- true if want to create 'square' external corners on toolpath
         profile_data.CornerSharpen = false -- true to perform corner sharpening on internal corners (only with v-bits)
@@ -1301,7 +1328,7 @@ function CreateLayerProfileToolpath(name, layer_name, start_depth, cut_depth, In
         local toolpath_id = toolpath_manager:CreateProfilingToolpath(name, tool, profile_data, ramping_data,
             lead_in_out_data, pos_data, geometry_selector, create_2d_previews, display_warnings)
         if toolpath_id == nil then
-            PresentMessage("Error", "Toolpath Processing", "Error creating Profile Toolpath")
+            PresentMessage("Error", "Toolpath Processing", "Error creating Profile Toolpath '" .. name .. "'")
             return false
         end
         AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)

@@ -77,6 +77,33 @@ which confirms both the finger count and the symmetric application of C.
 `-0.0070` is exactly `E/2`, which cancels the machine error and reduces the relation to
 `fit = 2C`.
 
+## Profile deflection and the finishing pass
+
+Finding (2026-09-22, from test cuts): a finger joint that is off size is not always machine
+error that an allowance can cancel. On the side and front profiles the bit runs in air
+between the fingers, then bites into each finger end and deflects. How much it deflects
+depends on how much material it meets, so it is not a constant offset, and neither an
+allowance nor a clearance cancels it reliably. A finger-depth ("recess") setting was tried
+and dropped for the same reason: it moved the tip, not the deflection.
+
+`ProfileFinishAllowance` (Milling menu, default 0 = off) splits the side and front profiles
+into two toolpaths:
+
+```
+<Side|Front>-Profile (t)          roughing, Allowance = ProfileFinishAllowance, tool stepdown
+<Side|Front>-Profile (t) Finish   Allowance = 0, full depth in one pass
+```
+
+Both use the same vectors, tool and tabs. The finishing pass takes an even skin of
+`ProfileFinishAllowance`, so the load, and with it the deflection, is small and uniform.
+Back and bottom profiles have no fingers and stay single-pass.
+
+- Start at 0.010 to 0.020 in (0.25 to 0.5 mm).
+- Turn this on **before** retuning `FingerAllowance`. Values tuned without it may have been
+  absorbing part of the deflection, and will read differently once it is gone.
+- Existing toolpaths keep their old passes when recalculated. Delete and regenerate them after
+  changing it.
+
 ## Superseded advice
 
 - A finger allowance of **-0.012** was given for the in-progress job, on an explicit

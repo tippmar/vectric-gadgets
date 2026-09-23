@@ -44,6 +44,7 @@ function RegistryReset() -- Reset All Settings
         Milling.DadoHeight = 6.3500
         Milling.FingerClearance = 0.1270
         Milling.FingerAllowance = 0.0000
+        Milling.ProfileFinishAllowance = 0.0000
         Milling.FingerToolDia = 3.0000
         Milling.FingerToolRadius = 1.5875
         Milling.PartGap = 19.0500
@@ -117,6 +118,7 @@ function RegistryReset() -- Reset All Settings
         Milling.BlindTabThickness = 0.1000
         Milling.FingerClearance = 0.0050
         Milling.FingerAllowance = 0.0000
+        Milling.ProfileFinishAllowance = 0.0000
         Milling.FingerToolDia = 0.1250
         Milling.FingerToolRadius = 0.0625
         Milling.PartGap = 0.7500
@@ -277,6 +279,8 @@ function RegistryRead() -- Read from Registry values
         Milling.BlindTabThickness = RegistryRead:GetDouble("Milling.BlindTabThickness", 2.54)
         Milling.FingerClearance = RegistryRead:GetDouble("Milling.FingerClearance", 0.127)
         Milling.FingerAllowance = RegistryRead:GetDouble("Milling.FingerAllowance", 0.0)
+        -- Defaults to zero, so a job saved before this setting existed keeps its single profile pass.
+        Milling.ProfileFinishAllowance = RegistryRead:GetDouble("Milling.ProfileFinishAllowance", 0.0)
         Milling.FingerToolDia = RegistryRead:GetDouble("Milling.FingerToolDia", 3.0)
         Milling.FingerToolRadius = RegistryRead:GetDouble("Milling.FingerToolRadius", 1.5875)
         Milling.PartGap = RegistryRead:GetDouble("Milling.PartGap", 19.05)
@@ -367,6 +371,8 @@ function RegistryRead() -- Read from Registry values
         Milling.BlindTabThickness = RegistryRead:GetDouble("Milling.BlindTabThickness", 0.1000)
         Milling.FingerClearance = RegistryRead:GetDouble("Milling.FingerClearance", 0.0050)
         Milling.FingerAllowance = RegistryRead:GetDouble("Milling.FingerAllowance", 0.0)
+        -- Defaults to zero, so a job saved before this setting existed keeps its single profile pass.
+        Milling.ProfileFinishAllowance = RegistryRead:GetDouble("Milling.ProfileFinishAllowance", 0.0)
         Milling.FingerToolDia = RegistryRead:GetDouble("Milling.FingerToolDia", 0.1250)
         Milling.FingerToolRadius = RegistryRead:GetDouble("Milling.FingerToolRadius", 0.0625)
         Milling.PartGap = RegistryRead:GetDouble("Milling.PartGap", 0.7500)
@@ -535,6 +541,7 @@ function RegistryWriter() -- Write to Registry values
     RegValue = RegistryWrite:SetDouble("Milling.TabThickness", Milling.TabThickness)
     RegValue = RegistryWrite:SetDouble("Milling.FingerClearance", Milling.FingerClearance)
     RegValue = RegistryWrite:SetDouble("Milling.FingerAllowance", Milling.FingerAllowance)
+    RegValue = RegistryWrite:SetDouble("Milling.ProfileFinishAllowance", Milling.ProfileFinishAllowance)
     RegValue = RegistryWrite:SetDouble("Milling.DadoHeight", Milling.DadoHeight)
     RegValue = RegistryWrite:SetDouble("Milling.BlindTabThickness", Milling.BlindTabThickness)
     RegValue = RegistryWrite:SetString("Milling.DrawerStyleName", Milling.DrawerStyleName)
@@ -695,6 +702,7 @@ function ExportWriter(xFile) -- Export All settings
     fileW:write([[Milling.DrawerStyleName = "]] .. Milling.DrawerStyleName .. [[" ]] .. "\n")
     fileW:write([[Milling.FingerClearance = tonumber("]] .. ExD2S(Milling.FingerClearance) .. [[") ]] .. "\n")
     fileW:write([[Milling.FingerAllowance = tonumber("]] .. ExD2S(Milling.FingerAllowance) .. [[") ]] .. "\n")
+    fileW:write([[Milling.ProfileFinishAllowance = tonumber("]] .. ExD2S(Milling.ProfileFinishAllowance) .. [[") ]] .. "\n")
     fileW:write([[Milling.FingerToolDia = tonumber("]] .. ExD2S(Milling.FingerToolDia) .. [[") ]] .. "\n")
     fileW:write([[Milling.JointStyleName = "]] .. Milling.JointStyleName .. [[" ]] .. "\n")
     fileW:write([[Milling.LNBackPocket = "]] .. Milling.LNBackPocket .. [[" ]] .. "\n")
