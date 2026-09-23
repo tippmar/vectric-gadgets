@@ -530,6 +530,27 @@ function ClearHoldDownLayer()
     end
 end
 -- =====================================================]]
+function ActiveLayer()
+    -- The layer the user was working on, so drawing the markers does not leave them on the Hold Down layer.
+    -- GetActiveLayer is documented in the SDK but new to this repo, so a failure only skips the restore.
+    local ok, layer = pcall(function()
+        return HoldDown.job.LayerManager:GetActiveLayer()
+    end)
+    if ok then
+        return layer
+    end
+    return nil
+end
+-- =====================================================]]
+function RestoreActiveLayer(layer)
+    if layer == nil then
+        return
+    end
+    pcall(function()
+        HoldDown.job.LayerManager:SetActiveLayer(layer)
+    end)
+end
+-- =====================================================]]
 function HoldDownLayer()
     local layer = HoldDown.job.LayerManager:GetLayerWithName(HoldDown.LayerName)
     layer:SetColor(255, 0, 255) -- magenta: not a color the Blum gadgets use, so markers stand out
@@ -1013,6 +1034,7 @@ function main(script_path)
         return false
     end
 
+    local original_layer = ActiveLayer()
     ClearHoldDownLayer()
     local layer = HoldDownLayer()
     for _, position in ipairs(placed) do
@@ -1022,6 +1044,7 @@ function main(script_path)
     local toolpath_made = CreateDimpleToolpath()
     -- The toolpath needed the markers selected; left selected, VCarve draws a direction arrow larger than each marker
     HoldDown.job.Selection:Clear()
+    RestoreActiveLayer(original_layer)
     HoldDown.job:Refresh2DView()
 
     local vector_clause = "from every vector."
