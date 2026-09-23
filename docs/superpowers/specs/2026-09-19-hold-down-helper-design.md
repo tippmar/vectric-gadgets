@@ -36,6 +36,8 @@ HoldDownHelper/
     Hold_Down_Helper.lua     -- entry point; must begin with "-- VECTRIC LUA SCRIPT"
     Help/
         HelpMain.xlua        -- the Help button's page, loaded on demand
+    License.txt              -- license and warranty disclaimer, as Blum Drawer Maker ships
+    README.md                -- attribution, packaging and folder overview
 ```
 
 The code is a single file. The help page follows Blum Drawer Maker's pattern: a `Help/*.xlua`

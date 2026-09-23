@@ -3,6 +3,15 @@
 -- Gadgets are an entirely optional add-in to Vectric's core software products.
 -- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
 -- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Hold Down Helper is an original gadget from the vectric-gadgets repository, https://github.com/tippmar/vectric-gadgets
 -- ====================================================================================================================================
 -- Hold Down Helper help page. Loaded on demand by OnLuaButton_InquiryHelp in Hold_Down_Helper.lua, the same way
 -- Blum Drawer Maker loads its Help/*.xlua pages, and shown in an HTML_Dialog. ButtonOK is the dialog's Close button.
@@ -138,6 +147,27 @@ R. Raise the margin to cover them.</li>
 <li><b>Small sheets.</b> The gadget is meant for full sheets and warns below 24 x 24 inches (610 x 610 mm), but
 carries on.</li>
 </ul>
+
+<h2>About</h2>
+<p><b>Hold Down Helper</b>, version ]==] .. HoldDown.ProgramVersion .. [==[<br>
+An original gadget from the vectric-gadgets repository:
+<a href="https://github.com/tippmar/vectric-gadgets">https://github.com/tippmar/vectric-gadgets</a><br>
+Questions and discussion: <a href="https://forum.vectric.com">Vectric User Forum</a></p>
+<p><b>Disclaimer</b><br>
+The Hold Down Helper gadget is a plugin for Vectric software, VCarve Pro and Aspire.
+Gadgets are an entirely optional add-in to Vectric's core software products.
+They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own
+risk. In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.</p>
+<p>Permission is granted to anyone to use this software for any purpose, including commercial applications, and to
+alter it and redistribute it freely, subject to the following restrictions:</p>
+<ol>
+<li>The origin of this software must not be misrepresented; you must not claim that you wrote the original
+software. If you use this software in a product, an acknowledgement in the product documentation would be
+appreciated but is not required.</li>
+<li>Altered source versions must be plainly marked as such, and must not be misrepresented as being the original
+software.</li>
+<li>This notice may not be removed or altered from any source distribution.</li>
+</ol>
 
 </div>
 <div class="foot">
