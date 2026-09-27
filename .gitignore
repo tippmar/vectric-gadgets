@@ -42,3 +42,6 @@ luac.out
 # Gadget packages
 *.vgadget
 
+
+# Superpowers specs and plans (local only)
+docs/superpowers/
