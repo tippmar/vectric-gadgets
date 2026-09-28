@@ -1,0 +1,177 @@
+-- VECTRIC LUA SCRIPT
+-- =====================================================]]
+function BuildDialog()
+    local html = [[<!DOCTYPE html><html><head><title>Box Joint Runs</title>
+<style>
+body { font-family: Arial, sans-serif; font-size: 12px; }
+table { border-collapse: collapse; }
+td { padding: 3px 6px; }
+h2 { font-size: 13px; margin: 8px 0 2px 0; }
+</style></head><body>
+<table>
+<tr><td colspan="4"><h2>Stock</h2></td></tr>
+<tr>
+  <td><label title="Thickness of every piece in this run.">Thickness (T)</label></td>
+  <td><input type="text" id="Run.StockT" size="10"/></td>
+  <td><label title="The dimension the fingers run across -- a drawer's height.">Width (W)</label></td>
+  <td><input type="text" id="Run.StockW" size="10"/></td>
+</tr>
+<tr><td colspan="4"><h2>Fingers</h2></td></tr>
+<tr>
+  <td><label title="Uncheck to enter a finger count by hand.">Automatic count</label></td>
+  <td><input type="checkbox" id="Run.FingerAuto"/></td>
+  <td><label title="Used only when Automatic count is unchecked.">Manual count</label></td>
+  <td><input type="text" id="Run.FingerCountManual" size="10"/></td>
+</tr>
+<tr>
+  <td><label title="Blind styles are excluded: any piece can be flipped face for face.">Joint style</label></td>
+  <td>
+    <select id="Run.JointStyle" size="1">
+      <option>Through</option>
+      <option>Dog Bone</option>
+      <option>T-Bone</option>
+    </select>
+  </td>
+  <td><label title="Gap opened beyond the finger's nominal width, split between both sides.">Finger clearance</label></td>
+  <td><input type="text" id="Run.FingerClearance" size="10"/></td>
+</tr>
+<tr><td colspan="4"><h2>Bottom groove</h2></td></tr>
+<tr>
+  <td><label>Groove on</label></td>
+  <td><input type="checkbox" id="Run.GrooveOn"/></td>
+  <td><label title="From the bottom edge to the near side of the groove.">Inset</label></td>
+  <td><input type="text" id="Run.GrooveInset" size="10"/></td>
+</tr>
+<tr>
+  <td><label>Groove width</label></td>
+  <td><input type="text" id="Run.GrooveWidth" size="10"/></td>
+  <td><label>Groove depth</label></td>
+  <td><input type="text" id="Run.GrooveDepth" size="10"/></td>
+</tr>
+<tr><td colspan="4"><h2>Tools</h2></td></tr>
+<tr>
+  <td><label>Profile bit</label></td>
+  <td><input id="ToolChooseProfile" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameProfile">-</span></td>
+  <td colspan="2"></td>
+</tr>
+<tr>
+  <td><label>Finger bit</label></td>
+  <td><input id="ToolChooseFinger" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameFinger">-</span></td>
+  <td><label>Pocket allowance</label></td>
+  <td><input type="text" id="Milling.FingerAllowance" size="10"/></td>
+</tr>
+<tr>
+  <td><label>Finger clear bit</label></td>
+  <td><input id="ToolChooseFingerClear" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameFingerClear">-</span></td>
+  <td><label>Pocket allowance</label></td>
+  <td><input type="text" id="Milling.FingerClearAllowance" size="10"/></td>
+</tr>
+<tr>
+  <td><label>Dado bit</label></td>
+  <td><input id="ToolChooseDado" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameDado">-</span></td>
+  <td><label>Pocket allowance</label></td>
+  <td><input type="text" id="Milling.GrooveAllowance" size="10"/></td>
+</tr>
+<tr><td colspan="4"><h2>Cutting</h2></td></tr>
+<tr>
+  <td><label title="Minimum gap left between parts on the sheet.">Part gap</label></td>
+  <td><input type="text" id="Milling.PartGap" size="10"/></td>
+  <td><label>Tabs</label></td>
+  <td><input type="checkbox" id="Milling.ProfileTabs"/></td>
+</tr>
+<tr>
+  <td><label title="Roughs to this allowance, then a full-depth finishing pass takes it off.">Profile finishing pass</label></td>
+  <td><input type="checkbox" id="Milling.ProfileFinish"/></td>
+  <td><label>Finish allowance</label></td>
+  <td><input type="text" id="Milling.ProfileFinishAllowance" size="10"/></td>
+</tr>
+<tr><td colspan="4"><h2>Mode</h2></td></tr>
+<tr>
+  <td><label>Mode</label></td>
+  <td colspan="3">
+    <select id="Run.Mode" size="1">
+      <option>Test Cut</option>
+    </select>
+  </td>
+</tr>
+<tr><td colspan="4"><hr/></td></tr>
+<tr>
+  <td><input id="InquiryHelpMain" class="LuaButton" type="button" value="Help"/></td>
+  <td class="alert" id="GadgetName.Alert" colspan="2"></td>
+  <td><input id="ButtonOK" class="FormButton" type="button" value="OK"/>
+      <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+</tr>
+</table>
+</body></html>]]
+    Run.dialog = HTML_Dialog(true, html, 620, 560, "Box Joint Runs " .. Run.UnitLabel)
+    Run.dialog:AddDoubleField("Run.StockT", Run.StockT)
+    Run.dialog:AddDoubleField("Run.StockW", Run.StockW)
+    Run.dialog:AddCheckBox("Run.FingerAuto", Run.FingerAuto)
+    Run.dialog:AddIntegerField("Run.FingerCountManual", Run.FingerCountManual)
+    Run.dialog:AddDropDownList("Run.JointStyle", Run.JointStyle)
+    Run.dialog:AddDoubleField("Run.FingerClearance", Run.FingerClearance)
+    Run.dialog:AddCheckBox("Run.GrooveOn", Run.GrooveOn)
+    Run.dialog:AddDoubleField("Run.GrooveInset", Run.GrooveInset)
+    Run.dialog:AddDoubleField("Run.GrooveWidth", Run.GrooveWidth)
+    Run.dialog:AddDoubleField("Run.GrooveDepth", Run.GrooveDepth)
+    Run.dialog:AddDoubleField("Milling.FingerAllowance", Milling.FingerAllowance)
+    Run.dialog:AddDoubleField("Milling.FingerClearAllowance", Milling.FingerClearAllowance)
+    Run.dialog:AddDoubleField("Milling.GrooveAllowance", Milling.GrooveAllowance)
+    Run.dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
+    Run.dialog:AddCheckBox("Milling.ProfileTabs", Milling.ProfileTabs)
+    Run.dialog:AddCheckBox("Milling.ProfileFinish", Milling.ProfileFinish)
+    Run.dialog:AddDoubleField("Milling.ProfileFinishAllowance", Milling.ProfileFinishAllowance)
+    Run.dialog:AddDropDownList("Run.Mode", Run.Mode)
+    Run.dialog:AddLabelField("ToolNameProfile", Milling.ProfileTool and Milling.ProfileTool.Name or "-")
+    Run.dialog:AddToolPicker("ToolChooseProfile", "ToolNameProfile", ToolDBId())
+    Run.dialog:AddToolPickerValidToolType("ToolChooseProfile", Tool.END_MILL)
+    Run.dialog:AddLabelField("ToolNameFinger", Milling.FingerTool and Milling.FingerTool.Name or "-")
+    Run.dialog:AddToolPicker("ToolChooseFinger", "ToolNameFinger", ToolDBId())
+    Run.dialog:AddToolPickerValidToolType("ToolChooseFinger", Tool.END_MILL)
+    Run.dialog:AddLabelField("ToolNameFingerClear", Milling.FingerClearTool and Milling.FingerClearTool.Name or "-")
+    Run.dialog:AddToolPicker("ToolChooseFingerClear", "ToolNameFingerClear", ToolDBId())
+    Run.dialog:AddToolPickerValidToolType("ToolChooseFingerClear", Tool.END_MILL)
+    Run.dialog:AddLabelField("ToolNameDado", Milling.DadoTool and Milling.DadoTool.Name or "-")
+    Run.dialog:AddToolPicker("ToolChooseDado", "ToolNameDado", ToolDBId())
+    Run.dialog:AddToolPickerValidToolType("ToolChooseDado", Tool.END_MILL)
+end
+-- =====================================================]]
+function ShowSettingsDialog()
+    BuildDialog()
+    if not Run.dialog:ShowDialog() then
+        return false
+    end
+    Run.StockT = math.abs(Run.dialog:GetDoubleField("Run.StockT"))
+    Run.StockW = math.abs(Run.dialog:GetDoubleField("Run.StockW"))
+    Run.FingerAuto = Run.dialog:GetCheckBox("Run.FingerAuto")
+    Run.FingerCountManual = Run.dialog:GetIntegerField("Run.FingerCountManual")
+    Run.JointStyle = Run.dialog:GetDropDownListValue("Run.JointStyle")
+    Run.FingerClearance = math.abs(Run.dialog:GetDoubleField("Run.FingerClearance"))
+    Run.GrooveOn = Run.dialog:GetCheckBox("Run.GrooveOn")
+    Run.GrooveInset = math.abs(Run.dialog:GetDoubleField("Run.GrooveInset"))
+    Run.GrooveWidth = math.abs(Run.dialog:GetDoubleField("Run.GrooveWidth"))
+    Run.GrooveDepth = math.abs(Run.dialog:GetDoubleField("Run.GrooveDepth"))
+    Run.Mode = Run.dialog:GetDropDownListValue("Run.Mode")
+    -- Allowances are signed, as Blum Drawer Maker's are: no math.abs here.
+    Milling.FingerAllowance = Run.dialog:GetDoubleField("Milling.FingerAllowance")
+    Milling.FingerClearAllowance = Run.dialog:GetDoubleField("Milling.FingerClearAllowance")
+    Milling.GrooveAllowance = Run.dialog:GetDoubleField("Milling.GrooveAllowance")
+    Milling.PartGap = math.abs(Run.dialog:GetDoubleField("Milling.PartGap"))
+    Milling.ProfileTabs = Run.dialog:GetCheckBox("Milling.ProfileTabs")
+    Milling.ProfileFinish = Run.dialog:GetCheckBox("Milling.ProfileFinish")
+    Milling.ProfileFinishAllowance = math.abs(Run.dialog:GetDoubleField("Milling.ProfileFinishAllowance"))
+    if Run.dialog:GetTool("ToolChooseProfile") then
+        Milling.ProfileTool = Run.dialog:GetTool("ToolChooseProfile")
+    end
+    if Run.dialog:GetTool("ToolChooseFinger") then
+        Milling.FingerTool = Run.dialog:GetTool("ToolChooseFinger")
+    end
+    if Run.dialog:GetTool("ToolChooseFingerClear") then
+        Milling.FingerClearTool = Run.dialog:GetTool("ToolChooseFingerClear")
+    end
+    if Run.dialog:GetTool("ToolChooseDado") then
+        Milling.DadoTool = Run.dialog:GetTool("ToolChooseDado")
+    end
+    return true
+end
+-- =============== End of File =========================]]

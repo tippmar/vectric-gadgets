@@ -1,0 +1,167 @@
+-- VECTRIC LUA SCRIPT
+-- =====================================================]]
+-- Box Joint Runs is a separate gadget from Blum Drawer Maker: it shares no code and no
+-- registry settings with it. Its own settings live under the "BoxJointRuns" section,
+-- one row per unit system, exactly as BlumDrawerRegistry.xlua keeps Blum's.
+-- =====================================================]]
+local IMPERIAL_DEFAULTS = {
+    StockT = 0.7500,
+    StockW = 6.0000,
+    FingerAuto = true,
+    FingerCountManual = 5,
+    JointStyle = "Through",
+    FingerClearance = 0.0050,
+    GrooveOn = true,
+    GrooveInset = 0.5000,
+    GrooveWidth = 0.2500,
+    GrooveDepth = 0.2500,
+    FingerAllowance = 0.0000,
+    FingerClearAllowance = 0.0000,
+    GrooveAllowance = 0.0000,
+    ProfileFinishAllowance = 0.0000,
+    PartGap = 0.7500,
+    ProfileTabs = true,
+    ProfileFinish = false,
+    Mode = "Test Cut"
+}
+local METRIC_DEFAULTS = {
+    StockT = 19.0000,
+    StockW = 150.0000,
+    FingerAuto = true,
+    FingerCountManual = 5,
+    JointStyle = "Through",
+    FingerClearance = 0.1270,
+    GrooveOn = true,
+    GrooveInset = 12.7000,
+    GrooveWidth = 6.3500,
+    GrooveDepth = 6.3500,
+    FingerAllowance = 0.0000,
+    FingerClearAllowance = 0.0000,
+    GrooveAllowance = 0.0000,
+    ProfileFinishAllowance = 0.0000,
+    PartGap = 19.0500,
+    ProfileTabs = true,
+    ProfileFinish = false,
+    Mode = "Test Cut"
+}
+local TOOL_SLOTS = {
+    {Slot = "Profile", Field = "ProfileTool"},
+    {Slot = "Finger", Field = "FingerTool"},
+    {Slot = "FingerClear", Field = "FingerClearTool"},
+    {Slot = "Dado", Field = "DadoTool"}
+}
+-- =====================================================]]
+function SettingDefaults()
+    if Run.InMM then
+        return METRIC_DEFAULTS
+    end
+    return IMPERIAL_DEFAULTS
+end
+-- =====================================================]]
+function SettingsKey(name)
+    if Run.InMM then
+        return "Metric." .. name
+    end
+    return "Imperial." .. name
+end
+-- =====================================================]]
+function ToolsRead()
+    -- The four chosen tools, restored as plain tables carrying only the fields the toolpath calls read
+    -- (modeled on HoldDownHelper's ToolRead/ToolWrite, Hold_Down_Helper.lua:225-266). A stored Name of ""
+    -- means the slot was never chosen; ValidateSettings checks these fields for nil, so leave them nil.
+    local registry = Registry(Run.RegName)
+    for _, slot in ipairs(TOOL_SLOTS) do
+        local prefix = slot.Slot .. "Tool."
+        local name = registry:GetString(SettingsKey(prefix .. "Name"), "")
+        if name == "" then
+            Milling[slot.Field] = nil
+        else
+            Milling[slot.Field] = {
+                Name = name,
+                InMM = registry:GetBool(SettingsKey(prefix .. "InMM"), Run.InMM),
+                ToolDia = registry:GetDouble(SettingsKey(prefix .. "ToolDia"), 0.0),
+                Stepdown = registry:GetDouble(SettingsKey(prefix .. "Stepdown"), 0.0),
+                Stepover = registry:GetDouble(SettingsKey(prefix .. "Stepover"), 0.0),
+                RateUnits = registry:GetInt(SettingsKey(prefix .. "RateUnits"), 4),
+                FeedRate = registry:GetDouble(SettingsKey(prefix .. "FeedRate"), 0.0),
+                PlungeRate = registry:GetDouble(SettingsKey(prefix .. "PlungeRate"), 0.0),
+                SpindleSpeed = registry:GetInt(SettingsKey(prefix .. "SpindleSpeed"), 18000),
+                ToolNumber = registry:GetInt(SettingsKey(prefix .. "ToolNumber"), 1)
+            }
+        end
+    end
+end
+-- =====================================================]]
+function ToolsWrite()
+    -- Reads each tool's fields once into the registry; the Vectric tool object itself is never stored.
+    local registry = Registry(Run.RegName)
+    for _, slot in ipairs(TOOL_SLOTS) do
+        local prefix = slot.Slot .. "Tool."
+        local tool = Milling[slot.Field]
+        if tool == nil then
+            registry:SetString(SettingsKey(prefix .. "Name"), "")
+        else
+            registry:SetString(SettingsKey(prefix .. "Name"), tool.Name)
+            registry:SetBool(SettingsKey(prefix .. "InMM"), tool.InMM)
+            registry:SetDouble(SettingsKey(prefix .. "ToolDia"), tool.ToolDia)
+            registry:SetDouble(SettingsKey(prefix .. "Stepdown"), tool.Stepdown)
+            registry:SetDouble(SettingsKey(prefix .. "Stepover"), tool.Stepover)
+            registry:SetInt(SettingsKey(prefix .. "RateUnits"), tool.RateUnits)
+            registry:SetDouble(SettingsKey(prefix .. "FeedRate"), tool.FeedRate)
+            registry:SetDouble(SettingsKey(prefix .. "PlungeRate"), tool.PlungeRate)
+            registry:SetInt(SettingsKey(prefix .. "SpindleSpeed"), tool.SpindleSpeed)
+            registry:SetInt(SettingsKey(prefix .. "ToolNumber"), tool.ToolNumber)
+        end
+    end
+end
+-- =====================================================]]
+function SettingsRead()
+    local registry = Registry(Run.RegName)
+    local defaults = SettingDefaults()
+    Run.StockT = registry:GetDouble(SettingsKey("StockT"), defaults.StockT)
+    Run.StockW = registry:GetDouble(SettingsKey("StockW"), defaults.StockW)
+    Run.FingerAuto = registry:GetBool(SettingsKey("FingerAuto"), defaults.FingerAuto)
+    Run.FingerCountManual = registry:GetInt(SettingsKey("FingerCountManual"), defaults.FingerCountManual)
+    Run.JointStyle = registry:GetString(SettingsKey("JointStyle"), defaults.JointStyle)
+    Run.FingerClearance = registry:GetDouble(SettingsKey("FingerClearance"), defaults.FingerClearance)
+    Run.GrooveOn = registry:GetBool(SettingsKey("GrooveOn"), defaults.GrooveOn)
+    Run.GrooveInset = registry:GetDouble(SettingsKey("GrooveInset"), defaults.GrooveInset)
+    Run.GrooveWidth = registry:GetDouble(SettingsKey("GrooveWidth"), defaults.GrooveWidth)
+    Run.GrooveDepth = registry:GetDouble(SettingsKey("GrooveDepth"), defaults.GrooveDepth)
+    Run.Mode = registry:GetString(SettingsKey("Mode"), defaults.Mode)
+    if Run.Mode == "" then
+        Run.Mode = defaults.Mode -- a blank saved by an earlier build would leave the dropdown unselected
+    end
+    Milling.FingerAllowance = registry:GetDouble(SettingsKey("FingerAllowance"), defaults.FingerAllowance)
+    Milling.FingerClearAllowance = registry:GetDouble(SettingsKey("FingerClearAllowance"), defaults.FingerClearAllowance)
+    Milling.GrooveAllowance = registry:GetDouble(SettingsKey("GrooveAllowance"), defaults.GrooveAllowance)
+    Milling.ProfileFinishAllowance = registry:GetDouble(SettingsKey("ProfileFinishAllowance"), defaults.ProfileFinishAllowance)
+    Milling.PartGap = registry:GetDouble(SettingsKey("PartGap"), defaults.PartGap)
+    Milling.ProfileTabs = registry:GetBool(SettingsKey("ProfileTabs"), defaults.ProfileTabs)
+    Milling.ProfileFinish = registry:GetBool(SettingsKey("ProfileFinish"), defaults.ProfileFinish)
+    ToolsRead()
+end
+-- =====================================================]]
+function SettingsWrite()
+    local registry = Registry(Run.RegName)
+    registry:SetDouble(SettingsKey("StockT"), Run.StockT)
+    registry:SetDouble(SettingsKey("StockW"), Run.StockW)
+    registry:SetBool(SettingsKey("FingerAuto"), Run.FingerAuto)
+    registry:SetInt(SettingsKey("FingerCountManual"), Run.FingerCountManual)
+    registry:SetString(SettingsKey("JointStyle"), Run.JointStyle)
+    registry:SetDouble(SettingsKey("FingerClearance"), Run.FingerClearance)
+    registry:SetBool(SettingsKey("GrooveOn"), Run.GrooveOn)
+    registry:SetDouble(SettingsKey("GrooveInset"), Run.GrooveInset)
+    registry:SetDouble(SettingsKey("GrooveWidth"), Run.GrooveWidth)
+    registry:SetDouble(SettingsKey("GrooveDepth"), Run.GrooveDepth)
+    registry:SetString(SettingsKey("Mode"), Run.Mode)
+    registry:SetDouble(SettingsKey("FingerAllowance"), Milling.FingerAllowance)
+    registry:SetDouble(SettingsKey("FingerClearAllowance"), Milling.FingerClearAllowance)
+    registry:SetDouble(SettingsKey("GrooveAllowance"), Milling.GrooveAllowance)
+    registry:SetDouble(SettingsKey("ProfileFinishAllowance"), Milling.ProfileFinishAllowance)
+    registry:SetDouble(SettingsKey("PartGap"), Milling.PartGap)
+    registry:SetBool(SettingsKey("ProfileTabs"), Milling.ProfileTabs)
+    registry:SetBool(SettingsKey("ProfileFinish"), Milling.ProfileFinish)
+    ToolsWrite()
+end
+-- =============== End of File =========================]]
