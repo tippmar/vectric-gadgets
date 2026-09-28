@@ -1,0 +1,1510 @@
+-- VECTRIC LUA SCRIPT
+--[[
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Box Joint Runs borrows its finger-joint math and dialog/toolpath plumbing from this repository's own Blum
+-- Drawer Maker, which is itself based on Easy Drawer Maker, originally written by JimAndi Gadgets, 2019.
+]] -- =====================================================]]
+-- Small geometry helpers, the finger-end pocketing routine, and the Test cut mode driver. Copied and
+-- generalized from BlumDrawerMaker/BlumDrawerTools.xlua and BlumDrawerMaker/BlumDrawerJoinery.xlua; see the
+-- per-function comments below for what changed and why.
+function IdKey(raw_id) -- String form of a UUID, usable as a table key
+    return luaUUID(raw_id):AsString()
+end
+-- =====================================================]]
+function GetDistance(objA, objB) -- Get the length for each of the components x and y
+    local xDist = objB.x - objA.x
+    local yDist = objB.y - objA.y
+    return math.sqrt((xDist ^ 2) + (yDist ^ 2))
+end
+-- =====================================================]]
+function FormatThickness(thickness) -- 0.5000 -> "0.5"
+    local text = string.format("%.4f", thickness):gsub("0+$", ""):gsub("%.$", "")
+    return text
+end
+-- =====================================================]]
+function ThicknessTag(thickness) -- Suffix that keeps layers / toolpaths of different thicknesses apart
+    return " (" .. FormatThickness(thickness) .. ")"
+end
+-- =====================================================]]
+function Polar2D(pt, ang, dis) -- Point at distance dis from pt, at angle ang (degrees). Not a Vectric API.
+    return Point2D((pt.X + dis * math.cos(math.rad(ang))), (pt.Y + dis * math.sin(math.rad(ang))))
+end
+-- =====================================================]]
+function PointAlong(pa, pb, fraction)
+    -- Point a given fraction of the way from pa to pb
+    return Point2D(pa.x + ((pb.x - pa.x) * fraction), pa.y + ((pb.y - pa.y) * fraction))
+end
+-- =====================================================]]
+function TabCountForEdge(edge_length)
+    -- One tab per foot of edge, never fewer than two. A single tab lets the part pivot around it, so two on
+    -- each of the two clean edges is the least that holds a part square while the profile pass cuts it free.
+    -- More than that is only extra nubs to pare off by hand afterward.
+    local spacing = Run.InMM and 304.8 or 12.0
+    local count = math.floor((edge_length / spacing) + 0.5) -- Lua 5.1 has no math.round
+    if count < 2 then
+        count = 2
+    end
+    return count
+end
+-- =====================================================]]
+function AddProfileTabs(cad_contour, pt1, pt2, pt3, pt4)
+    -- Holds a part in the sheet while its profile pass cuts it free. Tabs go only on the two edges that run the
+    -- length of the part (pt1->pt2 and pt3->pt4). The other two, pt2->pt3 and pt4->pt1, carry the finger joints,
+    -- and a tab left on a mating surface would have to be pared off before the joint would close.
+    if (not Milling.ProfileTabs) or (cad_contour == nil) then
+        return false
+    end
+    local count = TabCountForEdge(GetDistance(pt1, pt2))
+    for i = 1, count do
+        local fraction = (i - 0.5) / count -- evenly spaced along the edge, and never on a corner
+        cad_contour:InsertToolpathTabAtPoint(PointAlong(pt1, pt2, fraction))
+        cad_contour:InsertToolpathTabAtPoint(PointAlong(pt4, pt3, fraction))
+    end
+    return true
+end
+-- =====================================================]]
+function DrawBox(p1, p2, p3, p4, Layer)
+    --[[ Draw Box
+function main(script_path)
+local MyPt1 = Point2D(1.0,1.0)
+local MyPt2 = Point2D(1.0,3.0)
+local MyPt3 = Point2D(3.0,1.0)
+local MyPt4 = Point2D(3.0,3.0)
+local layer = "My Box"
+DrawBox(MyPt1 ,MyPt2, MyPt3, MyPt4, Layer)
+return true
+end -- function end
+-- -----------------------------------------------------]]
+    local job = VectricJob()
+    if not job.Exists then
+        DisplayMessageBox("Error in DrawBox: No job loaded")
+        return false;
+    end -- if end
+    local line = Contour(0.0)
+    local layer = job.LayerManager:GetLayerWithName(Layer)
+    line:AppendPoint(p1);
+    line:LineTo(p2);
+    line:LineTo(p3);
+    line:LineTo(p4);
+    line:LineTo(p1);
+    local cad_contour = CreateCadContour(line)
+    layer:AddObject(cad_contour, true)
+    job:Refresh2DView()
+    -- Returned so a caller that needs to attach toolpath tabs has the contour. Callers that ignore it are
+    -- unaffected: a CadContour is as truthy as the "true" this used to return.
+    return cad_contour
+end -- function end
+-- =====================================================]]
+function OccupiedMaxX() -- Right-most X of all vectors on the active sheet, or nil if the sheet is empty
+    local selection = Milling.job.Selection
+    selection:Clear()
+    Milling.job:SelectAllVectors()
+    local max_x = nil
+    if not selection.IsEmpty then
+        max_x = selection:GetBoundingBox().TRC.x
+    end
+    selection:Clear()
+    return max_x
+end
+-- =====================================================]]
+function OpenSpaceStart() -- Start point for new parts, right of anything already drawn on the active sheet
+    local start_x = 1.0 * Run.Cal
+    local max_x = OccupiedMaxX()
+    if max_x ~= nil then
+        start_x = math.max(start_x, max_x + Milling.PartGap + 1.0 * Run.Cal)
+    end
+    return Point2D(start_x, 1.0 * Run.Cal)
+end
+-- =====================================================]]
+function ActivateThicknessSheet(thickness) -- Finds or creates the sheet for this material thickness
+    local sheet_manager = Milling.job.SheetManager
+    local sheet_name = FormatThickness(thickness) .. " Material"
+    for id in sheet_manager:GetSheetIds() do
+        if sheet_manager:GetSheetName(id) == sheet_name then
+            sheet_manager.ActiveSheetId = id
+            Milling.job:Refresh2DView()
+            return
+        end
+    end
+    local sheet_id
+    if sheet_manager.NumberOfSheets == 1 and OccupiedMaxX() == nil then
+        -- First run in a fresh job: adopt the empty default sheet rather than leaving it unused
+        sheet_id = sheet_manager.ActiveSheetId
+        sheet_manager:RenameSheet(sheet_id, sheet_name)
+    else
+        sheet_id = sheet_manager:CreateNewSheet(sheet_name)
+    end
+    sheet_manager:ResizeSheet(sheet_id, MaterialBlock().Width, MaterialBlock().Height, thickness, false)
+    sheet_manager.ActiveSheetId = sheet_id
+    Milling.job:Refresh2DView()
+end
+-- =====================================================]]
+function DrawWriter(what, where, size, lay, ang)
+    local group
+    --[[ How to use tester:
+  |    local TextMessage = "Your Text Here"
+  |    local TextPt = Point2D(3.5,3.8)
+  |    local TextHight = 0.5
+  |    local TextLayer = "Jim Anderson"
+  |    local TextAng = 20.0
+  |    DrawWriter(TextMessage ,local TextPt , TextHight , TextLayer,TextAng )
+  |    -- ==Draw Writer==
+  |    -- Utilizing a provided string of text, the program walks the string and reproduces each letter (parametrically) on the drawing using vectors.
+  function main()
+      -- create a layer with passed name if it doesn't already exist
+    local job = VectricJob()
+    if not job.Exists then
+         DisplayMessageBox("No job loaded")
+         return false;
+    end
+    local TextMessage = "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 1 2 3 4 5 6 7 8 9 0 ! @ # $ % & * ( ) { } [ ] ? , . : ; '' ' _ - + = ~ ^ < > |"
+    local TextPt = Point2D(0.1, 2.0)
+    local TextHight = 0.25
+    local TextLayer = "Gadget Text"
+    local TextAng = 10.0
+    DrawWriter(TextMessage, TextPt, TextHight, TextLayer, TextAng)
+    job:Refresh2DView()
+    return true
+  end
+  -- -----------------------------------------------------]]
+    -- ==============================================================================]]
+    local function Polar2D(pt, ang, dis)
+        return Point2D((pt.X + dis * math.cos(math.rad(ang))), (pt.Y + dis * math.sin(math.rad(ang))))
+    end
+    -- ==============================================================================]]
+    local function MonoFont(job, pt, letter, scl, lay, ang)
+        scl = (scl * 0.5);
+        local pA0 = pt;
+        local pA1 = Polar2D(pt, ang + 90.0000, (0.2500 * scl));
+        local pA2 = Polar2D(pt, ang + 90.0000, (0.5000 * scl));
+        local pA3 = Polar2D(pt, ang + 90.0000, (0.7500 * scl));
+        local pA4 = Polar2D(pt, ang + 90.0000, (1.0000 * scl));
+        local pA5 = Polar2D(pt, ang + 90.0000, (1.2500 * scl));
+        local pA6 = Polar2D(pt, ang + 90.0000, (1.5000 * scl));
+        local pA7 = Polar2D(pt, ang + 90.0000, (1.7500 * scl));
+        local pA8 = Polar2D(pt, ang + 90.0000, (2.0000 * scl));
+        local pA9 = Polar2D(pt, ang + 90.0000, (2.2500 * scl));
+        local pA10 = Polar2D(pt, ang + 90.0000, (2.5000 * scl));
+        local pB0 = Polar2D(pt, ang + 0.0000, (0.2500 * scl));
+        local pB1 = Polar2D(pt, ang + 45.0000, (0.3536 * scl));
+        local pB2 = Polar2D(pt, ang + 63.4352, (0.5590 * scl));
+        local pB3 = Polar2D(pt, ang + 71.5651, (0.7906 * scl));
+        local pB4 = Polar2D(pt, ang + 75.9638, (1.0308 * scl));
+        local pB5 = Polar2D(pt, ang + 78.6901, (1.2748 * scl));
+        local pB6 = Polar2D(pt, ang + 80.5376, (1.5207 * scl));
+        local pB7 = Polar2D(pt, ang + 81.8699, (1.7678 * scl));
+        local pB8 = Polar2D(pt, ang + 82.8750, (2.0156 * scl));
+        local pB10 = Polar2D(pt, ang + 84.2894, (2.5125 * scl));
+        local pC0 = Polar2D(pt, ang + 0.0000, (0.5000 * scl));
+        local pC1 = Polar2D(pt, ang + 26.5650, (0.5590 * scl));
+        local pC2 = Polar2D(pt, ang + 45.0000, (0.7071 * scl));
+        local pC3 = Polar2D(pt, ang + 56.3099, (0.9014 * scl));
+        local pC4 = Polar2D(pt, ang + 63.4342, (1.1180 * scl));
+        local pC5 = Polar2D(pt, ang + 68.1993, (1.3463 * scl));
+        local pC6 = Polar2D(pt, ang + 71.5650, (1.5811 * scl));
+        local pC7 = Polar2D(pt, ang + 63.4342, (1.1180 * scl));
+        local pC8 = Polar2D(pt, ang + 75.9640, (2.0616 * scl));
+        local pC10 = Polar2D(pt, ang + 78.6899, (2.5495 * scl));
+        local pD0 = Polar2D(pt, ang + 0.0000, (0.6250 * scl));
+        local pD1 = Polar2D(pt, ang + 21.8014, (0.6731 * scl));
+        local pD2 = Polar2D(pt, ang + 33.6901, (0.9014 * scl));
+        local pD4 = Polar2D(pt, ang + 57.9946, (1.1792 * scl));
+        local pD7 = Polar2D(pt, ang + 70.3462, (1.8583 * scl));
+        local pD8 = Polar2D(pt, ang + 72.6460, (2.0954 * scl));
+        local pE0 = Polar2D(pt, ang + 0.0000, (0.7500 * scl));
+        local pE1 = Polar2D(pt, ang + 18.4346, (0.7906 * scl));
+        local pE2 = Polar2D(pt, ang + 33.6901, (0.9014 * scl));
+        local pE3 = Polar2D(pt, ang + 45.0000, (1.0607 * scl));
+        local pE5 = Polar2D(pt, ang + 59.0371, (1.4578 * scl));
+        local pE6 = Polar2D(pt, ang + 63.4349, (1.6771 * scl));
+        local pE7 = Polar2D(pt, ang + 66.4349, (1.9039 * scl));
+        local pE8 = Polar2D(pt, ang + 69.4440, (2.1360 * scl));
+        local pF0 = Polar2D(pt, ang + 0.0000, (1.0000 * scl));
+        local pF1 = Polar2D(pt, ang + 14.0360, (1.0308 * scl));
+        local pF2 = Polar2D(pt, ang + 26.5651, (1.1180 * scl));
+        local pF3 = Polar2D(pt, ang + 36.8699, (1.2500 * scl));
+        local pF4 = Polar2D(pt, ang + 45.0000, (1.4142 * scl));
+        local pF5 = Polar2D(pt, ang + 51.3425, (1.6006 * scl));
+        local pF6 = Polar2D(pt, ang + 56.3099, (1.8025 * scl));
+        local pF7 = Polar2D(pt, ang + 60.2551, (2.0156 * scl));
+        local pF8 = Polar2D(pt, ang + 63.4349, (2.2361 * scl));
+        local pG0 = Polar2D(pt, ang + 0.0000, (1.2500 * scl));
+        local pG1 = Polar2D(pt, ang + 11.3099, (1.2748 * scl));
+        local pG2 = Polar2D(pt, ang + 21.8014, (1.3463 * scl));
+        local pG3 = Polar2D(pt, ang + 30.9638, (1.4577 * scl));
+        local pG4 = Polar2D(pt, ang + 38.6598, (1.6008 * scl));
+        local pG5 = Polar2D(pt, ang + 45.0000, (1.7678 * scl));
+        local pG6 = Polar2D(pt, ang + 50.1944, (1.9526 * scl));
+        local pG7 = Polar2D(pt, ang + 54.4623, (2.1506 * scl));
+        local pG8 = Polar2D(pt, ang + 57.9946, (2.3585 * scl));
+        local pG10 = Polar2D(pt, 59.0362, (2.9155 * scl));
+        local pH0 = Polar2D(pt, ang + 0.0000, (1.5000 * scl));
+        local pH10 = Polar2D(pt, 63.4349, (2.7951 * scl));
+        local layer = job.LayerManager:GetLayerWithName(lay);
+        local line = Contour(0.0);
+        -- ------------------------------------------------------------------
+        if letter == 32 then
+            pH0 = pH0
+        end
+        if letter == 33 then
+            line:AppendPoint(pB0);
+            line:LineTo(pE0);
+            line:LineTo(pE2);
+            line:LineTo(pB2);
+            line:LineTo(pB0);
+            group:AddTail(line);
+            line = Contour(0.0)
+            line:AppendPoint(pB3);
+            line:LineTo(pE3);
+            line:LineTo(pE8);
+            line:LineTo(pB8);
+            line:LineTo(pB3);
+            group:AddTail(line);
+        end
+        if letter == 34 then
+            line:AppendPoint(pA7);
+            line:LineTo(pB10);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pB7);
+            line:LineTo(pC10);
+            group:AddTail(line);
+            pH0 = pE0
+        end
+        if letter == 35 then
+            line:AppendPoint(pA2);
+            line:LineTo(pG2);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA6);
+            line:LineTo(pG6);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pB0);
+            line:LineTo(pB8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pF0);
+            line:LineTo(pF8);
+            group:AddTail(line);
+        end
+        if letter == 36 then
+            line:AppendPoint(pA1);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG1);
+            line:LineTo(pG3);
+            line:LineTo(pF4);
+            line:LineTo(pB4);
+            line:LineTo(pA5);
+            line:LineTo(pA7);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pC0);
+            line:LineTo(pE0);
+            line:LineTo(pE8);
+            line:LineTo(pC8);
+            line:LineTo(pC0);
+            group:AddTail(line);
+        end
+        if letter == 37 then
+            line:AppendPoint(pC6);
+            line:LineTo(pC8);
+            line:LineTo(pA8);
+            line:LineTo(pA6);
+            line:LineTo(pE6);
+            line:LineTo(pG8);
+            line:LineTo(pA0);
+            line:LineTo(pC2);
+            line:LineTo(pG2);
+            line:LineTo(pG0);
+            line:LineTo(pE0);
+            line:LineTo(pE2);
+            group:AddTail(line);
+        end
+        if letter == 38 then
+            line:AppendPoint(pG2);
+            line:LineTo(pG1);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA1);
+            line:LineTo(pA3);
+            line:LineTo(pE6);
+            line:LineTo(pE7);
+            line:LineTo(pD8);
+            line:LineTo(pB8);
+            line:LineTo(pA7);
+            line:LineTo(pA6);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 39 then
+            line:AppendPoint(pA7);
+            line:LineTo(pB10);
+            group:AddTail(line);
+            pH0 = pC0
+        end
+        if letter == 40 then
+            line:AppendPoint(pB8);
+            line:LineTo(pA5);
+            line:LineTo(pA3);
+            line:LineTo(pB0);
+            group:AddTail(line);
+            pH0 = pD0
+        end
+        if letter == 41 then
+            line:AppendPoint(pA8);
+            line:LineTo(pB5);
+            line:LineTo(pB3);
+            line:LineTo(pA0);
+            group:AddTail(line);
+            pH0 = pG0
+        end
+        if letter == 42 then
+            line:AppendPoint(pA2);
+            line:LineTo(pG6);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA6);
+            line:LineTo(pG2);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD7);
+            line:LineTo(pD1);
+            group:AddTail(line);
+        end
+        if letter == 43 then
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD1);
+            line:LineTo(pD7);
+            group:AddTail(line)
+        end
+        if letter == 44 then
+            line:AppendPoint(pC0);
+            line:LineTo(pE2);
+            line:LineTo(pC2);
+            line:LineTo(pC4);
+            line:LineTo(pF4);
+            line:LineTo(pF2);
+            line:LineTo(pD0);
+            line:LineTo(pC0);
+            group:AddTail(line);
+        end
+        if letter == 45 then
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+        end
+        if letter == 46 then
+            line:AppendPoint(pA1);
+            line:LineTo(pB1);
+            line:LineTo(pB0);
+            line:LineTo(pA0);
+            line:LineTo(pA1);
+            group:AddTail(line);
+            pH0 = pD0;
+        end
+        if letter == 47 then
+            line:AppendPoint(pA0);
+            line:LineTo(pF8);
+            group:AddTail(line);
+            pH0 = pG0;
+        end
+        if letter == 48 then
+            line:AppendPoint(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pG8);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 49 then
+            line:AppendPoint(pA6);
+            line:LineTo(pD8);
+            line:LineTo(pD0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 50 then
+            line:AppendPoint(pA6);
+            line:LineTo(pA7);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pA2);
+            line:LineTo(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 51 then
+            line:AppendPoint(pA7);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pF4);
+            line:LineTo(pG3);
+            line:LineTo(pG1);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA1);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pF4);
+            line:LineTo(pB4);
+            group:AddTail(line);
+        end
+        if letter == 52 then
+            line:AppendPoint(pF0);
+            line:LineTo(pF8);
+            line:LineTo(pA2);
+            line:LineTo(pG2);
+            group:AddTail(line);
+        end
+        if letter == 53 then
+            line:AppendPoint(pG8);
+            line:LineTo(pA8);
+            line:LineTo(pA5);
+            line:LineTo(pF4);
+            line:LineTo(pG3);
+            line:LineTo(pG1);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA1);
+            line:LineTo(pA2);
+            group:AddTail(line);
+        end
+        if letter == 54 then
+            line:AppendPoint(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA7);
+            line:LineTo(pA1);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG1);
+            line:LineTo(pG3);
+            line:LineTo(pF4);
+            line:LineTo(pB4);
+            line:LineTo(pA2);
+            group:AddTail(line);
+        end
+        if letter == 55 then
+            line:AppendPoint(pB0);
+            line:LineTo(pG8);
+            line:LineTo(pA8);
+            group:AddTail(line);
+        end
+        if letter == 56 then
+            line:AppendPoint(pA1);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG1);
+            line:LineTo(pG3);
+            line:LineTo(pF4);
+            line:LineTo(pG5);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA7);
+            line:LineTo(pA5);
+            line:LineTo(pB4);
+            line:LineTo(pA3);
+            line:LineTo(pA1);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pB4);
+            line:LineTo(pF4);
+            group:AddTail(line);
+        end
+        if letter == 57 then
+            line:AppendPoint(pA1);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG3);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA7);
+            line:LineTo(pA5);
+            line:LineTo(pB4);
+            line:LineTo(pF4);
+            line:LineTo(pG5);
+            group:AddTail(line);
+        end
+        if letter == 58 then
+            line:AppendPoint(pB8);
+            line:LineTo(pA8);
+            line:LineTo(pA7);
+            line:LineTo(pB7);
+            line:LineTo(pB8);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA1);
+            line:LineTo(pB1);
+            line:LineTo(pB0);
+            line:LineTo(pA0);
+            line:LineTo(pA1);
+            group:AddTail(line);
+            pH0 = pD0;
+        end
+        if letter == 59 then
+            line:AppendPoint(pB8);
+            line:LineTo(pA8);
+            line:LineTo(pA7);
+            line:LineTo(pB7);
+            line:LineTo(pB8);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pB3);
+            line:LineTo(pB4);
+            line:LineTo(pA4);
+            line:LineTo(pA3);
+            line:LineTo(pB3);
+            line:LineTo(pA0);
+            group:AddTail(line);
+            pH0 = pD0;
+        end
+        if letter == 60 then
+            line:AppendPoint(pF8);
+            line:LineTo(pA4);
+            line:LineTo(pG0);
+            group:AddTail(line)
+        end
+        if letter == 61 then
+            line:AppendPoint(pA2);
+            line:LineTo(pG2);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA6);
+            line:LineTo(pG6);
+            group:AddTail(line);
+        end
+        if letter == 62 then
+            line:AppendPoint(pA8);
+            line:LineTo(pF4);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 63 then
+            line:AppendPoint(pB5);
+            line:LineTo(pA6);
+            line:LineTo(pA7);
+            line:LineTo(pB8);
+            line:LineTo(pE8);
+            line:LineTo(pF7);
+            line:LineTo(pF5);
+            line:LineTo(pC3);
+            line:LineTo(pC2);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pB0);
+            line:LineTo(pE0);
+            line:LineTo(pE1);
+            line:LineTo(pB1);
+            line:LineTo(pB0);
+            group:AddTail(line);
+        end
+        if letter == 64 then
+            line:AppendPoint(pG0);
+            line:LineTo(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG3);
+            line:LineTo(pE2);
+            line:LineTo(pB2);
+            line:LineTo(pB5);
+            line:LineTo(pE5);
+            line:LineTo(pE2);
+            group:AddTail(line)
+        end
+        if letter == 65 then
+            line:AppendPoint(pA0);
+            line:LineTo(pD8);
+            line:LineTo(pG0);
+            line:LineTo(pF3);
+            line:LineTo(pB3);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 66 then
+            line:AppendPoint(pA4);
+            line:LineTo(pF4);
+            line:LineTo(pG5);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pA8);
+            line:LineTo(pA0);
+            line:LineTo(pF0);
+            line:LineTo(pG1);
+            line:LineTo(pG3);
+            line:LineTo(pF4);
+            group:AddTail(line);
+        end
+        if letter == 67 then
+            line:AppendPoint(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            group:AddTail(line);
+        end
+        if letter == 68 then
+            line:AppendPoint(pA0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG6);
+            line:LineTo(pF8);
+            line:LineTo(pA8);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 69 then
+            line:AppendPoint(pG0);
+            line:LineTo(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pD4);
+            group:AddTail(line);
+        end
+        if letter == 70 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pF4);
+            group:AddTail(line);
+        end
+        if letter == 71 then
+            line:AppendPoint(pG6);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA6);
+            line:LineTo(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG3);
+            line:LineTo(pE3);
+            line:LineTo(pE2);
+            group:AddTail(line);
+        end
+        if letter == 72 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pG0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+        end
+        if letter == 73 then
+            line:AppendPoint(pB0);
+            line:LineTo(pB8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA0);
+            line:LineTo(pC0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA8);
+            line:LineTo(pC8);
+            group:AddTail(line);
+            pH0 = pE0;
+        end
+        if letter == 74 then
+            line:AppendPoint(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG8);
+            line:LineTo(pC8);
+            group:AddTail(line);
+        end
+        if letter == 75 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA2);
+            line:LineTo(pG7);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD4);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 76 then
+            line:AppendPoint(pA8);
+            line:LineTo(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 77 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pD4);
+            line:LineTo(pG8);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 78 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF0);
+            line:LineTo(pF8);
+            group:AddTail(line);
+            pH0 = pG0;
+        end
+        if letter == 79 then
+            line:AppendPoint(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            group:AddTail(line);
+        end
+        if letter == 80 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pF4);
+            line:LineTo(pA4);
+            group:AddTail(line);
+        end
+        if letter == 81 then
+            line:AppendPoint(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pG0);
+            line:LineTo(pD4);
+            group:AddTail(line)
+        end
+        if letter == 82 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pF4);
+            line:LineTo(pA4);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD4);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 83 then
+            line:AppendPoint(pG5);
+            line:LineTo(pG6);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA6);
+            line:LineTo(pA5);
+            line:LineTo(pG3);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA3);
+            group:AddTail(line);
+        end
+        if letter == 84 then
+            line:AppendPoint(pA8);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD8);
+            line:LineTo(pD0);
+            group:AddTail(line);
+        end
+        if letter == 85 then
+            line:AppendPoint(pA8);
+            line:LineTo(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 86 then
+            line:AppendPoint(pA8);
+            line:LineTo(pD0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 87 then
+            line:AppendPoint(pA8);
+            line:LineTo(pB0);
+            line:LineTo(pD4);
+            line:LineTo(pF0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 88 then
+            line:AppendPoint(pA0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA8);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 89 then
+            line:AppendPoint(pA8);
+            line:LineTo(pD4);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD0);
+            line:LineTo(pD4);
+            group:AddTail(line);
+        end
+        if letter == 90 then
+            line:AppendPoint(pA8);
+            line:LineTo(pG8);
+            line:LineTo(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 91 then
+            line:AppendPoint(pC0);
+            line:LineTo(pB0);
+            line:LineTo(pB8);
+            line:LineTo(pC8);
+            group:AddTail(line);
+        end
+        if letter == 92 then
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+        end
+        if letter == 93 then
+            line:AppendPoint(pE0);
+            line:LineTo(pF0);
+            line:LineTo(pF8);
+            line:LineTo(pE8);
+            group:AddTail(line);
+        end
+        if letter == 94 then
+            line:AppendPoint(pD8);
+            line:LineTo(pG6);
+            line:LineTo(pG5);
+            line:LineTo(pD7);
+            line:LineTo(pA5);
+            line:LineTo(pA6);
+            line:LineTo(pD8);
+            group:AddTail(line);
+        end
+        if letter == 95 then
+            line:AppendPoint(pA0);
+            line:LineTo(pF0);
+            group:AddTail(line);
+        end
+        if letter == 96 then
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+        end
+        -- Start of Lower Case
+        if letter == 97 then
+            line:AppendPoint(pA0);
+            line:LineTo(pD8);
+            line:LineTo(pG0);
+            line:LineTo(pF3);
+            line:LineTo(pB3);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 98 then
+            line:AppendPoint(pA4);
+            line:LineTo(pF4);
+            line:LineTo(pG5);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pA8);
+            line:LineTo(pA0);
+            line:LineTo(pF0);
+            line:LineTo(pG1);
+            line:LineTo(pG3);
+            line:LineTo(pF4);
+            group:AddTail(line);
+        end
+        if letter == 99 then
+            line:AppendPoint(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            group:AddTail(line);
+        end
+        if letter == 100 then
+            line:AppendPoint(pA0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG6);
+            line:LineTo(pF8);
+            line:LineTo(pA8);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 101 then
+            line:AppendPoint(pG0);
+            line:LineTo(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pD4);
+            group:AddTail(line);
+        end
+        if letter == 102 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pF4);
+            group:AddTail(line);
+        end
+        if letter == 103 then
+            line:AppendPoint(pG6);
+            line:LineTo(pG7);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA6);
+            line:LineTo(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG3);
+            line:LineTo(pE3);
+            line:LineTo(pE2);
+            group:AddTail(line);
+        end
+        if letter == 104 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pG0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA4);
+            line:LineTo(pG4);
+            group:AddTail(line);
+        end
+        if letter == 105 then
+            line:AppendPoint(pB0);
+            line:LineTo(pB8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA0);
+            line:LineTo(pC0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA8);
+            line:LineTo(pC8);
+            group:AddTail(line);
+            pH0 = pE0;
+        end
+        if letter == 106 then
+            line:AppendPoint(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG8);
+            line:LineTo(pC8);
+            group:AddTail(line);
+        end
+        if letter == 107 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA2);
+            line:LineTo(pG7);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD4);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 108 then
+            line:AppendPoint(pA8);
+            line:LineTo(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 109 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pD4);
+            line:LineTo(pG8);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 110 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF0);
+            line:LineTo(pF8);
+            group:AddTail(line);
+            pH0 = pG0;
+        end
+        if letter == 111 then
+            line:AppendPoint(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            group:AddTail(line);
+        end
+        if letter == 112 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pF4);
+            line:LineTo(pA4);
+            group:AddTail(line);
+        end
+        if letter == 113 then
+            line:AppendPoint(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA6);
+            line:LineTo(pB8);
+            line:LineTo(pF8);
+            line:LineTo(pG6);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pG0);
+            line:LineTo(pD4);
+            group:AddTail(line)
+        end
+        if letter == 114 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA8);
+            line:LineTo(pF8);
+            line:LineTo(pG7);
+            line:LineTo(pG5);
+            line:LineTo(pF4);
+            line:LineTo(pA4);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD4);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 115 then
+            line:AppendPoint(pG5);
+            line:LineTo(pG6);
+            line:LineTo(pF8);
+            line:LineTo(pB8);
+            line:LineTo(pA6);
+            line:LineTo(pA5);
+            line:LineTo(pG3);
+            line:LineTo(pG2);
+            line:LineTo(pF0);
+            line:LineTo(pB0);
+            line:LineTo(pA2);
+            line:LineTo(pA3);
+            group:AddTail(line);
+        end
+        if letter == 116 then
+            line:AppendPoint(pA8);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD8);
+            line:LineTo(pD0);
+            group:AddTail(line);
+        end
+        if letter == 117 then
+            line:AppendPoint(pA8);
+            line:LineTo(pA2);
+            line:LineTo(pB0);
+            line:LineTo(pF0);
+            line:LineTo(pG2);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 118 then
+            line:AppendPoint(pA8);
+            line:LineTo(pD0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 119 then
+            line:AppendPoint(pA8);
+            line:LineTo(pB0);
+            line:LineTo(pD4);
+            line:LineTo(pF0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+        end
+        if letter == 120 then
+            line:AppendPoint(pA0);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pA8);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        if letter == 121 then
+            line:AppendPoint(pA8);
+            line:LineTo(pD4);
+            line:LineTo(pG8);
+            group:AddTail(line);
+            line = Contour(0.0);
+            line:AppendPoint(pD0);
+            line:LineTo(pD4);
+            group:AddTail(line);
+        end
+        if letter == 122 then
+            line:AppendPoint(pA8);
+            line:LineTo(pG8);
+            line:LineTo(pA0);
+            line:LineTo(pG0);
+            group:AddTail(line);
+        end
+        -- End of Lower Case
+        if letter == 123 then
+            line:AppendPoint(pD0);
+            line:LineTo(pC0);
+            line:LineTo(pB1);
+            line:LineTo(pB2);
+            line:LineTo(pC3);
+            line:LineTo(pA4);
+            line:LineTo(pC5);
+            line:LineTo(pB6);
+            line:LineTo(pB7);
+            line:LineTo(pC8);
+            line:LineTo(pD8);
+            group:AddTail(line);
+        end
+        if letter == 124 then
+            line:AppendPoint(pA0);
+            line:LineTo(pA10);
+            line:LineTo(pC10);
+            line:LineTo(pC0);
+            line:LineTo(pA0);
+            group:AddTail(line);
+        end
+        if letter == 125 then
+            line:AppendPoint(pD0);
+            line:LineTo(pE0);
+            line:LineTo(pF1);
+            line:LineTo(pF2);
+            line:LineTo(pE3);
+            line:LineTo(pG4);
+            line:LineTo(pE5);
+            line:LineTo(pF6);
+            line:LineTo(pF7);
+            line:LineTo(pE8);
+            line:LineTo(pD8);
+            group:AddTail(line);
+        end
+        if letter == 126 then
+            line:AppendPoint(pA2);
+            line:LineTo(pA3);
+            line:LineTo(pB5);
+            line:LineTo(pF3);
+            line:LineTo(pG5);
+            line:LineTo(pG4);
+            line:LineTo(pF2);
+            line:LineTo(pB4);
+            line:LineTo(pA2);
+            group:AddTail(line);
+        end
+        return pH0
+    end -- function end
+    -- =========================================================================]]
+    local function AddGroupToJob(job, group, layer_name)
+        --  create a CadObject to represent the  group
+        local cad_object = CreateCadGroup(group);
+        -- create a layer with passed name if it doesnt already exist
+        local layer = job.LayerManager:GetLayerWithName(layer_name)
+        -- and add our object to it
+        layer:AddObject(cad_object, true)
+        return cad_object
+    end -- end function
+    -- =========================================================================]]
+    local job = VectricJob()
+    if not job.Exists then
+        DisplayMessageBox("Error in AddGroupToJob: Not finding a job loaded")
+        return false
+    end
+    local strlen = string.len(what)
+    local strup = what
+    local x = strlen
+    local i = 1
+    local y = ""
+    local ptx = where
+    group = ContourGroup(true)
+    while i <= x do
+        y = string.byte(string.sub(strup, i, i))
+        if (y >= 97) and (y <= 122) then -- Lower case
+            ptx = MonoFont(job, ptx, y, (size * 0.75), lay, ang)
+            ptx = Polar2D(ptx, ang, size * 0.05)
+        else -- Upper case
+            ptx = MonoFont(job, ptx, y, size, lay, ang)
+            ptx = Polar2D(ptx, ang, size * 0.07)
+        end
+        i = i + 1
+    end -- while end;
+    AddGroupToJob(job, group, lay)
+    job:Refresh2DView()
+    return true
+end -- Draw Text function end
+-- =====================================================]]
+function ApplyThicknessLayerNames()
+    -- Must run after the dialog, exactly as Blum Drawer Maker's own ApplyThicknessLayerNames does
+    -- (BlumDrawerJoinery.xlua:134), so the tagged names are never written to the registry.
+    local tag = ThicknessTag(Run.StockT)
+    Milling.LNProfile = "BJR Profile" .. tag
+    Milling.LNFingers = "BJR Fingers" .. tag
+    Milling.LNGroove = "BJR Groove" .. tag
+    Milling.LNLabels = "BJR Labels" .. tag
+end
+-- =====================================================]]
+function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name)
+    -- Pockets every gap band at one finger end. corner is the point where this end's edge meets the piece's
+    -- bottom (groove) edge. dir_into (degrees) points along the piece's length, into the piece body -- pockets
+    -- recess this way by the finger depth, Run.StockT. dir_across (degrees) points from the bottom edge toward
+    -- the top edge, along the piece's width -- band k runs from k * Run.FingerWidth to (k+1) * Run.FingerWidth
+    -- along this direction, counted from the bottom edge (the spec's phase rule). phase is "Finger" when band 0
+    -- is a finger, or "Gap" when band 0 is a gap; only gap bands are pocketed, since a finger band is the
+    -- material a mating piece's gap will receive.
+    --
+    -- Generalizes Blum Drawer Maker's MySideFingers (BlumDrawerJoinery.xlua:769-941): where Blum hardcodes the
+    -- panel axes as 0/180 (across) and 90/270 (into), this takes both directions as parameters so one routine
+    -- serves every end of every mode. Only the Dog Bone and T-Bone branches carry over; Blum's Sniglet style has
+    -- no equivalent here (the spec's three styles are Through, Dog Bone, T-Bone), and Through is new: a plain
+    -- rectangular pocket with no corner relief, since this joint is hand-fitted, not flush-cornered.
+    local layer = Milling.job.LayerManager:GetLayerWithName(layer_name)
+    -- Clearance widens every gap outward, never narrows it. Blum Drawer Maker widens only the side's notches, by
+    -- C/2 per edge, so its joint fits at C total (docs/clearance-reference.md, "Finger joints"). Here both mating
+    -- ends are drawn by this one routine, so each edge moves C/4 to keep the same meaning: a finger clearance of
+    -- C gives a total fit of C, the same number the user tuned in Blum Drawer Maker.
+    local edge_clear = Run.FingerClearance * 0.25
+    local overshoot = Milling.FingerTool.ToolDia * 1.5 -- past the end line, and past a long edge on band 0/n-1
+    -- Arc winding for the Dog Bone and T-Bone reliefs depends on the handedness of the (dir_into, dir_across)
+    -- pair. Blum Drawer Maker's two fixed cases fix the convention: into 90/across 0 uses -1.0, into 270/across 0
+    -- uses +1.0 (BlumDrawerJoinery.xlua:629-639 and 668-681), which is sin(across - into) in both.
+    local bulge = (math.sin(math.rad(dir_across - dir_into)) < 0.0) and -1.0 or 1.0
+    local n = Run.FingerCount
+    local gap_is_even = (phase == "Gap")
+    for k = 0, n - 1 do
+        local is_gap = ((k % 2 == 0) == gap_is_even)
+        if is_gap then
+            local band_start = Polar2D(corner, dir_across, k * Run.FingerWidth)
+            local band_end = Polar2D(corner, dir_across, (k + 1) * Run.FingerWidth)
+            local near = Polar2D(band_start, dir_across, -edge_clear)
+            local far = Polar2D(band_end, dir_across, edge_clear)
+            -- A gap on the bottom edge (k == 0) or the top edge (k == n - 1) overshoots past that long edge
+            -- too, exactly as Blum Drawer Maker's pockets do, so no sliver of material is left along it.
+            if k == 0 then
+                near = Polar2D(band_start, dir_across, -overshoot)
+            end
+            if k == n - 1 then
+                far = Polar2D(band_end, dir_across, overshoot)
+            end
+            local near_deep = Polar2D(near, dir_into, Run.StockT)
+            local far_deep = Polar2D(far, dir_into, Run.StockT)
+            local near_out = Polar2D(near, dir_into, -overshoot)
+            local far_out = Polar2D(far, dir_into, -overshoot)
+            local line = Contour(0.0)
+            if Run.JointStyle == "Through" then
+                line:AppendPoint(near_out)
+                line:LineTo(near_deep)
+                line:LineTo(far_deep)
+                line:LineTo(far_out)
+                line:LineTo(near_out)
+            elseif Run.JointStyle == "Dog Bone" then
+                -- A round relief bulging into each inside corner so a mating finger's square corner seats fully.
+                -- Blum Drawer Maker's Dog Bone branch (BlumDrawerJoinery.xlua:598-639), generalized to dir_into/
+                -- dir_across. Arc winding comes from bulge, above.
+                local bit = math.sin(math.rad(45.0)) * Milling.FingerTool.ToolDia
+                local near_relief_a = Polar2D(near_deep, dir_into, -bit)
+                local near_relief_b = Polar2D(near_deep, dir_across, bit)
+                local far_relief_a = Polar2D(far_deep, dir_across, -bit)
+                local far_relief_b = Polar2D(far_deep, dir_into, -bit)
+                line:AppendPoint(near_out)
+                line:LineTo(near_relief_a)
+                line:ArcTo(near_relief_b, bulge)
+                line:LineTo(far_relief_a)
+                line:ArcTo(far_relief_b, bulge)
+                line:LineTo(far_out)
+                line:LineTo(near_out)
+            else -- "T-Bone"
+                -- Blum Drawer Maker's T-Bone branch (BlumDrawerJoinery.xlua:640-664), generalized the same way.
+                local relief = Milling.FingerTool.ToolDia
+                local near_relief = Polar2D(near_deep, dir_into, -relief)
+                local far_relief = Polar2D(far_deep, dir_into, -relief)
+                line:AppendPoint(near_out)
+                line:LineTo(near_relief)
+                line:ArcTo(near_deep, bulge)
+                line:LineTo(far_deep)
+                line:ArcTo(far_relief, bulge)
+                line:LineTo(far_out)
+                line:LineTo(near_out)
+            end
+            layer:AddObject(CreateCadContour(line), true)
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function DrawPieceOutline(origin, length, up_angle, layer_name)
+    -- origin is the bottom-left corner (on the piece's bottom/groove edge, at its left end). up_angle is 90.0
+    -- if the top edge is in the +Y direction from origin, or 270.0 if it is in -Y (Existing back's rotated
+    -- frame). Ordering mirrors Blum Drawer Maker's Drawer_Side (BlumDrawerJoinery.xlua:267-273): pt1 origin,
+    -- pt2 up, pt3 across, pt4 down -- so AddProfileTabs's (pt1,pt2)/(pt3,pt4) edge pairing still means "the two
+    -- long edges" once passed in the piece's own order below.
+    local pt_bl = origin
+    local pt_tl = Polar2D(pt_bl, up_angle, Run.StockW)
+    local pt_tr = Polar2D(pt_tl, 0.0, length)
+    local pt_br = Polar2D(pt_tr, up_angle + 180.0, Run.StockW)
+    local cad_contour = DrawBox(pt_bl, pt_tl, pt_tr, pt_br, layer_name)
+    -- Tabs go on the two long edges (bottom and top), never the two ends, since the ends carry fingers.
+    AddProfileTabs(cad_contour, pt_bl, pt_br, pt_tr, pt_tl)
+    return pt_bl, pt_tl, pt_tr, pt_br, cad_contour
+end
+-- =====================================================]]
+function DrawGroove(origin, length, up_angle, layer_name)
+    -- A through dado on the top face, Run.GrooveInset from the bottom edge, running the full length plus the
+    -- dado bit radius at each end, as on a Blum back (BlumDrawerTools.xlua:1643-1673, simplified: Box Joint Runs
+    -- has no back rabbet to combine it with, so this is a plain rectangle, not Blum's T-shaped vector).
+    if not Run.GrooveOn then
+        return true
+    end
+    local radius = Milling.DadoTool.ToolDia * 0.5
+    local near = Polar2D(origin, up_angle, Run.GrooveInset)
+    local far = Polar2D(origin, up_angle, Run.GrooveInset + Run.GrooveWidth)
+    local p1 = Polar2D(near, 180.0, radius)
+    local p2 = Polar2D(far, 180.0, radius)
+    local p3 = Polar2D(p2, 0.0, length + (radius * 2.0))
+    local p4 = Polar2D(p1, 0.0, length + (radius * 2.0))
+    DrawBox(p1, p2, p3, p4, layer_name)
+    return true
+end
+-- =====================================================]]
+function LabelPiece(origin, index, length, width, thickness, layer_name)
+    -- "Run - Piece 2 (L x W x T)", placed near the piece's left end and just above the groove, as in Blum
+    -- Drawer Maker's part notes (BlumDrawerJoinery.xlua:132-134). The height starts at 0.25 and shrinks so the
+    -- text fits inside the piece length; short pieces such as Test cut stubs would otherwise run into their
+    -- neighbor. DrawWriter's letters advance about 0.7 of the text height each.
+    local margin = 0.25 * Run.Cal
+    local text = "Run - Piece " .. tostring(index) .. " (" .. FormatThickness(length) .. " x " ..
+        FormatThickness(width) .. " x " .. FormatThickness(thickness) .. ")"
+    local size = math.min(0.25 * Run.Cal, (length - (2.0 * margin)) / (string.len(text) * 0.7))
+    local pt = Point2D(origin.X + margin, origin.Y + (1.0607 * Run.Cal))
+    DrawWriter(text, pt, size, layer_name, 0.0)
+    return true
+end
+-- =====================================================]]
+function RunTestCut()
+    -- Two short stubs at the real W, so the finger count and finger width match production: one Finger-at-
+    -- bottom, one Gap-at-bottom, each about 3 units long, with the groove when it is on. Mirrors Blum Drawer
+    -- Maker's Drawer.TestCut stub sizing (BlumDrawerTools.xlua:1745-1754) and ProcessTest (BlumDrawerJoinery.xlua:58-73).
+    ApplyThicknessLayerNames()
+    ActivateThicknessSheet(Run.StockT)
+    local origin = OpenSpaceStart()
+    local stub_length = 3.0 * Run.Cal
+    -- Piece 1: Finger at bottom on its right end (the end under test); its left end is plain (no fingers).
+    local pt_bl, pt_tl, pt_tr, pt_br = DrawPieceOutline(origin, stub_length, 90.0, Milling.LNProfile)
+    DrawFingerEnd(pt_br, 180.0, 90.0, "Finger", Milling.LNFingers)
+    DrawGroove(origin, stub_length, 90.0, Milling.LNGroove)
+    LabelPiece(origin, 1, stub_length, Run.StockW, Run.StockT, Milling.LNLabels)
+    -- Piece 2: Gap at bottom on its left end, placed to the right with the part gap plus room for the finger
+    -- overshoot past the end line, so neither stub's pockets reach into the other's footprint.
+    local gap2 = Milling.PartGap + (Milling.FingerTool.ToolDia * 1.5)
+    local origin2 = Polar2D(origin, 0.0, stub_length + gap2)
+    DrawPieceOutline(origin2, stub_length, 90.0, Milling.LNProfile)
+    DrawFingerEnd(origin2, 0.0, 90.0, "Gap", Milling.LNFingers)
+    DrawGroove(origin2, stub_length, 90.0, Milling.LNGroove)
+    LabelPiece(origin2, 2, stub_length, Run.StockW, Run.StockT, Milling.LNLabels)
+    Milling.job:Refresh2DView()
+    return true
+end
+-- =============== End of File =========================]]

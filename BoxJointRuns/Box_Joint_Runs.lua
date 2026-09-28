@@ -126,6 +126,7 @@ function main(script_path)
     local Tools
     Tools = assert(loadfile(script_path .. "\\BoxJointRegistry.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BoxJointDialog.xlua"))(Tools)
+    Tools = assert(loadfile(script_path .. "\\BoxJointGeometry.xlua"))(Tools)
     GetMaterialSettings()
     SettingsRead()
     local looping = true
@@ -141,8 +142,11 @@ function main(script_path)
         end
     end
     SettingsWrite()
-    DisplayMessageBox("Settings saved. Mode: " .. Run.Mode .. ". Finger count: " .. tostring(Run.FingerCount) ..
-        ". Finger width: " .. string.format("%.4f", Run.FingerWidth))
+    RecomputeDerived()
+    if Run.Mode == "Test Cut" then
+        RunTestCut()
+    end
+    DisplayMessageBox("Box Joint Runs complete. Mode: " .. Run.Mode .. ". Review the drawing before milling.")
     return true
 end
 -- =============== End of File =========================]]
