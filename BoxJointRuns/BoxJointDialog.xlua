@@ -1,109 +1,137 @@
 -- VECTRIC LUA SCRIPT
 -- =====================================================]]
 function BuildDialog()
+    -- Look and feel copied from Blum Drawer Maker's DialogWindow.Style (BlumDrawerDialog.xlua:18-258), trimmed to
+    -- the classes this dialog uses, and inlined because a DialogWindow global table is not allowed here.
     local html = [[<!DOCTYPE html><html><head><title>Box Joint Runs</title>
 <style>
-body { font-family: Arial, sans-serif; font-size: 12px; }
-table { border-collapse: collapse; }
-td { padding: 3px 6px; }
-h2 { font-size: 13px; margin: 8px 0 2px 0; }
+html { overflow: hidden }
+body { background-color: #3a4660; overflow: hidden; font-family: arial, helvetica, sans-serif; font-size: 12px;
+    color: #FFFFFF; }
+table { width: 100%; border: 0; }
+.FormButton { font-weight: bold; width: 75px; font-size: 12px; white-space: nowrap; background-color: #630;
+    color: #FFFFFF; }
+.LuaButton { font-weight: bold; font-size: 12px; background-color: #663300; color: #FFFFFF; }
+.ToolNameLabel { font-weight: bolder; font-size: 12px; text-align: left; color: #000; width: 70%; }
+.ToolPicker { font-weight: bold; text-align: center; font-size: 12px; width: 50px; background-color: #663300;
+    color: #FFFFFF; }
+.h1-l { font-size: 12px; font-weight: bold; text-align: left; white-space: nowrap; }
+.h1-r { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
+.h1-rP { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; padding-right: 4px;
+    padding-left: 4px; }
+.h2-c { font-size: 14px; font-weight: bold; text-align: center; white-space: nowrap; text-shadow: 2px 2px white; }
+#InquiryHelpMain { width: 80px; }
 </style></head><body>
 <table>
-<tr><td colspan="4"><h2>Stock</h2></td></tr>
-<tr>
-  <td><label title="Thickness of every piece in this run.">Thickness (T)</label></td>
-  <td><input type="text" id="Run.StockT" size="10"/></td>
-  <td><label title="The dimension the fingers run across -- a drawer's height.">Width (W)</label></td>
-  <td><input type="text" id="Run.StockW" size="10"/></td>
-</tr>
-<tr><td colspan="4"><h2>Fingers</h2></td></tr>
-<tr>
-  <td><label title="Uncheck to enter a finger count by hand.">Automatic count</label></td>
-  <td><input type="checkbox" id="Run.FingerAuto"/></td>
-  <td><label title="Used only when Automatic count is unchecked.">Manual count</label></td>
-  <td><input type="text" id="Run.FingerCountManual" size="10"/></td>
-</tr>
-<tr>
-  <td><label title="Blind styles are excluded: any piece can be flipped face for face.">Joint style</label></td>
-  <td>
-    <select id="Run.JointStyle" size="1">
-      <option>Through</option>
-      <option>Dog Bone</option>
-      <option>T-Bone</option>
-    </select>
-  </td>
-  <td><label title="Gap opened beyond the finger's nominal width, split between both sides.">Finger clearance</label></td>
-  <td><input type="text" id="Run.FingerClearance" size="10"/></td>
-</tr>
-<tr><td colspan="4"><h2>Bottom groove</h2></td></tr>
-<tr>
-  <td><label>Groove on</label></td>
-  <td><input type="checkbox" id="Run.GrooveOn"/></td>
-  <td><label title="From the bottom edge to the near side of the groove.">Inset</label></td>
-  <td><input type="text" id="Run.GrooveInset" size="10"/></td>
-</tr>
-<tr>
-  <td><label>Groove width</label></td>
-  <td><input type="text" id="Run.GrooveWidth" size="10"/></td>
-  <td><label>Groove depth</label></td>
-  <td><input type="text" id="Run.GrooveDepth" size="10"/></td>
-</tr>
-<tr><td colspan="4"><h2>Tools</h2></td></tr>
-<tr>
-  <td><label>Profile bit</label></td>
-  <td><input id="ToolChooseProfile" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameProfile">-</span></td>
-  <td colspan="2"></td>
-</tr>
-<tr>
-  <td><label>Finger bit</label></td>
-  <td><input id="ToolChooseFinger" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameFinger">-</span></td>
-  <td><label>Pocket allowance</label></td>
-  <td><input type="text" id="Milling.FingerAllowance" size="10"/></td>
-</tr>
-<tr>
-  <td><label>Finger clear bit</label></td>
-  <td><input id="ToolChooseFingerClear" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameFingerClear">-</span></td>
-  <td><label>Pocket allowance</label></td>
-  <td><input type="text" id="Milling.FingerClearAllowance" size="10"/></td>
-</tr>
-<tr>
-  <td><label>Dado bit</label></td>
-  <td><input id="ToolChooseDado" class="ToolPicker" type="button" value="Tool"/> <span id="ToolNameDado">-</span></td>
-  <td><label>Pocket allowance</label></td>
-  <td><input type="text" id="Milling.GrooveAllowance" size="10"/></td>
-</tr>
-<tr><td colspan="4"><h2>Cutting</h2></td></tr>
-<tr>
-  <td><label title="Minimum gap left between parts on the sheet.">Part gap</label></td>
-  <td><input type="text" id="Milling.PartGap" size="10"/></td>
-  <td><label>Tabs</label></td>
-  <td><input type="checkbox" id="Milling.ProfileTabs"/></td>
-</tr>
-<tr>
-  <td><label title="Roughs to this allowance, then a full-depth finishing pass takes it off.">Profile finishing pass</label></td>
-  <td><input type="checkbox" id="Milling.ProfileFinish"/></td>
-  <td><label>Finish allowance</label></td>
-  <td><input type="text" id="Milling.ProfileFinishAllowance" size="10"/></td>
-</tr>
-<tr><td colspan="4"><h2>Mode</h2></td></tr>
-<tr>
-  <td><label>Mode</label></td>
-  <td colspan="3">
-    <select id="Run.Mode" size="1">
-      <option>Test Cut</option>
-    </select>
-  </td>
-</tr>
-<tr><td colspan="4"><hr/></td></tr>
-<tr>
-  <td><input id="InquiryHelpMain" class="LuaButton" type="button" value="Help"/></td>
-  <td class="alert" id="GadgetName.Alert" colspan="2"></td>
-  <td><input id="ButtonOK" class="FormButton" type="button" value="OK"/>
-      <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
-</tr>
+  <tr>
+    <td colspan="2" class="h2-c">Stock</td>
+    <td colspan="2" class="h2-c">Fingers</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Thickness of every piece in this run.">Thickness (T)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.StockT" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Uncheck to enter a finger count by hand.">Automatic Count</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Run.FingerAuto"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="The dimension the fingers run across -- a drawer's height.">Width (W)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.StockW" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Used only when Automatic Count is unchecked.">Manual Count</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.FingerCountManual" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="What this run draws and machines.">Mode</label></td>
+    <td class="h1-l">
+      <select id="Run.Mode" size="1">
+        <option>Test Cut</option>
+      </select>
+    </td>
+    <td class="h1-rP"><label title="Blind styles are excluded: any piece can be flipped face for face.">Joint Style</label></td>
+    <td class="h1-l">
+      <select id="Run.JointStyle" size="1">
+        <option>Through</option>
+        <option>Dog Bone</option>
+        <option>T-Bone</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">&nbsp;</td>
+    <td class="h1-rP"><label title="Gap opened beyond the finger's nominal width, split between both sides.">Finger Clearance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.FingerClearance" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="h2-c">Bottom Groove</td>
+    <td colspan="2" class="h2-c">Cutting</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Cut a groove for the drawer bottom.">Groove On</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Run.GrooveOn"/></td>
+    <td class="h1-rP"><label title="Minimum gap left between parts on the sheet.">Part Gap</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.PartGap" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="From the bottom edge to the near side of the groove.">Inset</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveInset" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Hold each part in the sheet while the profile cuts it free.">Tabs</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Milling.ProfileTabs"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Groove Width</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveWidth" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Roughs to this allowance, then a full-depth finishing pass takes it off.">Profile Finishing Pass</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Milling.ProfileFinish"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Groove Depth</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveDepth" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label>Finish Allowance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.ProfileFinishAllowance" size="10" maxlength="10"/></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="5"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for profile milling">Profile Bit:</label></td>
+    <td bgcolor="#33FFFF" class="ToolNameLabel"><span id="ToolNameProfile">-</span></td>
+    <td class="h1-l"><input id="ToolChooseProfile" class="ToolPicker" type="button" value="Tool"/></td>
+    <td colspan="2">&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for finger joint detail milling">Finger Bit:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id="ToolNameFinger">-</span></td>
+    <td class="h1-l"><input id="ToolChooseFinger" class="ToolPicker" type="button" value="Tool"/></td>
+    <td class="h1-rP"><label>Allowance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.FingerAllowance" size="8" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for finger joint material clearing">Finger Clearing Bit:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id="ToolNameFingerClear">-</span></td>
+    <td class="h1-l"><input id="ToolChooseFingerClear" class="ToolPicker" type="button" value="Tool"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Bit for the bottom groove">Dado Bit:</label></td>
+    <td bgcolor="#FFFF33" class="ToolNameLabel"><span id="ToolNameDado">-</span></td>
+    <td class="h1-l"><input id="ToolChooseDado" class="ToolPicker" type="button" value="Tool"/></td>
+    <td class="h1-rP"><label>Allowance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.GrooveAllowance" size="8" maxlength="10"/></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id="InquiryHelpMain" class="LuaButton" type="button" value="Help"/></td>
+    <td class="alert" id="GadgetName.Alert"></td>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Run"/>
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+  </tr>
 </table>
 </body></html>]]
-    Run.dialog = HTML_Dialog(true, html, 620, 560, "Box Joint Runs " .. Run.UnitLabel)
+    Run.dialog = HTML_Dialog(true, html, Run.DialogWidth, Run.DialogHeight, "Box Joint Runs " .. Run.UnitLabel)
     Run.dialog:AddDoubleField("Run.StockT", Run.StockT)
     Run.dialog:AddDoubleField("Run.StockW", Run.StockW)
     Run.dialog:AddCheckBox("Run.FingerAuto", Run.FingerAuto)
@@ -115,7 +143,6 @@ h2 { font-size: 13px; margin: 8px 0 2px 0; }
     Run.dialog:AddDoubleField("Run.GrooveWidth", Run.GrooveWidth)
     Run.dialog:AddDoubleField("Run.GrooveDepth", Run.GrooveDepth)
     Run.dialog:AddDoubleField("Milling.FingerAllowance", Milling.FingerAllowance)
-    Run.dialog:AddDoubleField("Milling.FingerClearAllowance", Milling.FingerClearAllowance)
     Run.dialog:AddDoubleField("Milling.GrooveAllowance", Milling.GrooveAllowance)
     Run.dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
     Run.dialog:AddCheckBox("Milling.ProfileTabs", Milling.ProfileTabs)
@@ -141,6 +168,9 @@ function ShowSettingsDialog()
     if not Run.dialog:ShowDialog() then
         return false
     end
+    -- Window size is unit-independent, so it is stored outside the Imperial/Metric settings keys.
+    Run.DialogWidth = Run.dialog.WindowWidth
+    Run.DialogHeight = Run.dialog.WindowHeight
     Run.StockT = math.abs(Run.dialog:GetDoubleField("Run.StockT"))
     Run.StockW = math.abs(Run.dialog:GetDoubleField("Run.StockW"))
     Run.FingerAuto = Run.dialog:GetCheckBox("Run.FingerAuto")
@@ -154,7 +184,6 @@ function ShowSettingsDialog()
     Run.Mode = Run.dialog:GetDropDownListValue("Run.Mode")
     -- Allowances are signed, as Blum Drawer Maker's are: no math.abs here.
     Milling.FingerAllowance = Run.dialog:GetDoubleField("Milling.FingerAllowance")
-    Milling.FingerClearAllowance = Run.dialog:GetDoubleField("Milling.FingerClearAllowance")
     Milling.GrooveAllowance = Run.dialog:GetDoubleField("Milling.GrooveAllowance")
     Milling.PartGap = math.abs(Run.dialog:GetDoubleField("Milling.PartGap"))
     Milling.ProfileTabs = Run.dialog:GetCheckBox("Milling.ProfileTabs")

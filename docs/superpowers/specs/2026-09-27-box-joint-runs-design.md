@@ -70,7 +70,7 @@ These apply to every mode.
   face for face.
 - **Finger clearance**, applied as Blum Drawer Maker applies it.
 - **Bottom groove:** on/off, inset from the bottom edge, width, depth.
-- **Tools:** profile bit, finger bit, finger clear bit, dado bit, each with its pocket allowance as in Blum
+- **Tools:** profile bit, finger bit, finger clear bit, dado bit; the finger, dado and profile finish passes each take an allowance as in Blum
   Drawer Maker; part gap; profile tabs; optional profile finishing pass.
 - **Mode:** Chain, Existing back, Existing end, or Test cut.
 
@@ -169,8 +169,7 @@ the groove is on. Drawn and machined like Chain pieces.
 
 | Toolpath | Layer | Tool | Notes |
 |---|---|---|---|
-| Finger clear | Fingers | Finger clear bit | Pocket, through depth |
-| Fingers | Fingers | Finger bit | Pocket with pocket allowance; cleans corners as Blum Drawer Maker does |
+| Fingers | Fingers | Finger bit, finger clear bit | Two-tool pocket, through depth, with pocket allowance: the clear bit roughs (VCarve adds a `[Clear]` partner), the finger bit finishes. When both pickers hold the same bit, it runs single-tool |
 | Groove | Groove | Dado bit | Pocket to groove depth; Chain and Test cut only |
 | Profile | Profile | Profile bit | Outside with tabs for pieces; inside, no tabs, for existing-back waste |
 | Profile finish | Profile | Profile bit | Optional finishing pass; pieces only |

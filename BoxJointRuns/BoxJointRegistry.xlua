@@ -16,7 +16,6 @@ local IMPERIAL_DEFAULTS = {
     GrooveWidth = 0.2500,
     GrooveDepth = 0.2500,
     FingerAllowance = 0.0000,
-    FingerClearAllowance = 0.0000,
     GrooveAllowance = 0.0000,
     ProfileFinishAllowance = 0.0000,
     PartGap = 0.7500,
@@ -36,7 +35,6 @@ local METRIC_DEFAULTS = {
     GrooveWidth = 6.3500,
     GrooveDepth = 6.3500,
     FingerAllowance = 0.0000,
-    FingerClearAllowance = 0.0000,
     GrooveAllowance = 0.0000,
     ProfileFinishAllowance = 0.0000,
     PartGap = 19.0500,
@@ -118,6 +116,8 @@ end
 function SettingsRead()
     local registry = Registry(Run.RegName)
     local defaults = SettingDefaults()
+    Run.DialogWidth = registry:GetInt("DialogWidth", 620)
+    Run.DialogHeight = registry:GetInt("DialogHeight", 560)
     Run.StockT = registry:GetDouble(SettingsKey("StockT"), defaults.StockT)
     Run.StockW = registry:GetDouble(SettingsKey("StockW"), defaults.StockW)
     Run.FingerAuto = registry:GetBool(SettingsKey("FingerAuto"), defaults.FingerAuto)
@@ -133,7 +133,6 @@ function SettingsRead()
         Run.Mode = defaults.Mode -- a blank saved by an earlier build would leave the dropdown unselected
     end
     Milling.FingerAllowance = registry:GetDouble(SettingsKey("FingerAllowance"), defaults.FingerAllowance)
-    Milling.FingerClearAllowance = registry:GetDouble(SettingsKey("FingerClearAllowance"), defaults.FingerClearAllowance)
     Milling.GrooveAllowance = registry:GetDouble(SettingsKey("GrooveAllowance"), defaults.GrooveAllowance)
     Milling.ProfileFinishAllowance = registry:GetDouble(SettingsKey("ProfileFinishAllowance"), defaults.ProfileFinishAllowance)
     Milling.PartGap = registry:GetDouble(SettingsKey("PartGap"), defaults.PartGap)
@@ -144,6 +143,8 @@ end
 -- =====================================================]]
 function SettingsWrite()
     local registry = Registry(Run.RegName)
+    registry:SetInt("DialogWidth", Run.DialogWidth)
+    registry:SetInt("DialogHeight", Run.DialogHeight)
     registry:SetDouble(SettingsKey("StockT"), Run.StockT)
     registry:SetDouble(SettingsKey("StockW"), Run.StockW)
     registry:SetBool(SettingsKey("FingerAuto"), Run.FingerAuto)
@@ -156,7 +157,6 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("GrooveDepth"), Run.GrooveDepth)
     registry:SetString(SettingsKey("Mode"), Run.Mode)
     registry:SetDouble(SettingsKey("FingerAllowance"), Milling.FingerAllowance)
-    registry:SetDouble(SettingsKey("FingerClearAllowance"), Milling.FingerClearAllowance)
     registry:SetDouble(SettingsKey("GrooveAllowance"), Milling.GrooveAllowance)
     registry:SetDouble(SettingsKey("ProfileFinishAllowance"), Milling.ProfileFinishAllowance)
     registry:SetDouble(SettingsKey("PartGap"), Milling.PartGap)

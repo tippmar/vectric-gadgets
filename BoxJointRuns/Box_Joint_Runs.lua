@@ -18,6 +18,7 @@ require "strict"
 Run = {}
 Milling = {}
 Run.RegName = "BoxJointRuns"
+lead_in_out_data = LeadInOutData()
 -- =====================================================]]
 function GetMaterialSettings()
     local mtl_block = MaterialBlock()
@@ -127,6 +128,7 @@ function main(script_path)
     Tools = assert(loadfile(script_path .. "\\BoxJointRegistry.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BoxJointDialog.xlua"))(Tools)
     Tools = assert(loadfile(script_path .. "\\BoxJointGeometry.xlua"))(Tools)
+    Tools = assert(loadfile(script_path .. "\\BoxJointToolpaths.xlua"))(Tools)
     GetMaterialSettings()
     SettingsRead()
     local looping = true
@@ -145,6 +147,11 @@ function main(script_path)
     RecomputeDerived()
     if Run.Mode == "Test Cut" then
         RunTestCut()
+        CreateFingerToolpath()
+        CreateGrooveToolpath()
+        CreateProfileToolpath(Milling.LNProfile, "OUT", true)
+        SequenceToolpathsByTool()
+        Milling.job:Refresh2DView()
     end
     DisplayMessageBox("Box Joint Runs complete. Mode: " .. Run.Mode .. ". Review the drawing before milling.")
     return true

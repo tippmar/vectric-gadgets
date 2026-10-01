@@ -1345,6 +1345,9 @@ function ApplyThicknessLayerNames()
     Milling.LNFingers = "BJR Fingers" .. tag
     Milling.LNGroove = "BJR Groove" .. tag
     Milling.LNLabels = "BJR Labels" .. tag
+    Milling.TPFingers = "BJR Fingers"
+    Milling.TPGroove = "BJR Groove"
+    Milling.TPProfile = "BJR Profile"
 end
 -- =====================================================]]
 function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name)
