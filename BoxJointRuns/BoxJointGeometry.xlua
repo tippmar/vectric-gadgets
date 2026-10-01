@@ -1435,6 +1435,22 @@ function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name)
             layer:AddObject(CreateCadContour(line), true)
         end
     end
+    -- Grooves facing outside: at a folded corner, the piece whose finger holds band 0 would block the mating
+    -- piece's groove short of the corner. A groove-sized pocket through that finger, as deep from the end as the
+    -- mating groove (plus the finger bit radius, so its rounded corners clear the bottom panel), lets the mating
+    -- groove run through. Only a "Finger" end owns band 0; a "Gap" end needs nothing.
+    if phase == "Finger" and Run.GrooveOn and Run.GrooveSide == "Outside" then
+        local near = Polar2D(corner, dir_across, Run.GrooveInset)
+        local far = Polar2D(corner, dir_across, Run.GrooveInset + Run.GrooveWidth)
+        local depth = Run.GrooveDepth + (Milling.FingerTool.ToolDia * 0.5)
+        local slot = Contour(0.0)
+        slot:AppendPoint(Polar2D(near, dir_into, -overshoot))
+        slot:LineTo(Polar2D(near, dir_into, depth))
+        slot:LineTo(Polar2D(far, dir_into, depth))
+        slot:LineTo(Polar2D(far, dir_into, -overshoot))
+        slot:LineTo(Polar2D(near, dir_into, -overshoot))
+        layer:AddObject(CreateCadContour(slot), true)
+    end
     return true
 end
 -- =====================================================]]
@@ -1507,6 +1523,62 @@ function RunTestCut()
     DrawFingerEnd(origin2, 0.0, 90.0, "Gap", Milling.LNFingers)
     DrawGroove(origin2, stub_length, 90.0, Milling.LNGroove)
     LabelPiece(origin2, 2, stub_length, Run.StockW, Run.StockT, Milling.LNLabels)
+    Milling.job:Refresh2DView()
+    return true
+end
+-- =====================================================]]
+function RunChain()
+    -- Lays out 1 to 4 pieces end to end along X, each a plain L x W rectangle with fingers cut per the phase
+    -- rule. At every internal joint the earlier piece's end is Finger at bottom and the later piece's end is
+    -- Gap at bottom (the spec's internal-joint rule) -- this is fixed, never a dialog choice. Close loop applies
+    -- that same rule between Piece 4's end and Piece 1's start, replacing the two end dropdowns.
+    ApplyThicknessLayerNames()
+    ActivateThicknessSheet(Run.StockT)
+    local origin = OpenSpaceStart()
+    local gap = Milling.PartGap + (Milling.FingerTool.ToolDia * 1.5)
+    local count = 1
+    for i = 2, 4 do
+        if Run.Piece[i].Enabled then
+            count = i
+        end
+    end
+    local closed = Run.CloseLoop and count == 4
+    local x = origin
+    for i = 1, count do
+        local piece = Run.Piece[i]
+        local _, _, _, pt_br = DrawPieceOutline(x, piece.Length, 90.0, Milling.LNProfile)
+        DrawGroove(x, piece.Length, 90.0, Milling.LNGroove)
+        LabelPiece(x, i, piece.Length, Run.StockW, Run.StockT, Milling.LNLabels)
+        -- Start-of-piece end
+        local start_phase = nil
+        if i == 1 then
+            if closed then
+                start_phase = "Gap" -- opposite the internal rule's "Finger" at the end of Piece 4
+            elseif Run.StartEnd ~= "None" and not Run.CloseLoop then
+                start_phase = Run.StartEnd
+            end
+        else
+            start_phase = "Gap" -- internal joint: always opposite the previous piece's Finger end
+        end
+        if start_phase ~= nil then
+            DrawFingerEnd(x, 0.0, 90.0, start_phase, Milling.LNFingers)
+        end
+        -- End-of-piece end
+        local end_phase = nil
+        if i == count then
+            if closed then
+                end_phase = "Finger" -- internal rule, joining to Piece 1's start
+            elseif Run.EndEnd ~= "None" and not Run.CloseLoop then
+                end_phase = Run.EndEnd
+            end
+        else
+            end_phase = "Finger" -- internal joint: this piece's end is Finger at bottom
+        end
+        if end_phase ~= nil then
+            DrawFingerEnd(pt_br, 180.0, 90.0, end_phase, Milling.LNFingers)
+        end
+        x = Polar2D(x, 0.0, piece.Length + gap)
+    end
     Milling.job:Refresh2DView()
     return true
 end

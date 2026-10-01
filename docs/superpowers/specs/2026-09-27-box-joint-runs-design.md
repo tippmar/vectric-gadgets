@@ -69,7 +69,7 @@ These apply to every mode.
 - **Joint style:** Through, Dog Bone, or T-Bone. Blind styles are excluded, so any piece can be flipped
   face for face.
 - **Finger clearance**, applied as Blum Drawer Maker applies it.
-- **Bottom groove:** on/off, inset from the bottom edge, width, depth.
+- **Bottom groove:** on/off, inset from the bottom edge, width, depth, and which way it faces once folded (Inside or Outside).
 - **Tools:** profile bit, finger bit, finger clear bit, dado bit; the finger, dado and profile finish passes each take an allowance as in Blum
   Drawer Maker; part gap; profile tabs; optional profile finishing pass.
 - **Mode:** Chain, Existing back, Existing end, or Test cut.
@@ -152,6 +152,9 @@ the groove is on. Drawn and machined like Chain pieces.
   the gaps; the profile trims the finger tips. Tabs go on the long edges, since the ends carry fingers.
 - **Groove:** a through dado on the top face at its inset from the bottom edge, running the full length
   plus the dado bit radius at each end, as on a Blum back. New pieces only.
+- **Outside grooves:** when the grooves face outside, the finger that holds the bottom band would block the
+  mating groove short of the corner. Every finger-at-bottom end then gets a through pocket on the Fingers layer
+  at the groove's inset and width, from past the end line to the groove depth plus the finger bit radius in.
 - **Layers:** Profile, Fingers, Groove and Labels, named with the thickness tag Blum Drawer Maker uses.
   Existing modes use separate layers (for example, `BJR Existing Fingers`).
 - **Labels:** each new piece is labeled, for example "Run – Piece 2 (L × W × T)".

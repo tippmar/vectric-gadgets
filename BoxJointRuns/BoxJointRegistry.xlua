@@ -21,6 +21,17 @@ local IMPERIAL_DEFAULTS = {
     PartGap = 0.7500,
     ProfileTabs = true,
     ProfileFinish = false,
+    Piece1Length = 12.0000,
+    Piece2Length = 12.0000,
+    Piece3Length = 12.0000,
+    Piece4Length = 12.0000,
+    Piece2Enabled = false,
+    Piece3Enabled = false,
+    Piece4Enabled = false,
+    GrooveSide = "Inside",
+    StartEnd = "None",
+    EndEnd = "None",
+    CloseLoop = false,
     Mode = "Test Cut"
 }
 local METRIC_DEFAULTS = {
@@ -40,6 +51,17 @@ local METRIC_DEFAULTS = {
     PartGap = 19.0500,
     ProfileTabs = true,
     ProfileFinish = false,
+    Piece1Length = 300.0000,
+    Piece2Length = 300.0000,
+    Piece3Length = 300.0000,
+    Piece4Length = 300.0000,
+    Piece2Enabled = false,
+    Piece3Enabled = false,
+    Piece4Enabled = false,
+    GrooveSide = "Inside",
+    StartEnd = "None",
+    EndEnd = "None",
+    CloseLoop = false,
     Mode = "Test Cut"
 }
 local TOOL_SLOTS = {
@@ -117,7 +139,7 @@ function SettingsRead()
     local registry = Registry(Run.RegName)
     local defaults = SettingDefaults()
     Run.DialogWidth = registry:GetInt("DialogWidth", 620)
-    Run.DialogHeight = registry:GetInt("DialogHeight", 560)
+    Run.DialogHeight = registry:GetInt("DialogHeight", 730)
     Run.StockT = registry:GetDouble(SettingsKey("StockT"), defaults.StockT)
     Run.StockW = registry:GetDouble(SettingsKey("StockW"), defaults.StockW)
     Run.FingerAuto = registry:GetBool(SettingsKey("FingerAuto"), defaults.FingerAuto)
@@ -129,9 +151,30 @@ function SettingsRead()
     Run.GrooveWidth = registry:GetDouble(SettingsKey("GrooveWidth"), defaults.GrooveWidth)
     Run.GrooveDepth = registry:GetDouble(SettingsKey("GrooveDepth"), defaults.GrooveDepth)
     Run.Mode = registry:GetString(SettingsKey("Mode"), defaults.Mode)
-    if Run.Mode == "" then
-        Run.Mode = defaults.Mode -- a blank saved by an earlier build would leave the dropdown unselected
+    if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" then
+        Run.Mode = defaults.Mode -- a blank or unknown value would leave the dropdown unselected
     end
+    Run.Piece = {}
+    Run.Piece[1] = {Enabled = true, Length = registry:GetDouble(SettingsKey("Piece1Length"), defaults.Piece1Length)}
+    for i = 2, 4 do
+        Run.Piece[i] = {
+            Enabled = registry:GetBool(SettingsKey("Piece" .. i .. "Enabled"), defaults["Piece" .. i .. "Enabled"]),
+            Length = registry:GetDouble(SettingsKey("Piece" .. i .. "Length"), defaults["Piece" .. i .. "Length"])
+        }
+    end
+    Run.GrooveSide = registry:GetString(SettingsKey("GrooveSide"), defaults.GrooveSide)
+    if Run.GrooveSide ~= "Inside" and Run.GrooveSide ~= "Outside" then
+        Run.GrooveSide = defaults.GrooveSide
+    end
+    Run.StartEnd = registry:GetString(SettingsKey("StartEnd"), defaults.StartEnd)
+    if Run.StartEnd ~= "None" and Run.StartEnd ~= "Finger" and Run.StartEnd ~= "Gap" then
+        Run.StartEnd = defaults.StartEnd
+    end
+    Run.EndEnd = registry:GetString(SettingsKey("EndEnd"), defaults.EndEnd)
+    if Run.EndEnd ~= "None" and Run.EndEnd ~= "Finger" and Run.EndEnd ~= "Gap" then
+        Run.EndEnd = defaults.EndEnd
+    end
+    Run.CloseLoop = registry:GetBool(SettingsKey("CloseLoop"), defaults.CloseLoop)
     Milling.FingerAllowance = registry:GetDouble(SettingsKey("FingerAllowance"), defaults.FingerAllowance)
     Milling.GrooveAllowance = registry:GetDouble(SettingsKey("GrooveAllowance"), defaults.GrooveAllowance)
     Milling.ProfileFinishAllowance = registry:GetDouble(SettingsKey("ProfileFinishAllowance"), defaults.ProfileFinishAllowance)
@@ -156,6 +199,16 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("GrooveWidth"), Run.GrooveWidth)
     registry:SetDouble(SettingsKey("GrooveDepth"), Run.GrooveDepth)
     registry:SetString(SettingsKey("Mode"), Run.Mode)
+    for i = 1, 4 do
+        registry:SetDouble(SettingsKey("Piece" .. i .. "Length"), Run.Piece[i].Length)
+    end
+    for i = 2, 4 do
+        registry:SetBool(SettingsKey("Piece" .. i .. "Enabled"), Run.Piece[i].Enabled)
+    end
+    registry:SetString(SettingsKey("GrooveSide"), Run.GrooveSide)
+    registry:SetString(SettingsKey("StartEnd"), Run.StartEnd)
+    registry:SetString(SettingsKey("EndEnd"), Run.EndEnd)
+    registry:SetBool(SettingsKey("CloseLoop"), Run.CloseLoop)
     registry:SetDouble(SettingsKey("FingerAllowance"), Milling.FingerAllowance)
     registry:SetDouble(SettingsKey("GrooveAllowance"), Milling.GrooveAllowance)
     registry:SetDouble(SettingsKey("ProfileFinishAllowance"), Milling.ProfileFinishAllowance)

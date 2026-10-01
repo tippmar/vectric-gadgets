@@ -84,6 +84,19 @@ function ValidateSettings()
     if Milling.ProfileTool.ToolDia >= Milling.PartGap then
         return false, "Profile bit is too large for the part gap."
     end
+    if Run.Mode == "Chain" then
+        for i = 1, 4 do
+            if Run.Piece[i].Enabled and Run.Piece[i].Length <= (2.0 * Run.StockT) then
+                return false, "Piece " .. tostring(i) .. " length must be greater than 2 x thickness."
+            end
+        end
+        if Run.CloseLoop then
+            if Run.Piece[1].Length ~= Run.Piece[3].Length or Run.Piece[2].Length ~= Run.Piece[4].Length then
+                PresentMessage("Box Joint Runs", "Alert",
+                    "Close loop: Piece 1/Piece 3 or Piece 2/Piece 4 lengths do not match. Continuing anyway.")
+            end
+        end
+    end
     return true, nil
 end
 -- =====================================================]]
@@ -147,7 +160,13 @@ function main(script_path)
     RecomputeDerived()
     if Run.Mode == "Test Cut" then
         RunTestCut()
-        CreateFingerToolpath()
+    elseif Run.Mode == "Chain" then
+        RunChain()
+    end
+    if Run.Mode == "Test Cut" or Run.Mode == "Chain" then
+        if Milling.job.LayerManager:FindLayerWithName(Milling.LNFingers) ~= nil then
+            CreateFingerToolpath() -- a chain with no joints and None ends draws no pockets
+        end
         CreateGrooveToolpath()
         CreateProfileToolpath(Milling.LNProfile, "OUT", true)
         SequenceToolpathsByTool()
