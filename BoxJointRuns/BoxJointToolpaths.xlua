@@ -233,13 +233,15 @@ function SelectVectorsOnLayer(layer, selection, select_closed, select_open, sele
     return objects_selected
 end -- function end
 -- =====================================================]]
-function CreateFingerToolpath()
+function CreateFingerToolpath(layer_name, toolpath_name)
+    -- Parameterized on layer and toolpath name so Existing end (and later Existing back) cut their own layer
+    -- under their own toolpath name; every mode shares this one two-tool pocket.
     -- CreateLayerFingerToolpath's frame (BlumDrawerJoinery.xlua:1138-1220), renamed: MillTool4 ->
     -- Milling.FingerTool, Milling.FingerAllowance already correctly named, MillTool5 -> Milling.FingerClearTool.
-    if not SelectLayerVectors(Milling.LNFingers, true, false) then
+    if not SelectLayerVectors(layer_name, true, false) then
         return false
     end
-    if RecalculateExistingToolpath(Milling.TPFingers) then
+    if RecalculateExistingToolpath(toolpath_name) then
         return true
     end
     local tool = Tool(Milling.FingerTool.Name, Tool.END_MILL)
@@ -287,13 +289,13 @@ function CreateFingerToolpath()
     end
     local geometry_selector = GeometrySelector()
     local toolpath_manager = ToolpathManager()
-    local toolpath_id = toolpath_manager:CreatePocketingToolpath(Milling.TPFingers, tool, area_clear_tool, pocket_data,
+    local toolpath_id = toolpath_manager:CreatePocketingToolpath(toolpath_name, tool, area_clear_tool, pocket_data,
         pos_data, geometry_selector, true, false)
     if toolpath_id == nil then
-        PresentMessage("Error", "Toolpath Processing", "Error creating Fingers toolpath")
+        PresentMessage("Error", "Toolpath Processing", "Error creating " .. toolpath_name .. " toolpath")
         return false
     end
-    AssociateToolpathWithLayer(toolpath_manager, Milling.TPFingers, Milling.LNFingers, true, false)
+    AssociateToolpathWithLayer(toolpath_manager, toolpath_name, layer_name, true, false)
     return true
 end
 -- =====================================================]]

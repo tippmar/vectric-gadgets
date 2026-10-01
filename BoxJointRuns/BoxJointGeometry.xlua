@@ -1345,7 +1345,9 @@ function ApplyThicknessLayerNames()
     Milling.LNFingers = "BJR Fingers" .. tag
     Milling.LNGroove = "BJR Groove" .. tag
     Milling.LNLabels = "BJR Labels" .. tag
+    Milling.LNExistingFingers = "BJR Existing Fingers" .. tag
     Milling.TPFingers = "BJR Fingers"
+    Milling.TPExistingFingers = "BJR Existing Fingers"
     Milling.TPGroove = "BJR Groove"
     Milling.TPProfile = "BJR Profile"
 end
@@ -1579,6 +1581,35 @@ function RunChain()
         end
         x = Polar2D(x, 0.0, piece.Length + gap)
     end
+    Milling.job:Refresh2DView()
+    return true
+end
+-- =====================================================]]
+function ClearModeLayer(layer_name)
+    -- A re-run of Existing end replaces that mode's geometry on the active sheet rather than stacking on top of
+    -- it; Chain and Test cut geometry is never touched. Unlike Blum Drawer Maker's MyLayerClear
+    -- (BlumDrawerTools.xlua:1496-1502) this removes non-empty layers too, since the layer holds exactly one
+    -- run's output.
+    local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+    if layer ~= nil then
+        Milling.job.LayerManager:RemoveLayer(layer)
+    end
+end
+-- =====================================================]]
+function RunExistingEnd()
+    -- Only the finger pockets are cut -- no profile, no groove pocket of its own. The end being cut is always at
+    -- X = 0; a right-hand stub is handled by turning it end for end, so nothing is drawn at negative X. The
+    -- bottom edge is at Y = 0 (Run.EEToward true) or Y = Run.StockW (false).
+    ApplyThicknessLayerNames() -- tagged names only; the active sheet is used as is, per the spec
+    ClearModeLayer(Milling.LNExistingFingers)
+    Milling.job:Refresh2DView()
+    local corner = Point2D(0.0, 0.0)
+    local dir_across = 90.0
+    if not Run.EEToward then
+        corner = Point2D(0.0, Run.StockW)
+        dir_across = 270.0
+    end
+    DrawFingerEnd(corner, 0.0, dir_across, Run.EEPhase, Milling.LNExistingFingers)
     Milling.job:Refresh2DView()
     return true
 end

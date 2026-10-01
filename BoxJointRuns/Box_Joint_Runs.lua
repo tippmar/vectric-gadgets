@@ -162,13 +162,21 @@ function main(script_path)
         RunTestCut()
     elseif Run.Mode == "Chain" then
         RunChain()
+    elseif Run.Mode == "Existing End" then
+        RunExistingEnd()
     end
     if Run.Mode == "Test Cut" or Run.Mode == "Chain" then
         if Milling.job.LayerManager:FindLayerWithName(Milling.LNFingers) ~= nil then
-            CreateFingerToolpath() -- a chain with no joints and None ends draws no pockets
+            CreateFingerToolpath(Milling.LNFingers, Milling.TPFingers) -- a chain with no joints and None ends draws no pockets
         end
         CreateGrooveToolpath()
         CreateProfileToolpath(Milling.LNProfile, "OUT", true)
+        SequenceToolpathsByTool()
+        Milling.job:Refresh2DView()
+    elseif Run.Mode == "Existing End" then
+        if Milling.job.LayerManager:FindLayerWithName(Milling.LNExistingFingers) ~= nil then
+            CreateFingerToolpath(Milling.LNExistingFingers, Milling.TPExistingFingers)
+        end
         SequenceToolpathsByTool()
         Milling.job:Refresh2DView()
     end

@@ -32,6 +32,8 @@ local IMPERIAL_DEFAULTS = {
     StartEnd = "None",
     EndEnd = "None",
     CloseLoop = false,
+    EEToward = true,
+    EEPhase = "Finger",
     Mode = "Test Cut"
 }
 local METRIC_DEFAULTS = {
@@ -62,6 +64,8 @@ local METRIC_DEFAULTS = {
     StartEnd = "None",
     EndEnd = "None",
     CloseLoop = false,
+    EEToward = true,
+    EEPhase = "Finger",
     Mode = "Test Cut"
 }
 local TOOL_SLOTS = {
@@ -139,7 +143,7 @@ function SettingsRead()
     local registry = Registry(Run.RegName)
     local defaults = SettingDefaults()
     Run.DialogWidth = registry:GetInt("DialogWidth", 620)
-    Run.DialogHeight = registry:GetInt("DialogHeight", 730)
+    Run.DialogHeight = registry:GetInt("DialogHeight", 810)
     Run.StockT = registry:GetDouble(SettingsKey("StockT"), defaults.StockT)
     Run.StockW = registry:GetDouble(SettingsKey("StockW"), defaults.StockW)
     Run.FingerAuto = registry:GetBool(SettingsKey("FingerAuto"), defaults.FingerAuto)
@@ -151,8 +155,13 @@ function SettingsRead()
     Run.GrooveWidth = registry:GetDouble(SettingsKey("GrooveWidth"), defaults.GrooveWidth)
     Run.GrooveDepth = registry:GetDouble(SettingsKey("GrooveDepth"), defaults.GrooveDepth)
     Run.Mode = registry:GetString(SettingsKey("Mode"), defaults.Mode)
-    if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" then
+    if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" and Run.Mode ~= "Existing End" then
         Run.Mode = defaults.Mode -- a blank or unknown value would leave the dropdown unselected
+    end
+    Run.EEToward = registry:GetBool(SettingsKey("EEToward"), defaults.EEToward)
+    Run.EEPhase = registry:GetString(SettingsKey("EEPhase"), defaults.EEPhase)
+    if Run.EEPhase ~= "Finger" and Run.EEPhase ~= "Gap" then
+        Run.EEPhase = defaults.EEPhase
     end
     Run.Piece = {}
     Run.Piece[1] = {Enabled = true, Length = registry:GetDouble(SettingsKey("Piece1Length"), defaults.Piece1Length)}
@@ -199,6 +208,8 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("GrooveWidth"), Run.GrooveWidth)
     registry:SetDouble(SettingsKey("GrooveDepth"), Run.GrooveDepth)
     registry:SetString(SettingsKey("Mode"), Run.Mode)
+    registry:SetBool(SettingsKey("EEToward"), Run.EEToward)
+    registry:SetString(SettingsKey("EEPhase"), Run.EEPhase)
     for i = 1, 4 do
         registry:SetDouble(SettingsKey("Piece" .. i .. "Length"), Run.Piece[i].Length)
     end

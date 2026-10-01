@@ -45,6 +45,7 @@ table { width: 100%; border: 0; }
       <select id="Run.Mode" size="1">
         <option>Test Cut</option>
         <option>Chain</option>
+        <option>Existing End</option>
       </select>
     </td>
     <td class="h1-rP"><label title="Blind styles are excluded: any piece can be flipped face for face.">Joint Style</label></td>
@@ -111,6 +112,25 @@ table { width: 100%; border: 0; }
     <td class="h1-l"><input type="checkbox" class="LuaButton" id="CloseLoopCheck"/></td>
     <td class="h1-rP">&nbsp;</td>
     <td class="h1-l">&nbsp;</td>
+  </tr>
+  <tr>
+    <td colspan="4" class="h2-c">Existing End</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="The end being cut is always at X = 0. Turn a right-hand stub end for end so nothing is drawn at negative X. Toward = bottom edge toward the operator (on Y = 0); Away = bottom edge away from the operator (on Y = Width).">Bottom Edge</label></td>
+    <td class="h1-l">
+      <select id="Run.EEToward" size="1">
+        <option>Toward</option>
+        <option>Away</option>
+      </select>
+    </td>
+    <td class="h1-rP"><label title="Finger = Finger at bottom; Gap = Gap at bottom.">Phase</label></td>
+    <td class="h1-l">
+      <select id="Run.EEPhase" size="1">
+        <option>Finger</option>
+        <option>Gap</option>
+      </select>
+    </td>
   </tr>
   <tr>
     <td colspan="2" class="h2-c">Bottom Groove</td>
@@ -212,6 +232,8 @@ table { width: 100%; border: 0; }
     Run.dialog:AddCheckBox("ProfileFinishCheck", Milling.ProfileFinish)
     Run.dialog:AddDoubleField("Milling.ProfileFinishAllowance", Milling.ProfileFinishAllowance)
     Run.dialog:AddDropDownList("Run.Mode", Run.Mode)
+    Run.dialog:AddDropDownList("Run.EEToward", Run.EEToward and "Toward" or "Away")
+    Run.dialog:AddDropDownList("Run.EEPhase", Run.EEPhase)
     for i = 1, 4 do
         Run.dialog:AddDoubleField("Run.Piece" .. i .. "Length", Run.Piece[i].Length)
     end
@@ -255,6 +277,8 @@ function ShowSettingsDialog()
     Run.GrooveWidth = math.abs(Run.dialog:GetDoubleField("Run.GrooveWidth"))
     Run.GrooveDepth = math.abs(Run.dialog:GetDoubleField("Run.GrooveDepth"))
     Run.Mode = Run.dialog:GetDropDownListValue("Run.Mode")
+    Run.EEToward = (Run.dialog:GetDropDownListValue("Run.EEToward") ~= "Away")
+    Run.EEPhase = Run.dialog:GetDropDownListValue("Run.EEPhase")
     for i = 1, 4 do
         Run.Piece[i].Length = math.abs(Run.dialog:GetDoubleField("Run.Piece" .. i .. "Length"))
     end
