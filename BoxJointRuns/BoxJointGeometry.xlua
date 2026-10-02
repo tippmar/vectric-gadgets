@@ -1352,7 +1352,7 @@ function ApplyThicknessLayerNames()
     Milling.TPProfile = "BJR Profile"
 end
 -- =====================================================]]
-function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name)
+function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name, between_pieces)
     -- Pockets every gap band at one finger end. corner is the point where this end's edge meets the piece's
     -- bottom (groove) edge. dir_into (degrees) points along the piece's length, into the piece body -- pockets
     -- recess this way by the finger depth, Run.StockT. dir_across (degrees) points from the bottom edge toward
@@ -1441,7 +1441,10 @@ function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name)
     -- piece's groove short of the corner. A groove-sized pocket through that finger, as deep from the end as the
     -- mating groove (plus the finger bit radius, so its rounded corners clear the bottom panel), lets the mating
     -- groove run through. Only a "Finger" end owns band 0; a "Gap" end needs nothing.
-    if phase == "Finger" and Run.GrooveOn and Run.GrooveSide == "Outside" then
+    -- Only joints between two new pieces
+    -- (between_pieces true) get it: a Start/End or Existing end meets a Blum back at an inside corner, where a
+    -- pass-through would show as a hole behind the drawer.
+    if between_pieces and phase == "Finger" and Run.GrooveOn and Run.GrooveSide == "Outside" then
         local near = Polar2D(corner, dir_across, Run.GrooveInset)
         local far = Polar2D(corner, dir_across, Run.GrooveInset + Run.GrooveWidth)
         local depth = Run.GrooveDepth + (Milling.FingerTool.ToolDia * 0.5)
@@ -1514,7 +1517,7 @@ function RunTestCut()
     local stub_length = 3.0 * Run.Cal
     -- Piece 1: Finger at bottom on its right end (the end under test); its left end is plain (no fingers).
     local pt_bl, pt_tl, pt_tr, pt_br = DrawPieceOutline(origin, stub_length, 90.0, Milling.LNProfile)
-    DrawFingerEnd(pt_br, 180.0, 90.0, "Finger", Milling.LNFingers)
+    DrawFingerEnd(pt_br, 180.0, 90.0, "Finger", Milling.LNFingers, true)
     DrawGroove(origin, stub_length, 90.0, Milling.LNGroove)
     LabelPiece(origin, 1, stub_length, Run.StockW, Run.StockT, Milling.LNLabels)
     -- Piece 2: Gap at bottom on its left end, placed to the right with the part gap plus room for the finger
@@ -1522,7 +1525,7 @@ function RunTestCut()
     local gap2 = Milling.PartGap + (Milling.FingerTool.ToolDia * 1.5)
     local origin2 = Polar2D(origin, 0.0, stub_length + gap2)
     DrawPieceOutline(origin2, stub_length, 90.0, Milling.LNProfile)
-    DrawFingerEnd(origin2, 0.0, 90.0, "Gap", Milling.LNFingers)
+    DrawFingerEnd(origin2, 0.0, 90.0, "Gap", Milling.LNFingers, true)
     DrawGroove(origin2, stub_length, 90.0, Milling.LNGroove)
     LabelPiece(origin2, 2, stub_length, Run.StockW, Run.StockT, Milling.LNLabels)
     Milling.job:Refresh2DView()
@@ -1563,7 +1566,7 @@ function RunChain()
             start_phase = "Gap" -- internal joint: always opposite the previous piece's Finger end
         end
         if start_phase ~= nil then
-            DrawFingerEnd(x, 0.0, 90.0, start_phase, Milling.LNFingers)
+            DrawFingerEnd(x, 0.0, 90.0, start_phase, Milling.LNFingers, i > 1 or closed)
         end
         -- End-of-piece end
         local end_phase = nil
@@ -1577,7 +1580,7 @@ function RunChain()
             end_phase = "Finger" -- internal joint: this piece's end is Finger at bottom
         end
         if end_phase ~= nil then
-            DrawFingerEnd(pt_br, 180.0, 90.0, end_phase, Milling.LNFingers)
+            DrawFingerEnd(pt_br, 180.0, 90.0, end_phase, Milling.LNFingers, i < count or closed)
         end
         x = Polar2D(x, 0.0, piece.Length + gap)
     end
@@ -1609,7 +1612,7 @@ function RunExistingEnd()
         corner = Point2D(0.0, Run.StockW)
         dir_across = 270.0
     end
-    DrawFingerEnd(corner, 0.0, dir_across, Run.EEPhase, Milling.LNExistingFingers)
+    DrawFingerEnd(corner, 0.0, dir_across, Run.EEPhase, Milling.LNExistingFingers, false)
     Milling.job:Refresh2DView()
     return true
 end

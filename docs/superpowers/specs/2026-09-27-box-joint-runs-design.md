@@ -153,8 +153,10 @@ the groove is on. Drawn and machined like Chain pieces.
 - **Groove:** a through dado on the top face at its inset from the bottom edge, running the full length
   plus the dado bit radius at each end, as on a Blum back. New pieces only.
 - **Outside grooves:** when the grooves face outside, the finger that holds the bottom band would block the
-  mating groove short of the corner. Every finger-at-bottom end then gets a through pocket on the Fingers layer
-  at the groove's inset and width, from past the end line to the groove depth plus the finger bit radius in.
+  mating groove short of the corner. Every finger-at-bottom end at a joint between two new pieces
+  (including the close-loop joint and Test cut) then gets a through pocket on the Fingers layer
+  at the groove's inset and width, from past the end line to the groove depth plus the finger bit radius in. Start/End
+  ends and the Existing modes never get it: they meet a Blum back at an inside corner, where it would show.
 - **Layers:** Profile, Fingers, Groove and Labels, named with the thickness tag Blum Drawer Maker uses.
   Existing modes use separate layers (for example, `BJR Existing Fingers`).
 - **Labels:** each new piece is labeled, for example "Run – Piece 2 (L × W × T)".

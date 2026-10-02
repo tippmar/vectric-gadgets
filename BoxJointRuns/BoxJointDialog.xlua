@@ -161,7 +161,7 @@ table { width: 100%; border: 0; }
     <td class="h1-l"><input type="text" class="h1-l" id="Milling.ProfileFinishAllowance" size="10" maxlength="10"/></td>
   </tr>
   <tr>
-    <td class="h1-rP"><label title="Which way the grooves face once the pieces are folded together. Outside adds a groove-sized pocket through each finger at the bottom so the mating groove runs to the corner.">Groove Faces</label></td>
+    <td class="h1-rP"><label title="Which way the grooves face once the pieces are folded together. Outside adds a groove-sized pocket through each finger at the bottom so the mating groove runs to the corner. Joints between pieces only; Start/End ends and the Existing modes never get it.">Groove Faces</label></td>
     <td class="h1-l">
       <select id="Run.GrooveSide" size="1">
         <option>Inside</option>
