@@ -7,6 +7,7 @@ Gadgets for use with Vectric CNC software, developed and tested against **VCarve
 | Blum Drawer Maker | [`BlumDrawerMaker/`](BlumDrawerMaker/) | Designs drawer boxes for Blum under-mount slides: draws the parts and creates their toolpaths. |
 | Blum Nesting Repair | [`BlumNestingRepair/`](BlumNestingRepair/) | Run after nesting to fix toolpaths that nesting left behind on the wrong sheets. |
 | Hold Down Helper | [`HoldDownHelper/`](HoldDownHelper/) | Finds places to screw a sheet to the spoilboard where no cutter will reach, and dimples them with a V-bit. |
+| Shaker Maker | [`ShakerMaker/`](ShakerMaker/) | Carves a shaker look into a solid slab: a recessed panel, straight or V-bit edged, cleared by one or more bits. |
 
 The two are meant to be used in sequence: build drawers with Blum Drawer Maker, nest the job, then run Blum Nesting Repair to put the toolpaths back in order.
 
@@ -101,6 +102,10 @@ What it does not do:
 Do not draw on the `Hold Down` layer: re-running removes everything on it for the active sheet.
 
 The chosen V-bit is remembered as a snapshot; after editing its feeds in the tool database, pick it again.
+
+## Shaker Maker
+
+Carves a shaker door or drawer front into a solid slab, such as MDF, rather than building a five-piece one: the panel is recessed and the rails and stiles stand as a raised frame. The panel wall is straight or a V-bit bevel, and rail and stile widths account for the bevel. A large bulk bit clears the floor and up to two smaller corner bits clean up its corners. See [`ShakerMaker/README.md`](ShakerMaker/README.md).
 
 ## Installing
 

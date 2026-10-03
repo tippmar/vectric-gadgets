@@ -1,0 +1,84 @@
+-- VECTRIC LUA SCRIPT
+-- =====================================================]]
+-- Shaker Maker help page. Loaded on demand by OnLuaButton_InquiryHelpMain in Shaker_Maker.lua, as Hold Down Helper
+-- loads its own, and shown in an HTML_Dialog. ButtonOK is the dialog's Close button.
+-- =====================================================]]
+function ShakerHelpHtml()
+    return [==[<!DOCTYPE html><html lang="en"><head><title>Shaker Maker Help</title>
+<style>
+body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background-color: #FFFFFF; color: #000000; margin: 0; }
+.layout { overflow: auto; height: 540px; padding: 4px 14px 4px 10px; }
+h1 { font-size: 20px; margin: 10px 0 4px 0; }
+h2 { font-size: 16px; margin: 16px 0 4px 0; border-bottom: 1px solid #999999; }
+p, li { line-height: 1.35; }
+table { border-collapse: collapse; margin: 4px 0; }
+th, td { border: 1px solid #BBBBBB; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background-color: #EEEEEE; }
+.warn { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px 8px; margin: 8px 0; }
+.foot { text-align: center; padding: 8px; border-top: 1px solid #999999; }
+.FormButton { font-weight: bold; font-size: 12px; }
+</style></head>
+<body>
+<div class="layout">
+
+<h1>Shaker Maker</h1>
+<p>Carves a shaker look into a solid slab, such as MDF: the center panel is recessed, and the rails and stiles are
+left standing as a raised frame around it. Each run draws the parts and creates their toolpaths.</p>
+
+<h2>Part</h2>
+<table>
+<tr><th>Setting</th><th>Meaning</th></tr>
+<tr><td>Name, Quantity</td><td>Each part is labeled with the name (numbered when there is more than one) and its
+size. Identical parts are laid out side by side.</td></tr>
+<tr><td>Width (X), Length (Y)</td><td>Overall size of the door or drawer front.</td></tr>
+<tr><td>Thickness</td><td>Thickness of the slab. Parts go on a sheet named for it, created if needed.</td></tr>
+<tr><td>Recess Depth</td><td>How far the panel sits below the face of the frame.</td></tr>
+<tr><td>Stile Width, Rail Width</td><td>Width of the left/right and top/bottom frame members.</td></tr>
+</table>
+
+<h2>Panel Edge</h2>
+<p><b>Straight</b> cuts a square wall. The clearing bits cut it, so the panel's corners are left round, at the
+radius of the smallest clearing bit in use. The completion message states that radius.</p>
+<p><b>V-Bit</b> cuts a beveled wall with sharp corners. The bevel is <i>depth &times; tan(V-bit angle / 2)</i>
+wide: 0.25 at a depth of 0.25 with a 90&deg; bit. <b>Measure Widths To</b> says where the rail and stile widths end:</p>
+<ul>
+<li><b>Bottom of Bevel</b>: the frame, bevel included, is the width you entered. The flat face of the frame is
+narrower by the bevel width.</li>
+<li><b>Top of Bevel</b>: the flat face of the frame is the width you entered, and the bevel comes out of the
+panel.</li>
+</ul>
+
+<h2>Bits</h2>
+<table>
+<tr><th>Bit</th><th>Used for</th></tr>
+<tr><td>Bulk Clearing Bit</td><td>Clears the panel floor. Use the largest bit the floor allows, such as a large
+carbide insert cutter: it must be smaller than the floor's shorter side.</td></tr>
+<tr><td>Corner Bit 1, 2</td><td>Optional. Each cleans up the corners the bit before it could not reach, by pocketing
+a small square in each floor corner. Each must be smaller than the one before.</td></tr>
+<tr><td>V-Bit</td><td>V-Bit edge only. Cuts the bevel. Its diameter must be at least twice the bevel width to reach
+the recess depth.</td></tr>
+<tr><td>Profile Bit</td><td>Cuts each part out of the sheet when <b>Cut Out Parts</b> is ticked. Untick it when the
+slab is already cut to size; the part outline is still drawn, and shows where the slab must sit.</td></tr>
+</table>
+
+<h2>Toolpaths</h2>
+<p>Toolpaths are associated with the layers they cut, so a later run with the same thickness and recess depth
+recalculates them to include its parts rather than adding duplicates. They are ordered to cut the floor first,
+then the corners from the largest bit to the smallest, then the V-bit bevel, then the cut-out.</p>
+<table>
+<tr><th>Toolpath</th><th>Layer</th></tr>
+<tr><td>SM Pocket <i>depth</i></td><td>SM Pocket (<i>thickness</i>, <i>depth</i>): the floor, for a straight edge</td></tr>
+<tr><td>SM V-Carve <i>depth</i></td><td>SM V-Carve (<i>thickness</i>, <i>depth</i>): the top of the bevel, for a V-bit edge.
+The bulk bit clears its flat floor.</td></tr>
+<tr><td>SM Corners 1/2 <i>depth</i></td><td>SM Corners 1/2 (<i>thickness</i>, <i>depth</i>)</td></tr>
+<tr><td>SM Profile</td><td>SM Profile (<i>thickness</i>)</td></tr>
+</table>
+
+<div class="warn"><b>A reused toolpath keeps the bits it was created with.</b> If a later run with the same
+thickness and depth chooses different bits, edit the existing toolpaths or delete them before running.</div>
+
+</div>
+<div class="foot"><input id="ButtonOK" class="FormButton" type="button" value="Close"></div>
+</body></html>]==]
+end
+-- =============== End of File =========================]]

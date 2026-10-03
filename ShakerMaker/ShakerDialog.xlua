@@ -1,0 +1,217 @@
+-- VECTRIC LUA SCRIPT
+-- =====================================================]]
+function BuildDialog()
+    -- Look and feel copied from Blum Drawer Maker's DialogWindow.Style (BlumDrawerDialog.xlua:18-258) by way of
+    -- Box Joint Runs (BoxJointDialog.xlua), trimmed to the classes this dialog uses.
+    local html = [[<!DOCTYPE html><html><head><title>Shaker Maker</title>
+<style>
+html { overflow: hidden }
+body { background-color: #3a4660; overflow: hidden; font-family: arial, helvetica, sans-serif; font-size: 12px;
+    color: #FFFFFF; }
+table { width: 100%; border: 0; }
+.FormButton { font-weight: bold; width: 75px; font-size: 12px; white-space: nowrap; background-color: #630;
+    color: #FFFFFF; }
+.LuaButton { font-weight: bold; font-size: 12px; background-color: #663300; color: #FFFFFF; }
+.ToolNameLabel { font-weight: bolder; font-size: 12px; text-align: left; color: #000; width: 70%; }
+.ToolPicker { font-weight: bold; text-align: center; font-size: 12px; width: 50px; background-color: #663300;
+    color: #FFFFFF; }
+.h1-l { font-size: 12px; font-weight: bold; text-align: left; white-space: nowrap; }
+.h1-r { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
+.h1-rP { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; padding-right: 4px;
+    padding-left: 4px; }
+.h2-c { font-size: 14px; font-weight: bold; text-align: center; white-space: nowrap; text-shadow: 2px 2px white; }
+#InquiryHelpMain { width: 80px; }
+</style></head><body>
+<table>
+  <tr>
+    <td colspan="4" class="h2-c">Part</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Written on each part's label.">Name</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.PartName" size="14" maxlength="40"/></td>
+    <td class="h1-rP"><label title="How many identical parts to draw, side by side.">Quantity</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Quantity" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Overall width of the door or drawer front, across the rails (X).">Width (X)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Width" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Overall length of the door or drawer front, along the stiles (Y).">Length (Y)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Length" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Thickness of the slab. Parts go on a sheet named for it.">Thickness</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Thickness" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="How far the panel is recessed below the face of the frame.">Recess Depth</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Depth" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Width of the left and right frame members.">Stile Width</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.StileW" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Width of the top and bottom frame members.">Rail Width</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.RailW" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="h2-c">Panel Edge</td>
+    <td colspan="2" class="h2-c">Cutting</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Straight = a square wall cut by the clearing bits. V-Bit = a beveled wall cut by the V-bit, with sharp corners.">Edge</label></td>
+    <td class="h1-l">
+      <select id="Shaker.Edge" size="1">
+        <option>Straight</option>
+        <option>V-Bit</option>
+      </select>
+    </td>
+    <td class="h1-rP"><label title="Profile each part out of the sheet. Untick when the slab is already cut to size.">Cut Out Parts</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="CutOutCheck"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="V-Bit only. Bottom of Bevel = the frame, bevel included, is the entered width. Top of Bevel = the flat face of the frame is the entered width, and the bevel comes out of the panel.">Measure Widths To</label></td>
+    <td class="h1-l">
+      <select id="Shaker.MeasureTo" size="1">
+        <option>Bottom of Bevel</option>
+        <option>Top of Bevel</option>
+      </select>
+    </td>
+    <td class="h1-rP"><label title="Minimum gap left between parts on the sheet.">Part Gap</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Milling.PartGap" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="2">&nbsp;</td>
+    <td class="h1-rP"><label title="Hold each part in the sheet while the profile cuts it free.">Tabs</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="ProfileTabsCheck"/></td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="4"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Clears the panel floor. It can be as large as the floor allows; the corner bits clean up the corners it cannot reach.">Bulk Clearing Bit:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id="ToolNameBulk">-</span></td>
+    <td class="h1-l"><input id="ToolChooseBulk" class="ToolPicker" type="button" value="Tool"/></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Tick to clean the corners the bulk bit leaves round. Must be smaller than the bulk bit.">Corner Bit 1:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id="ToolNameCorner1">-</span></td>
+    <td class="h1-l"><input id="ToolChooseCorner1" class="ToolPicker" type="button" value="Tool"/></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Corner1Check"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Tick to clean the corners again with a still smaller bit; needs Corner Bit 1 on.">Corner Bit 2:</label></td>
+    <td bgcolor="#00FFCC" class="ToolNameLabel"><span id="ToolNameCorner2">-</span></td>
+    <td class="h1-l"><input id="ToolChooseCorner2" class="ToolPicker" type="button" value="Tool"/></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="Corner2Check"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Cuts the beveled panel wall. Used only when Edge is V-Bit.">V-Bit:</label></td>
+    <td bgcolor="#FFFF33" class="ToolNameLabel"><span id="ToolNameVBit">-</span></td>
+    <td class="h1-l"><input id="ToolChooseVBit" class="ToolPicker" type="button" value="Tool"/></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Cuts each part out of the sheet. Used only when Cut Out Parts is ticked.">Profile Bit:</label></td>
+    <td bgcolor="#33FFFF" class="ToolNameLabel"><span id="ToolNameProfile">-</span></td>
+    <td class="h1-l"><input id="ToolChooseProfile" class="ToolPicker" type="button" value="Tool"/></td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td colspan="3"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id="InquiryHelpMain" class="LuaButton" type="button" value="Help"/></td>
+    <td class="alert" id="GadgetName.Alert"></td>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Run"/>
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+  </tr>
+</table>
+</body></html>]]
+    Shaker.dialog = HTML_Dialog(true, html, Shaker.DialogWidth, Shaker.DialogHeight, "Shaker Maker " .. Shaker.UnitLabel)
+    Shaker.dialog:AddTextField("Shaker.PartName", Shaker.PartName)
+    Shaker.dialog:AddIntegerField("Shaker.Quantity", Shaker.Quantity)
+    Shaker.dialog:AddDoubleField("Shaker.Width", Shaker.Width)
+    Shaker.dialog:AddDoubleField("Shaker.Length", Shaker.Length)
+    Shaker.dialog:AddDoubleField("Shaker.Thickness", Shaker.Thickness)
+    Shaker.dialog:AddDoubleField("Shaker.Depth", Shaker.Depth)
+    Shaker.dialog:AddDoubleField("Shaker.StileW", Shaker.StileW)
+    Shaker.dialog:AddDoubleField("Shaker.RailW", Shaker.RailW)
+    Shaker.dialog:AddDropDownList("Shaker.Edge", Shaker.Edge)
+    Shaker.dialog:AddDropDownList("Shaker.MeasureTo", Shaker.MeasureTo)
+    Shaker.dialog:AddCheckBox("CutOutCheck", Shaker.CutOut)
+    Shaker.dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
+    Shaker.dialog:AddCheckBox("ProfileTabsCheck", Milling.ProfileTabs)
+    Shaker.dialog:AddCheckBox("Corner1Check", Shaker.Corner1On)
+    Shaker.dialog:AddCheckBox("Corner2Check", Shaker.Corner2On)
+    AddToolSlot("Bulk", Milling.BulkTool, Tool.END_MILL)
+    AddToolSlot("Corner1", Milling.Corner1Tool, Tool.END_MILL)
+    AddToolSlot("Corner2", Milling.Corner2Tool, Tool.END_MILL)
+    AddToolSlot("VBit", Milling.VBitTool, Tool.VBIT)
+    AddToolSlot("Profile", Milling.ProfileTool, Tool.END_MILL)
+end
+-- =====================================================]]
+function AddToolSlot(slot, tool, tool_type)
+    Shaker.dialog:AddLabelField("ToolName" .. slot, tool and tool.Name or "-")
+    Shaker.dialog:AddToolPicker("ToolChoose" .. slot, "ToolName" .. slot, ToolDBId())
+    Shaker.dialog:AddToolPickerValidToolType("ToolChoose" .. slot, tool_type)
+end
+-- =====================================================]]
+function PickedTool(slot, current)
+    -- The tool picked this time, or the one remembered from before when the picker was left alone.
+    local picked = Shaker.dialog:GetTool("ToolChoose" .. slot)
+    if picked then
+        return picked
+    end
+    return current
+end
+-- =====================================================]]
+function ShowSettingsDialog()
+    BuildDialog()
+    if not Shaker.dialog:ShowDialog() then
+        return false
+    end
+    -- Window size is unit-independent, so it is stored outside the Imperial/Metric settings keys.
+    Shaker.DialogWidth = Shaker.dialog.WindowWidth
+    Shaker.DialogHeight = Shaker.dialog.WindowHeight
+    Shaker.PartName = Shaker.dialog:GetTextField("Shaker.PartName")
+    Shaker.Quantity = Shaker.dialog:GetIntegerField("Shaker.Quantity")
+    Shaker.Width = math.abs(Shaker.dialog:GetDoubleField("Shaker.Width"))
+    Shaker.Length = math.abs(Shaker.dialog:GetDoubleField("Shaker.Length"))
+    Shaker.Thickness = math.abs(Shaker.dialog:GetDoubleField("Shaker.Thickness"))
+    Shaker.Depth = math.abs(Shaker.dialog:GetDoubleField("Shaker.Depth"))
+    Shaker.StileW = math.abs(Shaker.dialog:GetDoubleField("Shaker.StileW"))
+    Shaker.RailW = math.abs(Shaker.dialog:GetDoubleField("Shaker.RailW"))
+    Shaker.Edge = Shaker.dialog:GetDropDownListValue("Shaker.Edge")
+    Shaker.MeasureTo = Shaker.dialog:GetDropDownListValue("Shaker.MeasureTo")
+    Shaker.CutOut = Shaker.dialog:GetCheckBox("CutOutCheck")
+    Milling.PartGap = math.abs(Shaker.dialog:GetDoubleField("Milling.PartGap"))
+    Milling.ProfileTabs = Shaker.dialog:GetCheckBox("ProfileTabsCheck")
+    -- Corner Bit 2 can be on only while Corner Bit 1 is; it silently drops back to off otherwise.
+    Shaker.Corner1On = Shaker.dialog:GetCheckBox("Corner1Check")
+    Shaker.Corner2On = Shaker.dialog:GetCheckBox("Corner2Check") and Shaker.Corner1On
+    Milling.BulkTool = PickedTool("Bulk", Milling.BulkTool)
+    Milling.Corner1Tool = PickedTool("Corner1", Milling.Corner1Tool)
+    Milling.Corner2Tool = PickedTool("Corner2", Milling.Corner2Tool)
+    Milling.VBitTool = PickedTool("VBit", Milling.VBitTool)
+    Milling.ProfileTool = PickedTool("Profile", Milling.ProfileTool)
+    return true
+end
+-- =====================================================]]
+-- Check box callbacks. The LuaButton class is what binds a check box to the dialog, and VCarve then calls
+-- OnLuaButton_<id> on every click, so each check box needs one even though ticking it changes nothing until
+-- Run is pressed (as BoxJointDialog.xlua does). IDs therefore carry no dots.
+function OnLuaButton_CutOutCheck()
+    return true
+end
+function OnLuaButton_ProfileTabsCheck()
+    return true
+end
+function OnLuaButton_Corner1Check()
+    return true
+end
+function OnLuaButton_Corner2Check()
+    return true
+end
+-- =============== End of File =========================]]

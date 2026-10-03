@@ -1,0 +1,165 @@
+-- VECTRIC LUA SCRIPT
+-- =====================================================]]
+-- Shaker Maker's settings live under the "ShakerMaker" registry section, one row per unit system, as Box Joint
+-- Runs keeps its own (BoxJointRegistry.xlua). Nothing is shared with the other gadgets.
+-- =====================================================]]
+local IMPERIAL_DEFAULTS = {
+    PartName = "Door",
+    Quantity = 1,
+    Width = 15.0000,
+    Length = 20.0000,
+    Thickness = 0.7500,
+    Depth = 0.2500,
+    StileW = 2.2500,
+    RailW = 2.2500,
+    Edge = "Straight",
+    MeasureTo = "Bottom of Bevel",
+    Corner1On = false,
+    Corner2On = false,
+    CutOut = true,
+    PartGap = 0.7500,
+    ProfileTabs = true
+}
+local METRIC_DEFAULTS = {
+    PartName = "Door",
+    Quantity = 1,
+    Width = 380.0000,
+    Length = 500.0000,
+    Thickness = 19.0000,
+    Depth = 6.0000,
+    StileW = 57.0000,
+    RailW = 57.0000,
+    Edge = "Straight",
+    MeasureTo = "Bottom of Bevel",
+    Corner1On = false,
+    Corner2On = false,
+    CutOut = true,
+    PartGap = 19.0500,
+    ProfileTabs = true
+}
+local TOOL_SLOTS = {
+    {Slot = "Bulk", Field = "BulkTool"},
+    {Slot = "Corner1", Field = "Corner1Tool"},
+    {Slot = "Corner2", Field = "Corner2Tool"},
+    {Slot = "VBit", Field = "VBitTool"},
+    {Slot = "Profile", Field = "ProfileTool"}
+}
+-- =====================================================]]
+function SettingDefaults()
+    if Shaker.InMM then
+        return METRIC_DEFAULTS
+    end
+    return IMPERIAL_DEFAULTS
+end
+-- =====================================================]]
+function SettingsKey(name)
+    if Shaker.InMM then
+        return "Metric." .. name
+    end
+    return "Imperial." .. name
+end
+-- =====================================================]]
+function ToolsRead()
+    -- Each chosen tool comes back as a plain table carrying only the fields the toolpath calls read (Box Joint
+    -- Runs' ToolsRead, plus the V-bit's angle and flat-clearing stepover). A stored Name of "" means the slot was
+    -- never chosen; ValidateSettings checks these fields for nil, so leave them nil.
+    local registry = Registry(Shaker.RegName)
+    for _, slot in ipairs(TOOL_SLOTS) do
+        local prefix = slot.Slot .. "Tool."
+        local name = registry:GetString(SettingsKey(prefix .. "Name"), "")
+        if name == "" then
+            Milling[slot.Field] = nil
+        else
+            Milling[slot.Field] = {
+                Name = name,
+                InMM = registry:GetBool(SettingsKey(prefix .. "InMM"), Shaker.InMM),
+                ToolDia = registry:GetDouble(SettingsKey(prefix .. "ToolDia"), 0.0),
+                Stepdown = registry:GetDouble(SettingsKey(prefix .. "Stepdown"), 0.0),
+                Stepover = registry:GetDouble(SettingsKey(prefix .. "Stepover"), 0.0),
+                RateUnits = registry:GetInt(SettingsKey(prefix .. "RateUnits"), 4),
+                FeedRate = registry:GetDouble(SettingsKey(prefix .. "FeedRate"), 0.0),
+                PlungeRate = registry:GetDouble(SettingsKey(prefix .. "PlungeRate"), 0.0),
+                SpindleSpeed = registry:GetInt(SettingsKey(prefix .. "SpindleSpeed"), 18000),
+                ToolNumber = registry:GetInt(SettingsKey(prefix .. "ToolNumber"), 1),
+                VBit_Angle = registry:GetDouble(SettingsKey(prefix .. "VBit_Angle"), 90.0),
+                ClearStepover = registry:GetDouble(SettingsKey(prefix .. "ClearStepover"), 0.0)
+            }
+        end
+    end
+end
+-- =====================================================]]
+function ToolsWrite()
+    local registry = Registry(Shaker.RegName)
+    for _, slot in ipairs(TOOL_SLOTS) do
+        local prefix = slot.Slot .. "Tool."
+        local tool = Milling[slot.Field]
+        if tool == nil then
+            registry:SetString(SettingsKey(prefix .. "Name"), "")
+        else
+            registry:SetString(SettingsKey(prefix .. "Name"), tool.Name)
+            registry:SetBool(SettingsKey(prefix .. "InMM"), tool.InMM)
+            registry:SetDouble(SettingsKey(prefix .. "ToolDia"), tool.ToolDia)
+            registry:SetDouble(SettingsKey(prefix .. "Stepdown"), tool.Stepdown)
+            registry:SetDouble(SettingsKey(prefix .. "Stepover"), tool.Stepover)
+            registry:SetInt(SettingsKey(prefix .. "RateUnits"), tool.RateUnits)
+            registry:SetDouble(SettingsKey(prefix .. "FeedRate"), tool.FeedRate)
+            registry:SetDouble(SettingsKey(prefix .. "PlungeRate"), tool.PlungeRate)
+            registry:SetInt(SettingsKey(prefix .. "SpindleSpeed"), tool.SpindleSpeed)
+            registry:SetInt(SettingsKey(prefix .. "ToolNumber"), tool.ToolNumber)
+            registry:SetDouble(SettingsKey(prefix .. "VBit_Angle"), tool.VBit_Angle or 90.0)
+            registry:SetDouble(SettingsKey(prefix .. "ClearStepover"), tool.ClearStepover or 0.0)
+        end
+    end
+end
+-- =====================================================]]
+function SettingsRead()
+    local registry = Registry(Shaker.RegName)
+    local defaults = SettingDefaults()
+    Shaker.DialogWidth = registry:GetInt("DialogWidth", 620)
+    Shaker.DialogHeight = registry:GetInt("DialogHeight", 640)
+    Shaker.PartName = registry:GetString(SettingsKey("PartName"), defaults.PartName)
+    Shaker.Quantity = registry:GetInt(SettingsKey("Quantity"), defaults.Quantity)
+    Shaker.Width = registry:GetDouble(SettingsKey("Width"), defaults.Width)
+    Shaker.Length = registry:GetDouble(SettingsKey("Length"), defaults.Length)
+    Shaker.Thickness = registry:GetDouble(SettingsKey("Thickness"), defaults.Thickness)
+    Shaker.Depth = registry:GetDouble(SettingsKey("Depth"), defaults.Depth)
+    Shaker.StileW = registry:GetDouble(SettingsKey("StileW"), defaults.StileW)
+    Shaker.RailW = registry:GetDouble(SettingsKey("RailW"), defaults.RailW)
+    Shaker.Edge = registry:GetString(SettingsKey("Edge"), defaults.Edge)
+    if Shaker.Edge ~= "Straight" and Shaker.Edge ~= "V-Bit" then
+        Shaker.Edge = defaults.Edge -- a blank or unknown value would leave the dropdown unselected
+    end
+    Shaker.MeasureTo = registry:GetString(SettingsKey("MeasureTo"), defaults.MeasureTo)
+    if Shaker.MeasureTo ~= "Bottom of Bevel" and Shaker.MeasureTo ~= "Top of Bevel" then
+        Shaker.MeasureTo = defaults.MeasureTo
+    end
+    Shaker.Corner1On = registry:GetBool(SettingsKey("Corner1On"), defaults.Corner1On)
+    Shaker.Corner2On = registry:GetBool(SettingsKey("Corner2On"), defaults.Corner2On)
+    Shaker.CutOut = registry:GetBool(SettingsKey("CutOut"), defaults.CutOut)
+    Milling.PartGap = registry:GetDouble(SettingsKey("PartGap"), defaults.PartGap)
+    Milling.ProfileTabs = registry:GetBool(SettingsKey("ProfileTabs"), defaults.ProfileTabs)
+    ToolsRead()
+end
+-- =====================================================]]
+function SettingsWrite()
+    local registry = Registry(Shaker.RegName)
+    registry:SetInt("DialogWidth", Shaker.DialogWidth)
+    registry:SetInt("DialogHeight", Shaker.DialogHeight)
+    registry:SetString(SettingsKey("PartName"), Shaker.PartName)
+    registry:SetInt(SettingsKey("Quantity"), Shaker.Quantity)
+    registry:SetDouble(SettingsKey("Width"), Shaker.Width)
+    registry:SetDouble(SettingsKey("Length"), Shaker.Length)
+    registry:SetDouble(SettingsKey("Thickness"), Shaker.Thickness)
+    registry:SetDouble(SettingsKey("Depth"), Shaker.Depth)
+    registry:SetDouble(SettingsKey("StileW"), Shaker.StileW)
+    registry:SetDouble(SettingsKey("RailW"), Shaker.RailW)
+    registry:SetString(SettingsKey("Edge"), Shaker.Edge)
+    registry:SetString(SettingsKey("MeasureTo"), Shaker.MeasureTo)
+    registry:SetBool(SettingsKey("Corner1On"), Shaker.Corner1On)
+    registry:SetBool(SettingsKey("Corner2On"), Shaker.Corner2On)
+    registry:SetBool(SettingsKey("CutOut"), Shaker.CutOut)
+    registry:SetDouble(SettingsKey("PartGap"), Milling.PartGap)
+    registry:SetBool(SettingsKey("ProfileTabs"), Milling.ProfileTabs)
+    ToolsWrite()
+end
+-- =============== End of File =========================]]

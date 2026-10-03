@@ -1,0 +1,410 @@
+-- VECTRIC LUA SCRIPT
+--[[
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Shaker Maker borrows its toolpath plumbing from this repository's own Box Joint Runs, which took it from Blum
+-- Drawer Maker, itself based on Easy Drawer Maker, originally written by JimAndi Gadgets, 2019.
+]] -- =====================================================]]
+-- Selection, layer association, recalculation and sequencing copied verbatim from BoxJointRuns/BoxJointToolpaths.xlua
+-- (ReorderByTool also knows Shaker Maker's names), plus the pocket, V-carve and profile builders.
+function FindLatestToolpaths(toolpath_manager, toolpath_name)
+    -- Most recent toolpath with this name, plus its "[Clear]" partner from two-tool pocketing.
+    local wanted = {[toolpath_name] = true, [toolpath_name .. " [Clear]"] = true}
+    local toolpaths = {}
+    local pos = toolpath_manager:GetTailPosition()
+    while pos ~= nil do
+        local candidate
+        candidate, pos = toolpath_manager:GetPrev(pos)
+        if candidate ~= nil and wanted[candidate.Name] then
+            wanted[candidate.Name] = nil
+            table.insert(toolpaths, candidate)
+        end
+    end
+    return toolpaths
+end
+-- =====================================================]]
+function ReorderByTool(toolpath_manager, entries)
+    -- Orders the given toolpaths to minimize tool changes: clearance passes first (they rough out
+    -- before finishing), then other cuts, then profiles (parts are cut free last). Within each tier,
+    -- toolpaths sharing a tool stay together, in the order each tool first appears.
+    local tiers = {{order = {}, ids = {}}, {order = {}, ids = {}}, {order = {}, ids = {}}}
+    -- "[Clear]" and "-Profile" match Blum Drawer Maker's names, which can share a job with ours; the "BJR "
+    -- checks match Box Joint Runs' own ("BJR Profile", "BJR Profile Finish", ...). Shaker Maker's: "SM Profile" cuts
+    -- last; the V-carve itself ("SM V-Carve 0.25", exactly) is the finishing cut; every other "SM " toolpath --
+    -- the pocket, the corner pockets, and the V-carve's flat-clearing partner, whatever VCarve names it -- clears.
+    for _, entry in ipairs(entries) do
+        local tier = tiers[2]
+        local is_bjr = string.sub(entry.name, 1, 4) == "BJR "
+        local is_sm = string.sub(entry.name, 1, 3) == "SM "
+        if is_sm then
+            if string.sub(entry.name, 1, 10) == "SM Profile" then
+                tier = tiers[3]
+            elseif not string.find(entry.name, "^SM V%-Carve [%d%.]+$") then
+                tier = tiers[1]
+            end
+        elseif string.find(entry.name, "[Clear]", 1, true) or (is_bjr and string.find(entry.name, "Clear", 1, true)) then
+            tier = tiers[1]
+        elseif string.find(entry.name, "-Profile", 1, true) or (is_bjr and string.find(entry.name, "Profile", 1, true)) then
+            tier = tiers[3]
+        end
+        if tier.ids[entry.tool] == nil then
+            tier.ids[entry.tool] = {}
+            table.insert(tier.order, entry.tool)
+        end
+        table.insert(tier.ids[entry.tool], entry.id)
+    end
+    local ids = UUID_List()
+    for _, tier in ipairs(tiers) do
+        for _, key in ipairs(tier.order) do
+            for _, id in ipairs(tier.ids[key]) do
+                ids:AddTail(id)
+            end
+        end
+    end
+    local ok, reordered = pcall(function()
+        return toolpath_manager:ReorderToolpathList(ids)
+    end)
+    return ok and reordered
+end
+-- =====================================================]]
+function SequenceToolpathsByTool()
+    -- Sequences every toolpath in the job by tool. A job-wide list is rejected once toolpaths span
+    -- several sheets, so fall back to ordering each sheet's own toolpaths in turn.
+    local toolpath_manager = ToolpathManager()
+    local entries = {}
+    local pos = toolpath_manager:GetHeadPosition()
+    while pos ~= nil do
+        local toolpath
+        toolpath, pos = toolpath_manager:GetNext(pos)
+        local tool = toolpath.Tool
+        table.insert(entries, {
+            id = toolpath.Id,
+            name = toolpath.Name,
+            sheet = IdKey(toolpath.SheetId),
+            tool = tostring(tool.Name) .. "|" .. tostring(tool.ToolNumber) .. "|" .. tostring(tool.ToolDia)
+        })
+    end
+    if ReorderByTool(toolpath_manager, entries) then
+        return true
+    end
+    local sheet_manager = Milling.job.SheetManager
+    local original_sheet = sheet_manager.ActiveSheetId
+    local failed = {}
+    for id in sheet_manager:GetSheetIds() do
+        local key = IdKey(id)
+        local on_sheet = {}
+        for _, entry in ipairs(entries) do
+            if entry.sheet == key then
+                table.insert(on_sheet, entry)
+            end
+        end
+        if #on_sheet > 0 then
+            sheet_manager.ActiveSheetId = id
+            if not ReorderByTool(toolpath_manager, on_sheet) then
+                table.insert(failed, sheet_manager:GetSheetName(id) .. " (" .. #on_sheet .. " toolpaths)")
+            end
+        end
+    end
+    sheet_manager.ActiveSheetId = original_sheet
+    Milling.job:Refresh2DView()
+    if #failed > 0 then
+        PresentMessage("Alert", "Toolpath Processing", "Could not reorder toolpaths by tool for the whole job (" ..
+            #entries .. " toolpaths) or on: " .. table.concat(failed, ", "))
+    end
+    return true
+end
+-- =====================================================]]
+function RecalculateExistingToolpath(name)
+    -- A toolpath from an earlier run is already layer-associated, so recalculating it picks up the new parts.
+    local toolpath_manager = ToolpathManager()
+    local toolpaths = FindLatestToolpaths(toolpath_manager, name)
+    if #toolpaths == 0 then
+        return false
+    end
+    for _, toolpath in ipairs(toolpaths) do
+        -- The "[Clear]" partner can't be recalculated on its own (VCarve error 1035); it follows its main toolpath.
+        if toolpath.Name == name then
+            local ok, recalculated = pcall(function()
+                return toolpath_manager:RecalculateToolpath(toolpath)
+            end)
+            if not (ok and recalculated) then
+                PresentMessage("Alert", "Toolpath Processing", "Could not recalculate existing toolpath '" ..
+                    toolpath.Name .. "'. Use Recalculate All Toolpaths to include the new parts.")
+            end
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function SelectLayerVectors(layer_name, select_closed, select_open)
+    -- Selects the vectors on layer_name into the job selection so a toolpath creation call
+    -- (which always operates on the currently selected vectors) picks them up.
+    local selection = Milling.job.Selection
+    selection:Clear()
+    local layer = Milling.job.LayerManager:FindLayerWithName(layer_name)
+    if layer == nil then
+        PresentMessage("Alert", "Toolpath Processing", "No layer found with name = " .. layer_name)
+        return false
+    end
+    if not SelectVectorsOnLayer(layer, selection, select_closed, select_open, true) then
+        PresentMessage("Alert", "Toolpath Processing", "No closed vectors found on layer " .. layer_name)
+        return false
+    end
+    return true
+end
+-- =====================================================]]
+function AssociateToolpathWithLayer(toolpath_manager, toolpath_name, layer_name, select_closed, select_open)
+    -- Best-effort: persist a layer-based GeometrySelector on the already-created toolpath,
+    -- so VCarve re-selects vectors from layer_name whenever the toolpath is recalculated
+    -- (equivalent to ticking 'Associate with toolpath' in the Vector Selector UI).
+    -- Looks the toolpath up by name (walking from the tail, since it was just created) rather
+    -- than by id, since Find(UUID)/GetAt(pos) overloads vary between VCarve builds.
+    -- Wrapped in pcall since this step is purely an enhancement - toolpath creation must not
+    -- fail because of it.
+    local ok, err = pcall(function()
+        for _, toolpath in ipairs(FindLatestToolpaths(toolpath_manager, toolpath_name)) do
+            local geometry_selector = GeometrySelector()
+            -- GeometryFilterUsed is undocumented in the SDK PDF but registered in VCarvePro.exe;
+            -- it drives the 'Associate with toolpath' checkbox.
+            geometry_selector.GeometryFilterUsed = true
+            geometry_selector.OnlyOnLayers = true
+            geometry_selector.SelectClosed = select_closed
+            geometry_selector.SelectOpen = select_open
+            geometry_selector:AddLayerName(layer_name)
+            geometry_selector:SaveSelectorData(toolpath)
+        end
+    end)
+    if not ok then
+        PresentMessage("Alert", "Toolpath Processing",
+            "Could not associate toolpath '" .. toolpath_name .. "' with layer " .. layer_name .. ": " .. tostring(err))
+    end
+end
+-- =====================================================]]
+function SelectVectorsOnLayer(layer, selection, select_closed, select_open, select_groups)
+    -- Please Note: SelectVectorsOnLayer is provided by Vectric and can be found in the SDK and Sample Gadget files.
+    --[[  ---------------- SelectVectorsOnLayer ----------------
+  -- |   SelectVectorsOnLayer("Stringer Profile", selection, true, falus, falus)
+  -- |   Add all the vectors on the layer to the selection
+  -- |     layer,            -- layer we are selecting vectors on
+  -- |     selection         -- selection object
+  -- |     select_closed     -- if true  select closed objects
+  -- |     select_open       -- if true  select open objects
+  -- |     select_groups     -- if true select grouped vectors (irrespective of open / closed state of member objects)
+  -- |  Return Values:
+  -- |     true if selected one or more vectors|
+  --]]
+    local objects_selected = false
+    local warning_displayed = false
+    local pos = layer:GetHeadPosition()
+    while pos ~= nil do
+        local object
+        object, pos = layer:GetNext(pos)
+        local contour = object:GetContour()
+        if contour == nil then
+            if (object.ClassName == "vcCadObjectGroup") and select_groups then
+                selection:Add(object, true, true)
+                objects_selected = true
+            else
+                if not warning_displayed then
+                    local message = "Object(s) without contour information found on layer - ignoring"
+                    if not select_groups then
+                        message = message .. "\r\n\r\n" ..
+                                      "If layer contains grouped vectors these must be ungrouped for this script"
+                    end -- if end
+                    PresentMessage("Alert", "Select Vectors On Layer", message)
+                    warning_displayed = true
+                end -- if end
+            end -- if end
+        else -- contour was NOT nil, test if Open or Closed
+            if contour.IsOpen and select_open then
+                selection:Add(object, true, true)
+                objects_selected = true
+            elseif select_closed then
+                selection:Add(object, true, true)
+                objects_selected = true
+            end -- if end
+        end -- if end
+    end -- while end
+    -- to avoid excessive redrawing etc we added vectors to the selection in 'batch' mode
+    -- tell selection we have now finished updating
+    if objects_selected then
+        selection:GroupSelectionFinished()
+    end -- if end
+    return objects_selected
+end -- function end
+-- =====================================================]]
+function MakeTool(source, tool_type)
+    -- A fresh Vectric Tool carrying the fields the toolpath calls read, from a picked tool or a remembered one.
+    local tool = Tool(source.Name, tool_type)
+    tool.InMM = source.InMM
+    tool.ToolDia = source.ToolDia
+    tool.Stepdown = source.Stepdown
+    tool.Stepover = source.Stepover
+    tool.RateUnits = source.RateUnits
+    tool.FeedRate = source.FeedRate
+    tool.PlungeRate = source.PlungeRate
+    tool.SpindleSpeed = source.SpindleSpeed
+    tool.ToolNumber = source.ToolNumber
+    if tool_type == Tool.VBIT then
+        tool.VBit_Angle = source.VBit_Angle
+        -- The stepover the V-bit uses on any flat area the clearing bit cannot reach. A remembered tool from an
+        -- older setting may lack it; the bit's own stepover is the nearest stand-in.
+        local clear_stepover = source.ClearStepover or 0.0
+        if clear_stepover <= 0.0 then
+            clear_stepover = source.Stepover
+        end
+        tool.ClearStepover = clear_stepover
+    end
+    return tool
+end
+-- =====================================================]]
+function MakePosData()
+    local mtl_block = MaterialBlock()
+    local mtl_box_blc = mtl_block.MaterialBox.BLC
+    local pos_data = ToolpathPosData()
+    pos_data:SetHomePosition(mtl_box_blc.x, mtl_box_blc.y, mtl_block.MaterialBox.TRC.z + (mtl_block.Thickness * 0.2))
+    pos_data.SafeZGap = mtl_block.Thickness * 0.1
+    return pos_data
+end
+-- =====================================================]]
+function MakePocketData()
+    -- The recess: from the face down to the recess depth, finishing the walls with a profile pass last.
+    local pocket_data = PocketParameterData()
+    pocket_data.StartDepth = 0.0
+    pocket_data.CutDepth = Shaker.Depth
+    pocket_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+    pocket_data.Allowance = 0.0
+    pocket_data.DoRasterClearance = false
+    pocket_data.RasterAngle = 0
+    pocket_data.ProfilePassType = PocketParameterData.PROFILE_LAST
+    pocket_data.DoRamping = false
+    pocket_data.RampDistance = 1.0
+    pocket_data.ProjectToolpath = false
+    return pocket_data
+end
+-- =====================================================]]
+function CreatePocketPass(name, layer_name, source_tool)
+    -- One single-tool pocket over every closed vector on layer_name: the straight-edge panel with the bulk bit, or a
+    -- set of corner squares with a corner bit.
+    if not SelectLayerVectors(layer_name, true, false) then
+        return false
+    end
+    if RecalculateExistingToolpath(name) then
+        return true
+    end
+    local toolpath_manager = ToolpathManager()
+    local toolpath_id = toolpath_manager:CreatePocketingToolpath(name, MakeTool(source_tool, Tool.END_MILL), nil,
+        MakePocketData(), MakePosData(), GeometrySelector(), true, false)
+    if toolpath_id == nil then
+        PresentMessage("Error", "Toolpath Processing", "Error creating " .. name .. " toolpath")
+        return false
+    end
+    AssociateToolpathWithLayer(toolpath_manager, name, layer_name, true, false)
+    return true
+end
+-- =====================================================]]
+function CreateVCarvePass()
+    -- A flat-bottomed V-carve over the top-of-bevel rectangle: the V-bit cuts the beveled wall and carries it
+    -- into sharp corners, and the bulk bit, as the area clearance tool, clears the flat floor. The corner pockets
+    -- run between the two (see ReorderByTool), so the V-bit meets little or no material on the floor.
+    if not SelectLayerVectors(Milling.LNVCarve, true, false) then
+        return false
+    end
+    if RecalculateExistingToolpath(Milling.TPVCarve) then
+        return true
+    end
+    local vcarve_data = VCarveParameterData()
+    vcarve_data.StartDepth = 0.0
+    vcarve_data.DoFlatBottom = true
+    vcarve_data.FlatDepth = Shaker.Depth
+    vcarve_data.ProjectToolpath = false
+    vcarve_data.UseAreaClearTool = true
+    local toolpath_manager = ToolpathManager()
+    local toolpath_id = toolpath_manager:CreateVCarvingToolpath(Milling.TPVCarve, MakeTool(Milling.VBitTool, Tool.VBIT),
+        MakeTool(Milling.BulkTool, Tool.END_MILL), vcarve_data, MakePocketData(), MakePosData(), GeometrySelector(),
+        true, false)
+    if toolpath_id == nil then
+        PresentMessage("Error", "Toolpath Processing", "Error creating " .. Milling.TPVCarve .. " toolpath")
+        return false
+    end
+    AssociateToolpathWithLayer(toolpath_manager, Milling.TPVCarve, Milling.LNVCarve, true, false)
+    return true
+end
+-- =====================================================]]
+function CreateProfilePass()
+    -- Box Joint Runs' CreateProfilePass (BoxJointToolpaths.xlua:372), cut outside the part outline through the full
+    -- thickness, with no finishing pass.
+    if not SelectLayerVectors(Milling.LNProfile, true, false) then
+        return false
+    end
+    if RecalculateExistingToolpath(Milling.TPProfile) then
+        return true
+    end
+    local profile_data = ProfileParameterData()
+    profile_data.StartDepth = 0.0
+    profile_data.CutDepth = Shaker.Thickness
+    profile_data.CutDirection = ProfileParameterData.CLIMB_DIRECTION
+    profile_data.ProfileSide = ProfileParameterData.PROFILE_OUTSIDE
+    profile_data.Allowance = 0.0
+    profile_data.KeepStartPoints = false
+    profile_data.CreateSquareCorners = false
+    profile_data.CornerSharpen = false
+    profile_data.UseTabs = Milling.ProfileTabs
+    profile_data.TabLength = 0.5 * Shaker.Cal
+    profile_data.TabThickness = Shaker.Thickness * 0.5
+    profile_data.Use3dTabs = true
+    profile_data.ProjectToolpath = false
+    local ramping_data = RampingData()
+    ramping_data.DoRamping = false
+    ramping_data.RampType = RampingData.RAMP_ZIG_ZAG
+    ramping_data.RampConstraint = RampingData.CONSTRAIN_ANGLE
+    ramping_data.RampDistance = 100.0
+    ramping_data.RampAngle = 25.0
+    ramping_data.RampMaxAngleDist = 15
+    ramping_data.RampOnLeadIn = false
+    lead_in_out_data.DoLeadIn = false
+    lead_in_out_data.DoLeadOut = false
+    lead_in_out_data.LeadType = LeadInOutData.CIRCULAR_LEAD
+    lead_in_out_data.LeadLength = 5.0
+    lead_in_out_data.LinearLeadAngle = 45
+    lead_in_out_data.CirularLeadRadius = 5.0
+    lead_in_out_data.OvercutDistance = 0.0
+    local toolpath_manager = ToolpathManager()
+    local toolpath_id = toolpath_manager:CreateProfilingToolpath(Milling.TPProfile,
+        MakeTool(Milling.ProfileTool, Tool.END_MILL), profile_data, ramping_data, lead_in_out_data, MakePosData(),
+        GeometrySelector(), true, false)
+    if toolpath_id == nil then
+        PresentMessage("Error", "Toolpath Processing", "Error creating Profile toolpath '" .. Milling.TPProfile .. "'")
+        return false
+    end
+    AssociateToolpathWithLayer(toolpath_manager, Milling.TPProfile, Milling.LNProfile, true, false)
+    return true
+end
+-- =====================================================]]
+function CreateShakerToolpaths()
+    -- Created in cutting order: the bulk clearing (a pocket, or the V-carve's flat clearance), the corner bits from
+    -- largest to smallest, then the cut-out. SequenceToolpathsByTool settles the final order.
+    if Shaker.Edge == "V-Bit" then
+        CreateVCarvePass()
+    else
+        CreatePocketPass(Milling.TPPocket, Milling.LNPocket, Milling.BulkTool)
+    end
+    local tools = ClearingTools()
+    for i = 2, #tools do
+        CreatePocketPass(Milling.TPCorners[i], Milling.LNCorners[i], tools[i])
+    end
+    if Shaker.CutOut then
+        CreateProfilePass()
+    end
+    return true
+end
+-- =============== End of File =========================]]
