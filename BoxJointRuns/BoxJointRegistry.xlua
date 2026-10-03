@@ -34,6 +34,10 @@ local IMPERIAL_DEFAULTS = {
     CloseLoop = false,
     EEToward = true,
     EEPhase = "Finger",
+    EBBackLength = 24.0000,
+    EBFirstStub = 9.0000,
+    EBOpening = 6.0000,
+    EBPhase = "Finger",
     Mode = "Test Cut"
 }
 local METRIC_DEFAULTS = {
@@ -66,6 +70,10 @@ local METRIC_DEFAULTS = {
     CloseLoop = false,
     EEToward = true,
     EEPhase = "Finger",
+    EBBackLength = 600.0000,
+    EBFirstStub = 225.0000,
+    EBOpening = 150.0000,
+    EBPhase = "Finger",
     Mode = "Test Cut"
 }
 local TOOL_SLOTS = {
@@ -143,7 +151,7 @@ function SettingsRead()
     local registry = Registry(Run.RegName)
     local defaults = SettingDefaults()
     Run.DialogWidth = registry:GetInt("DialogWidth", 620)
-    Run.DialogHeight = registry:GetInt("DialogHeight", 810)
+    Run.DialogHeight = registry:GetInt("DialogHeight", 880)
     Run.StockT = registry:GetDouble(SettingsKey("StockT"), defaults.StockT)
     Run.StockW = registry:GetDouble(SettingsKey("StockW"), defaults.StockW)
     Run.FingerAuto = registry:GetBool(SettingsKey("FingerAuto"), defaults.FingerAuto)
@@ -155,13 +163,20 @@ function SettingsRead()
     Run.GrooveWidth = registry:GetDouble(SettingsKey("GrooveWidth"), defaults.GrooveWidth)
     Run.GrooveDepth = registry:GetDouble(SettingsKey("GrooveDepth"), defaults.GrooveDepth)
     Run.Mode = registry:GetString(SettingsKey("Mode"), defaults.Mode)
-    if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" and Run.Mode ~= "Existing End" then
+    if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" and Run.Mode ~= "Existing End" and Run.Mode ~= "Existing Back" then
         Run.Mode = defaults.Mode -- a blank or unknown value would leave the dropdown unselected
     end
     Run.EEToward = registry:GetBool(SettingsKey("EEToward"), defaults.EEToward)
     Run.EEPhase = registry:GetString(SettingsKey("EEPhase"), defaults.EEPhase)
     if Run.EEPhase ~= "Finger" and Run.EEPhase ~= "Gap" then
         Run.EEPhase = defaults.EEPhase
+    end
+    Run.EBBackLength = registry:GetDouble(SettingsKey("EBBackLength"), defaults.EBBackLength)
+    Run.EBFirstStub = registry:GetDouble(SettingsKey("EBFirstStub"), defaults.EBFirstStub)
+    Run.EBOpening = registry:GetDouble(SettingsKey("EBOpening"), defaults.EBOpening)
+    Run.EBPhase = registry:GetString(SettingsKey("EBPhase"), defaults.EBPhase)
+    if Run.EBPhase ~= "Finger" and Run.EBPhase ~= "Gap" then
+        Run.EBPhase = defaults.EBPhase
     end
     Run.Piece = {}
     Run.Piece[1] = {Enabled = true, Length = registry:GetDouble(SettingsKey("Piece1Length"), defaults.Piece1Length)}
@@ -210,6 +225,10 @@ function SettingsWrite()
     registry:SetString(SettingsKey("Mode"), Run.Mode)
     registry:SetBool(SettingsKey("EEToward"), Run.EEToward)
     registry:SetString(SettingsKey("EEPhase"), Run.EEPhase)
+    registry:SetDouble(SettingsKey("EBBackLength"), Run.EBBackLength)
+    registry:SetDouble(SettingsKey("EBFirstStub"), Run.EBFirstStub)
+    registry:SetDouble(SettingsKey("EBOpening"), Run.EBOpening)
+    registry:SetString(SettingsKey("EBPhase"), Run.EBPhase)
     for i = 1, 4 do
         registry:SetDouble(SettingsKey("Piece" .. i .. "Length"), Run.Piece[i].Length)
     end

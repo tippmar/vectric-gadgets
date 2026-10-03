@@ -97,6 +97,17 @@ function ValidateSettings()
             end
         end
     end
+    if Run.Mode == "Existing Back" then
+        if Run.EBFirstStub <= Run.StockT then
+            return false, "First stub length must be greater than the stock thickness."
+        end
+        if Run.EBOpening <= 0.0 then
+            return false, "Notch opening must be greater than zero."
+        end
+        if (Run.EBFirstStub + Run.EBOpening + Run.StockT) >= Run.EBBackLength then
+            return false, "First stub length + opening + thickness must be less than the back length."
+        end
+    end
     return true, nil
 end
 -- =====================================================]]
@@ -164,6 +175,8 @@ function main(script_path)
         RunChain()
     elseif Run.Mode == "Existing End" then
         RunExistingEnd()
+    elseif Run.Mode == "Existing Back" then
+        RunExistingBack()
     end
     if Run.Mode == "Test Cut" or Run.Mode == "Chain" then
         if Milling.job.LayerManager:FindLayerWithName(Milling.LNFingers) ~= nil then
@@ -177,6 +190,13 @@ function main(script_path)
         if Milling.job.LayerManager:FindLayerWithName(Milling.LNExistingFingers) ~= nil then
             CreateFingerToolpath(Milling.LNExistingFingers, Milling.TPExistingFingers)
         end
+        SequenceToolpathsByTool()
+        Milling.job:Refresh2DView()
+    elseif Run.Mode == "Existing Back" then
+        if Milling.job.LayerManager:FindLayerWithName(Milling.LNExistingFingers) ~= nil then
+            CreateFingerToolpath(Milling.LNExistingFingers, Milling.TPExistingFingers)
+        end
+        CreateProfilePass(Milling.TPExistingProfile, Milling.LNExistingProfile, "IN", false, 0.0, false)
         SequenceToolpathsByTool()
         Milling.job:Refresh2DView()
     end

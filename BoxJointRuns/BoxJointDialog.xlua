@@ -46,6 +46,7 @@ table { width: 100%; border: 0; }
         <option>Test Cut</option>
         <option>Chain</option>
         <option>Existing End</option>
+        <option>Existing Back</option>
       </select>
     </td>
     <td class="h1-rP"><label title="Blind styles are excluded: any piece can be flipped face for face.">Joint Style</label></td>
@@ -127,6 +128,26 @@ table { width: 100%; border: 0; }
     <td class="h1-rP"><label title="Finger = Finger at bottom; Gap = Gap at bottom.">Phase</label></td>
     <td class="h1-l">
       <select id="Run.EEPhase" size="1">
+        <option>Finger</option>
+        <option>Gap</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4" class="h2-c">Existing Back</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Overall length of the existing back.">Back Length</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.EBBackLength" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="From zero (the back's top-right corner) to the first cut end.">First Stub Length</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.EBFirstStub" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Between the two cut ends: the inside width of the notch. The notch front piece is this plus 2 x thickness overall.">Notch Opening</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.EBOpening" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Finger = Finger at bottom; Gap = Gap at bottom. Both stub ends take this phase.">Stub Phase</label></td>
+    <td class="h1-l">
+      <select id="Run.EBPhase" size="1">
         <option>Finger</option>
         <option>Gap</option>
       </select>
@@ -234,6 +255,10 @@ table { width: 100%; border: 0; }
     Run.dialog:AddDropDownList("Run.Mode", Run.Mode)
     Run.dialog:AddDropDownList("Run.EEToward", Run.EEToward and "Toward" or "Away")
     Run.dialog:AddDropDownList("Run.EEPhase", Run.EEPhase)
+    Run.dialog:AddDoubleField("Run.EBBackLength", Run.EBBackLength)
+    Run.dialog:AddDoubleField("Run.EBFirstStub", Run.EBFirstStub)
+    Run.dialog:AddDoubleField("Run.EBOpening", Run.EBOpening)
+    Run.dialog:AddDropDownList("Run.EBPhase", Run.EBPhase)
     for i = 1, 4 do
         Run.dialog:AddDoubleField("Run.Piece" .. i .. "Length", Run.Piece[i].Length)
     end
@@ -279,6 +304,10 @@ function ShowSettingsDialog()
     Run.Mode = Run.dialog:GetDropDownListValue("Run.Mode")
     Run.EEToward = (Run.dialog:GetDropDownListValue("Run.EEToward") ~= "Away")
     Run.EEPhase = Run.dialog:GetDropDownListValue("Run.EEPhase")
+    Run.EBBackLength = math.abs(Run.dialog:GetDoubleField("Run.EBBackLength"))
+    Run.EBFirstStub = math.abs(Run.dialog:GetDoubleField("Run.EBFirstStub"))
+    Run.EBOpening = math.abs(Run.dialog:GetDoubleField("Run.EBOpening"))
+    Run.EBPhase = Run.dialog:GetDropDownListValue("Run.EBPhase")
     for i = 1, 4 do
         Run.Piece[i].Length = math.abs(Run.dialog:GetDoubleField("Run.Piece" .. i .. "Length"))
     end

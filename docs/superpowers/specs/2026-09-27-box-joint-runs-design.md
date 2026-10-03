@@ -115,10 +115,12 @@ Inputs, all in the machine frame:
 
 - back length;
 - first stub length, from zero to the first cut end;
-- notch opening, between the two cut ends (equals the notch front piece's overall length);
+- notch opening, between the two cut ends (the notch's inside width; each notch side sits in the last T of its stub, so the notch
+  front piece is the opening + 2T overall);
 - phase of the stub ends.
 
-The gadget profiles out the middle — from first stub length to first stub length + opening — as a rectangle,
+The gadget profiles out the middle — from first stub length to first stub length + opening — as a rectangle that runs
+past both long edges by the profile bit diameter,
 inside, full depth, with no tabs, and pockets the gap bands behind each new end. The middle comes loose; the
 operator screws it down. No groove is cut: the back already has one.
 

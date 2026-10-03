@@ -1346,7 +1346,9 @@ function ApplyThicknessLayerNames()
     Milling.LNGroove = "BJR Groove" .. tag
     Milling.LNLabels = "BJR Labels" .. tag
     Milling.LNExistingFingers = "BJR Existing Fingers" .. tag
+    Milling.LNExistingProfile = "BJR Existing Profile" .. tag
     Milling.TPFingers = "BJR Fingers"
+    Milling.TPExistingProfile = "BJR Existing Profile"
     Milling.TPExistingFingers = "BJR Existing Fingers"
     Milling.TPGroove = "BJR Groove"
     Milling.TPProfile = "BJR Profile"
@@ -1613,6 +1615,32 @@ function RunExistingEnd()
         dir_across = 270.0
     end
     DrawFingerEnd(corner, 0.0, dir_across, Run.EEPhase, Milling.LNExistingFingers, false)
+    Milling.job:Refresh2DView()
+    return true
+end
+-- =====================================================]]
+function RunExistingBack()
+    -- Setup fixed by the Blum back's shape: it lies with its bottom edge away from the operator (top edge along
+    -- Y = 0), zero is the back's top-right corner, X runs along the top edge. The middle, from Run.EBFirstStub to
+    -- Run.EBFirstStub + Run.EBOpening, is profiled out as a rectangle (inside, full depth, no tabs); the gap bands
+    -- are pocketed behind each new end. No groove: the back already has one, and between_pieces is false.
+    -- Shares Existing end's finger layer and toolpath name (the spec accepts the sharing).
+    ApplyThicknessLayerNames() -- tagged names only; the active sheet is used as is
+    ClearModeLayer(Milling.LNExistingProfile)
+    ClearModeLayer(Milling.LNExistingFingers)
+    Milling.job:Refresh2DView()
+    -- The back lies in +Y: bottom (groove) edge on Y = Run.StockW; finger ends count bands toward the top edge.
+    local bottom_y = Run.StockW
+    local across = 270.0
+    local near_x = Run.EBFirstStub -- first stub's new end; that stub's body is at X < near_x
+    local far_x = Run.EBFirstStub + Run.EBOpening -- second stub's new end; its body is at X > far_x
+    -- The waste rectangle runs past both long edges by the profile bit diameter: an inside profile keeps the bit
+    -- inside the vector, so a rectangle ending at Y = 0 and Y = W would leave uncut corners at each cut end.
+    local past = Milling.ProfileTool.ToolDia
+    DrawBox(Point2D(near_x, -past), Point2D(near_x, bottom_y + past), Point2D(far_x, bottom_y + past),
+        Point2D(far_x, -past), Milling.LNExistingProfile)
+    DrawFingerEnd(Point2D(near_x, bottom_y), 180.0, across, Run.EBPhase, Milling.LNExistingFingers, false)
+    DrawFingerEnd(Point2D(far_x, bottom_y), 0.0, across, Run.EBPhase, Milling.LNExistingFingers, false)
     Milling.job:Refresh2DView()
     return true
 end
