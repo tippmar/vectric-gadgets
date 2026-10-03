@@ -1356,7 +1356,7 @@ function LabelPart(x, y, index)
     if Shaker.Quantity > 1 then
         text = text .. " " .. tostring(index)
     end
-    text = text .. " (" .. FormatThickness(Shaker.Width) .. " x " .. FormatThickness(Shaker.Length) .. ")"
+    text = text .. " (" .. FormatThickness(Shaker.Width) .. " x " .. FormatThickness(Shaker.Height) .. ")"
     local size = math.min(0.25 * Shaker.Cal, (Shaker.FloorW - (2.0 * margin)) / (string.len(text) * 0.7))
     if size <= 0.0 then
         return false
@@ -1379,29 +1379,33 @@ function DrawDoors()
         local y0 = origin.Y
         -- Outline drawn so its first edge (p1->p2) and third edge (p4->p3) are the two long ones, for the tabs.
         local p1, p2, p3, p4
-        if Shaker.Length >= Shaker.Width then
-            p1, p2 = Point2D(x0, y0), Point2D(x0, y0 + Shaker.Length)
-            p3, p4 = Point2D(x0 + Shaker.Width, y0 + Shaker.Length), Point2D(x0 + Shaker.Width, y0)
+        if Shaker.Height >= Shaker.Width then
+            p1, p2 = Point2D(x0, y0), Point2D(x0, y0 + Shaker.Height)
+            p3, p4 = Point2D(x0 + Shaker.Width, y0 + Shaker.Height), Point2D(x0 + Shaker.Width, y0)
         else
             p1, p2 = Point2D(x0, y0), Point2D(x0 + Shaker.Width, y0)
-            p3, p4 = Point2D(x0 + Shaker.Width, y0 + Shaker.Length), Point2D(x0, y0 + Shaker.Length)
+            p3, p4 = Point2D(x0 + Shaker.Width, y0 + Shaker.Height), Point2D(x0, y0 + Shaker.Height)
         end
         local outline = DrawBox(p1, p2, p3, p4, Milling.LNProfile)
         if Shaker.CutOut then
             AddProfileTabs(outline, p1, p2, p3, p4)
         end
-        local fx1, fy1 = x0 + Shaker.FloorStile, y0 + Shaker.FloorRail
-        local fx2, fy2 = x0 + Shaker.Width - Shaker.FloorStile, y0 + Shaker.Length - Shaker.FloorRail
-        if Shaker.Edge == "V-Bit" then
-            DrawRect(x0 + Shaker.TopStile, y0 + Shaker.TopRail, x0 + Shaker.Width - Shaker.TopStile,
-                y0 + Shaker.Length - Shaker.TopRail, Milling.LNVCarve)
-        else
-            DrawRect(fx1, fy1, fx2, fy2, Milling.LNPocket)
+        -- One panel, or two with a middle stile. The top of a panel's bevel is its floor grown by the bevel width
+        -- on every side (zero for a straight edge).
+        local fx1, fx2 = x0 + Shaker.FloorStile, x0 + Shaker.Width - Shaker.FloorStile
+        for _, floor_y in ipairs(Shaker.PanelFloorY) do
+            local fy1 = y0 + floor_y
+            local fy2 = fy1 + Shaker.FloorH
+            if Shaker.Edge == "V-Bit" then
+                DrawRect(fx1 - Shaker.Bevel, fy1 - Shaker.Bevel, fx2 + Shaker.Bevel, fy2 + Shaker.Bevel, Milling.LNVCarve)
+            else
+                DrawRect(fx1, fy1, fx2, fy2, Milling.LNPocket)
+            end
+            for i, size in pairs(Shaker.CornerSize) do
+                DrawCornerSquares(fx1, fy1, fx2, fy2, size, Milling.LNCorners[i])
+            end
         end
-        for i, size in pairs(Shaker.CornerSize) do
-            DrawCornerSquares(fx1, fy1, fx2, fy2, size, Milling.LNCorners[i])
-        end
-        LabelPart(fx1, fy1, n)
+        LabelPart(fx1, y0 + Shaker.PanelFloorY[1], n)
     end
     Milling.job:Refresh2DView()
     return true

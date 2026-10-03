@@ -30,10 +30,12 @@ left standing as a raised frame around it. Each run draws the parts and creates 
 <tr><th>Setting</th><th>Meaning</th></tr>
 <tr><td>Name, Quantity</td><td>Each part is labeled with the name (numbered when there is more than one) and its
 size. Identical parts are laid out side by side.</td></tr>
-<tr><td>Width (X), Length (Y)</td><td>Overall size of the door or drawer front.</td></tr>
+<tr><td>Width (X), Height (Y)</td><td>Overall size of the door or drawer front.</td></tr>
 <tr><td>Thickness</td><td>Thickness of the slab. Parts go on a sheet named for it, created if needed.</td></tr>
 <tr><td>Recess Depth</td><td>How far the panel sits below the face of the frame.</td></tr>
 <tr><td>Stile Width, Rail Width</td><td>Width of the left/right and top/bottom frame members.</td></tr>
+<tr><td>Middle Stile</td><td>For tall doors: a horizontal member, as wide as the stiles and measured the same way, centered
+top to bottom. It splits the panel into two of equal height. With a V-bit edge it is beveled on both sides.</td></tr>
 </table>
 
 <h2>Panel Edge</h2>

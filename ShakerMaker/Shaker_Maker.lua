@@ -72,14 +72,33 @@ function RecomputeDerived()
     Shaker.TopStile = floor_stile - Shaker.Bevel
     Shaker.TopRail = floor_rail - Shaker.Bevel
     Shaker.FloorW = Shaker.Width - (2.0 * floor_stile)
-    Shaker.FloorL = Shaker.Length - (2.0 * floor_rail)
+    -- A middle stile splits the panel into two of equal height, one above the other. It is a stile's width wide,
+    -- measured the same way, but it has a bevel on both sides: its floor gap is that width when measured to the
+    -- bottom of the bevel, and that width plus both bevels when measured to the top.
+    Shaker.FloorMid = 0.0
+    Shaker.TopMid = 0.0
+    local panels = 1
+    if Shaker.MiddleStile then
+        panels = 2
+        Shaker.FloorMid = Shaker.StileW
+        if Shaker.Edge == "V-Bit" and Shaker.MeasureTo == "Top of Bevel" then
+            Shaker.FloorMid = Shaker.StileW + (2.0 * Shaker.Bevel)
+        end
+        Shaker.TopMid = Shaker.FloorMid - (2.0 * Shaker.Bevel)
+    end
+    Shaker.FloorH = (Shaker.Height - (2.0 * floor_rail) - Shaker.FloorMid) / panels
+    -- Bottom edge of each panel's floor, measured from the door's bottom edge.
+    Shaker.PanelFloorY = {floor_rail}
+    if Shaker.MiddleStile then
+        table.insert(Shaker.PanelFloorY, floor_rail + Shaker.FloorH + Shaker.FloorMid)
+    end
     -- Each corner bit pockets a square in every floor corner, big enough to take out the round the bit before it
     -- left (a quarter circle of that bit's radius inside a radius-sized square) plus its own radius of overlap.
     Shaker.CornerSize = {}
     local tools = ClearingTools()
     for i = 2, #tools do
         local size = (tools[i - 1].ToolDia * 0.5) + (tools[i].ToolDia * 0.5)
-        Shaker.CornerSize[i] = math.min(size, Shaker.FloorW * 0.5, Shaker.FloorL * 0.5)
+        Shaker.CornerSize[i] = math.min(size, Shaker.FloorW * 0.5, Shaker.FloorH * 0.5)
     end
     Shaker.CornerRadius = tools[#tools].ToolDia * 0.5
 end
@@ -106,8 +125,8 @@ function ValidateSettings()
             end
         end
     end
-    if Shaker.Width <= 0.0 or Shaker.Length <= 0.0 or Shaker.Thickness <= 0.0 then
-        return false, "Width, length and thickness must all be greater than zero."
+    if Shaker.Width <= 0.0 or Shaker.Height <= 0.0 or Shaker.Thickness <= 0.0 then
+        return false, "Width, height and thickness must all be greater than zero."
     end
     if Shaker.Quantity < 1 then
         return false, "Quantity must be at least 1."
@@ -119,18 +138,22 @@ function ValidateSettings()
         return false, "The V-bit's angle must be between 0 and 180 degrees."
     end
     RecomputeDerived()
+    if Shaker.MiddleStile and Shaker.TopMid <= 0.0 then
+        return false, "The middle stile must be wider than both its bevels (" .. Fmt(2.0 * Shaker.Bevel) ..
+            "), or measure the widths to the top of the bevel."
+    end
     if Shaker.TopStile <= 0.0 or Shaker.TopRail <= 0.0 then
         return false, "Rail and stile widths must be greater than the bevel width (" .. Fmt(Shaker.Bevel) ..
             "), or measure them to the top of the bevel."
     end
-    if Shaker.FloorW <= 0.0 or Shaker.FloorL <= 0.0 then
-        return false, "The rails and stiles leave no panel. The panel floor would be " .. Fmt(Shaker.FloorW) ..
-            " x " .. Fmt(Shaker.FloorL) .. "."
+    if Shaker.FloorW <= 0.0 or Shaker.FloorH <= 0.0 then
+        return false, "The rails and stiles leave no panel. Each panel floor would be " .. Fmt(Shaker.FloorW) ..
+            " x " .. Fmt(Shaker.FloorH) .. "."
     end
-    local floor_min = math.min(Shaker.FloorW, Shaker.FloorL)
+    local floor_min = math.min(Shaker.FloorW, Shaker.FloorH)
     if Milling.BulkTool.ToolDia >= floor_min then
         return false, "The bulk clearing bit (" .. Fmt(Milling.BulkTool.ToolDia) .. ") does not fit the panel floor (" ..
-            Fmt(Shaker.FloorW) .. " x " .. Fmt(Shaker.FloorL) .. "). Choose a smaller bulk bit."
+            Fmt(Shaker.FloorW) .. " x " .. Fmt(Shaker.FloorH) .. "). Choose a smaller bulk bit."
     end
     local clearing = ClearingTools()
     for i = 2, #clearing do
@@ -204,7 +227,7 @@ function main(script_path)
     SequenceToolpathsByTool()
     Milling.job:Refresh2DView()
     local summary = "Shaker Maker drew " .. tostring(Shaker.Quantity) .. " part(s), " .. Fmt(Shaker.Width) .. " x " ..
-        Fmt(Shaker.Length) .. ", with a panel floor of " .. Fmt(Shaker.FloorW) .. " x " .. Fmt(Shaker.FloorL) .. "."
+        Fmt(Shaker.Height) .. ", with " .. tostring(#Shaker.PanelFloorY) .. " panel(s), each with a floor of " .. Fmt(Shaker.FloorW) .. " x " .. Fmt(Shaker.FloorH) .. "."
     if Shaker.Edge == "V-Bit" then
         summary = summary .. "\nThe V-bit bevel is " .. Fmt(Shaker.Bevel) .. " wide."
     else

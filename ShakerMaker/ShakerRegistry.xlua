@@ -7,7 +7,7 @@ local IMPERIAL_DEFAULTS = {
     PartName = "Door",
     Quantity = 1,
     Width = 15.0000,
-    Length = 20.0000,
+    Height = 20.0000,
     Thickness = 0.7500,
     Depth = 0.2500,
     StileW = 2.2500,
@@ -17,6 +17,7 @@ local IMPERIAL_DEFAULTS = {
     Corner1On = false,
     Corner2On = false,
     CutOut = true,
+    MiddleStile = false,
     PartGap = 0.7500,
     ProfileTabs = true
 }
@@ -24,7 +25,7 @@ local METRIC_DEFAULTS = {
     PartName = "Door",
     Quantity = 1,
     Width = 380.0000,
-    Length = 500.0000,
+    Height = 500.0000,
     Thickness = 19.0000,
     Depth = 6.0000,
     StileW = 57.0000,
@@ -34,6 +35,7 @@ local METRIC_DEFAULTS = {
     Corner1On = false,
     Corner2On = false,
     CutOut = true,
+    MiddleStile = false,
     PartGap = 19.0500,
     ProfileTabs = true
 }
@@ -116,11 +118,13 @@ function SettingsRead()
     local registry = Registry(Shaker.RegName)
     local defaults = SettingDefaults()
     Shaker.DialogWidth = registry:GetInt("DialogWidth", 620)
-    Shaker.DialogHeight = registry:GetInt("DialogHeight", 640)
+    Shaker.DialogHeight = registry:GetInt("DialogHeight", 670)
     Shaker.PartName = registry:GetString(SettingsKey("PartName"), defaults.PartName)
     Shaker.Quantity = registry:GetInt(SettingsKey("Quantity"), defaults.Quantity)
     Shaker.Width = registry:GetDouble(SettingsKey("Width"), defaults.Width)
-    Shaker.Length = registry:GetDouble(SettingsKey("Length"), defaults.Length)
+    -- Falls back to the "Length" key the first release saved this under, so an upgrade keeps the value.
+    Shaker.Height = registry:GetDouble(SettingsKey("Height"),
+        registry:GetDouble(SettingsKey("Length"), defaults.Height))
     Shaker.Thickness = registry:GetDouble(SettingsKey("Thickness"), defaults.Thickness)
     Shaker.Depth = registry:GetDouble(SettingsKey("Depth"), defaults.Depth)
     Shaker.StileW = registry:GetDouble(SettingsKey("StileW"), defaults.StileW)
@@ -136,6 +140,7 @@ function SettingsRead()
     Shaker.Corner1On = registry:GetBool(SettingsKey("Corner1On"), defaults.Corner1On)
     Shaker.Corner2On = registry:GetBool(SettingsKey("Corner2On"), defaults.Corner2On)
     Shaker.CutOut = registry:GetBool(SettingsKey("CutOut"), defaults.CutOut)
+    Shaker.MiddleStile = registry:GetBool(SettingsKey("MiddleStile"), defaults.MiddleStile)
     Milling.PartGap = registry:GetDouble(SettingsKey("PartGap"), defaults.PartGap)
     Milling.ProfileTabs = registry:GetBool(SettingsKey("ProfileTabs"), defaults.ProfileTabs)
     ToolsRead()
@@ -148,7 +153,7 @@ function SettingsWrite()
     registry:SetString(SettingsKey("PartName"), Shaker.PartName)
     registry:SetInt(SettingsKey("Quantity"), Shaker.Quantity)
     registry:SetDouble(SettingsKey("Width"), Shaker.Width)
-    registry:SetDouble(SettingsKey("Length"), Shaker.Length)
+    registry:SetDouble(SettingsKey("Height"), Shaker.Height)
     registry:SetDouble(SettingsKey("Thickness"), Shaker.Thickness)
     registry:SetDouble(SettingsKey("Depth"), Shaker.Depth)
     registry:SetDouble(SettingsKey("StileW"), Shaker.StileW)
@@ -158,6 +163,7 @@ function SettingsWrite()
     registry:SetBool(SettingsKey("Corner1On"), Shaker.Corner1On)
     registry:SetBool(SettingsKey("Corner2On"), Shaker.Corner2On)
     registry:SetBool(SettingsKey("CutOut"), Shaker.CutOut)
+    registry:SetBool(SettingsKey("MiddleStile"), Shaker.MiddleStile)
     registry:SetDouble(SettingsKey("PartGap"), Milling.PartGap)
     registry:SetBool(SettingsKey("ProfileTabs"), Milling.ProfileTabs)
     ToolsWrite()

@@ -8,6 +8,7 @@ toolpaths. The dialog's **Help** button covers every setting.
   wall with sharp corners, cut by a flat-bottomed V-carve).
 - **Bit geometry**: the V-bit's bevel is `depth x tan(angle / 2)` wide. Rail and stile widths are measured to the
   bottom of the bevel (the frame, bevel included, is the entered width) or to the top of it (the flat face is).
+- **Middle stile**: optional, for tall doors; a stile-wide member centered top to bottom, giving two equal panels.
 - **Several clearing bits**: a bulk bit, as large as the floor allows, clears the panel; up to two smaller corner
   bits each pocket a square in every floor corner to take out the round the bit before them left.
 - Parts go on a sheet named for their thickness, right of anything already drawn, so repeated runs build up a

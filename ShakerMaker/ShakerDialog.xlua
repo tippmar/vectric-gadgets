@@ -35,8 +35,8 @@ table { width: 100%; border: 0; }
   <tr>
     <td class="h1-rP"><label title="Overall width of the door or drawer front, across the rails (X).">Width (X)</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Width" size="10" maxlength="10"/></td>
-    <td class="h1-rP"><label title="Overall length of the door or drawer front, along the stiles (Y).">Length (Y)</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Length" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Overall height of the door or drawer front, along the stiles (Y).">Height (Y)</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Shaker.Height" size="10" maxlength="10"/></td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Thickness of the slab. Parts go on a sheet named for it.">Thickness</label></td>
@@ -49,6 +49,11 @@ table { width: 100%; border: 0; }
     <td class="h1-l"><input type="text" class="h1-l" id="Shaker.StileW" size="10" maxlength="10"/></td>
     <td class="h1-rP"><label title="Width of the top and bottom frame members.">Rail Width</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Shaker.RailW" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="For tall doors: a horizontal member, a stile's width wide, centered top to bottom, splitting the panel into two of equal height.">Middle Stile</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="MiddleStileCheck"/></td>
+    <td colspan="2">&nbsp;</td>
   </tr>
   <tr>
     <td colspan="2" class="h2-c">Panel Edge</td>
@@ -133,7 +138,7 @@ table { width: 100%; border: 0; }
     Shaker.dialog:AddTextField("Shaker.PartName", Shaker.PartName)
     Shaker.dialog:AddIntegerField("Shaker.Quantity", Shaker.Quantity)
     Shaker.dialog:AddDoubleField("Shaker.Width", Shaker.Width)
-    Shaker.dialog:AddDoubleField("Shaker.Length", Shaker.Length)
+    Shaker.dialog:AddDoubleField("Shaker.Height", Shaker.Height)
     Shaker.dialog:AddDoubleField("Shaker.Thickness", Shaker.Thickness)
     Shaker.dialog:AddDoubleField("Shaker.Depth", Shaker.Depth)
     Shaker.dialog:AddDoubleField("Shaker.StileW", Shaker.StileW)
@@ -141,6 +146,7 @@ table { width: 100%; border: 0; }
     Shaker.dialog:AddDropDownList("Shaker.Edge", Shaker.Edge)
     Shaker.dialog:AddDropDownList("Shaker.MeasureTo", Shaker.MeasureTo)
     Shaker.dialog:AddCheckBox("CutOutCheck", Shaker.CutOut)
+    Shaker.dialog:AddCheckBox("MiddleStileCheck", Shaker.MiddleStile)
     Shaker.dialog:AddDoubleField("Milling.PartGap", Milling.PartGap)
     Shaker.dialog:AddCheckBox("ProfileTabsCheck", Milling.ProfileTabs)
     Shaker.dialog:AddCheckBox("Corner1Check", Shaker.Corner1On)
@@ -178,7 +184,7 @@ function ShowSettingsDialog()
     Shaker.PartName = Shaker.dialog:GetTextField("Shaker.PartName")
     Shaker.Quantity = Shaker.dialog:GetIntegerField("Shaker.Quantity")
     Shaker.Width = math.abs(Shaker.dialog:GetDoubleField("Shaker.Width"))
-    Shaker.Length = math.abs(Shaker.dialog:GetDoubleField("Shaker.Length"))
+    Shaker.Height = math.abs(Shaker.dialog:GetDoubleField("Shaker.Height"))
     Shaker.Thickness = math.abs(Shaker.dialog:GetDoubleField("Shaker.Thickness"))
     Shaker.Depth = math.abs(Shaker.dialog:GetDoubleField("Shaker.Depth"))
     Shaker.StileW = math.abs(Shaker.dialog:GetDoubleField("Shaker.StileW"))
@@ -186,6 +192,7 @@ function ShowSettingsDialog()
     Shaker.Edge = Shaker.dialog:GetDropDownListValue("Shaker.Edge")
     Shaker.MeasureTo = Shaker.dialog:GetDropDownListValue("Shaker.MeasureTo")
     Shaker.CutOut = Shaker.dialog:GetCheckBox("CutOutCheck")
+    Shaker.MiddleStile = Shaker.dialog:GetCheckBox("MiddleStileCheck")
     Milling.PartGap = math.abs(Shaker.dialog:GetDoubleField("Milling.PartGap"))
     Milling.ProfileTabs = Shaker.dialog:GetCheckBox("ProfileTabsCheck")
     -- Corner Bit 2 can be on only while Corner Bit 1 is; it silently drops back to off otherwise.
@@ -203,6 +210,9 @@ end
 -- OnLuaButton_<id> on every click, so each check box needs one even though ticking it changes nothing until
 -- Run is pressed (as BoxJointDialog.xlua does). IDs therefore carry no dots.
 function OnLuaButton_CutOutCheck()
+    return true
+end
+function OnLuaButton_MiddleStileCheck()
     return true
 end
 function OnLuaButton_ProfileTabsCheck()
