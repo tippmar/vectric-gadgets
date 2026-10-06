@@ -42,3 +42,5 @@ luac.out
 # Gadget packages
 *.vgadget
 
+# Claude Code local settings
+.claude/settings.local.json
