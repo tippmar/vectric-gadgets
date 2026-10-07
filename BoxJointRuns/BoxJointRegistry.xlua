@@ -13,7 +13,8 @@ local IMPERIAL_DEFAULTS = {
     FingerClearance = 0.0050,
     GrooveOn = true,
     GrooveInset = 0.5000,
-    GrooveWidth = 0.2500,
+    BottomThickness = 0.2500,
+    GrooveClearance = 0.0120,
     GrooveDepth = 0.2500,
     FingerAllowance = 0.0000,
     GrooveAllowance = 0.0000,
@@ -49,7 +50,8 @@ local METRIC_DEFAULTS = {
     FingerClearance = 0.1270,
     GrooveOn = true,
     GrooveInset = 12.7000,
-    GrooveWidth = 6.3500,
+    BottomThickness = 6.3500,
+    GrooveClearance = 0.3048,
     GrooveDepth = 6.3500,
     FingerAllowance = 0.0000,
     GrooveAllowance = 0.0000,
@@ -160,7 +162,10 @@ function SettingsRead()
     Run.FingerClearance = registry:GetDouble(SettingsKey("FingerClearance"), defaults.FingerClearance)
     Run.GrooveOn = registry:GetBool(SettingsKey("GrooveOn"), defaults.GrooveOn)
     Run.GrooveInset = registry:GetDouble(SettingsKey("GrooveInset"), defaults.GrooveInset)
-    Run.GrooveWidth = registry:GetDouble(SettingsKey("GrooveWidth"), defaults.GrooveWidth)
+    -- BottomThickness is a new key, not a rename of GrooveWidth: a saved groove width already has the
+    -- clearance in it, and reading it as a thickness would add the clearance twice.
+    Run.BottomThickness = registry:GetDouble(SettingsKey("BottomThickness"), defaults.BottomThickness)
+    Run.GrooveClearance = registry:GetDouble(SettingsKey("GrooveClearance"), defaults.GrooveClearance)
     Run.GrooveDepth = registry:GetDouble(SettingsKey("GrooveDepth"), defaults.GrooveDepth)
     Run.Mode = registry:GetString(SettingsKey("Mode"), defaults.Mode)
     if Run.Mode ~= "Test Cut" and Run.Mode ~= "Chain" and Run.Mode ~= "Existing End" and Run.Mode ~= "Existing Back" then
@@ -220,7 +225,8 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("FingerClearance"), Run.FingerClearance)
     registry:SetBool(SettingsKey("GrooveOn"), Run.GrooveOn)
     registry:SetDouble(SettingsKey("GrooveInset"), Run.GrooveInset)
-    registry:SetDouble(SettingsKey("GrooveWidth"), Run.GrooveWidth)
+    registry:SetDouble(SettingsKey("BottomThickness"), Run.BottomThickness)
+    registry:SetDouble(SettingsKey("GrooveClearance"), Run.GrooveClearance)
     registry:SetDouble(SettingsKey("GrooveDepth"), Run.GrooveDepth)
     registry:SetString(SettingsKey("Mode"), Run.Mode)
     registry:SetBool(SettingsKey("EEToward"), Run.EEToward)

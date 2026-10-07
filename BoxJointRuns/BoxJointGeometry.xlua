@@ -1448,7 +1448,7 @@ function DrawFingerEnd(corner, dir_into, dir_across, phase, layer_name, between_
     -- pass-through would show as a hole behind the drawer.
     if between_pieces and phase == "Finger" and Run.GrooveOn and Run.GrooveSide == "Outside" then
         local near = Polar2D(corner, dir_across, Run.GrooveInset)
-        local far = Polar2D(corner, dir_across, Run.GrooveInset + Run.GrooveWidth)
+        local far = Polar2D(corner, dir_across, Run.GrooveInset + Run.BottomThickness + Run.GrooveClearance)
         local depth = Run.GrooveDepth + (Milling.FingerTool.ToolDia * 0.5)
         local slot = Contour(0.0)
         slot:AppendPoint(Polar2D(near, dir_into, -overshoot))
@@ -1478,15 +1478,16 @@ function DrawPieceOutline(origin, length, up_angle, layer_name)
 end
 -- =====================================================]]
 function DrawGroove(origin, length, up_angle, layer_name)
-    -- A through dado on the top face, Run.GrooveInset from the bottom edge, running the full length plus the
-    -- dado bit radius at each end, as on a Blum back (BlumDrawerTools.xlua:1643-1673, simplified: Box Joint Runs
-    -- has no back rabbet to combine it with, so this is a plain rectangle, not Blum's T-shaped vector).
+    -- A through dado on the top face, Run.GrooveInset from the bottom edge and the bottom thickness plus
+    -- Run.GrooveClearance wide, running the full length plus the dado bit radius at each end, as on a Blum back
+    -- (BlumDrawerTools.xlua:1643-1673, simplified: Box Joint Runs has no back rabbet to combine it with, so this
+    -- is a plain rectangle, not Blum's T-shaped vector).
     if not Run.GrooveOn then
         return true
     end
     local radius = Milling.DadoTool.ToolDia * 0.5
     local near = Polar2D(origin, up_angle, Run.GrooveInset)
-    local far = Polar2D(origin, up_angle, Run.GrooveInset + Run.GrooveWidth)
+    local far = Polar2D(origin, up_angle, Run.GrooveInset + Run.BottomThickness + Run.GrooveClearance)
     local p1 = Polar2D(near, 180.0, radius)
     local p2 = Polar2D(far, 180.0, radius)
     local p3 = Polar2D(p2, 0.0, length + (radius * 2.0))
