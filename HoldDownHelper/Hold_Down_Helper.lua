@@ -14,9 +14,9 @@
 -- Hold Down Helper is an original gadget from the vectric-gadgets repository, https://github.com/tippmar/vectric-gadgets
 -- ====================================================================================================================================
 -- Hold Down Helper: finds places on the active sheet where a screw or nail can be driven into the spoilboard
--- without being hit by a cutter later, marks each one, and creates a drilling toolpath that dimples them with
--- a V-bit. Run that toolpath on its own, drive the fasteners at the dimples, then run the real job WITHOUT
--- re-zeroing -- the dimples are in job coordinates, so a re-zero invalidates every one of them.
+-- without being hit by a cutter later, marks each one, and creates a drilling toolpath that countersinks them with
+-- a V-bit. Run that toolpath on its own, drive the fasteners at the countersinks, then run the real job WITHOUT
+-- re-zeroing -- the countersinks are in job coordinates, so a re-zero invalidates every one of them.
 ]] -- =====================================================]]
 require "strict"
 -- Resolved against VCarve Pro V12.5 by the Task 2 probe on 2026-09-22. The SDK PDF does not document
@@ -46,7 +46,9 @@ HoldDown = {}
 HoldDown.ProgramVersion = "1.0"
 HoldDown.RegName = "HoldDownHelper" .. HoldDown.ProgramVersion
 HoldDown.LayerName = "Hold Down"
-HoldDown.ToolpathName = "Hold Down Dimples"
+HoldDown.ToolpathName = "Hold Down Countersinks"
+-- The name before countersinks. A re-run deletes it too, so an older job never keeps both.
+HoldDown.OldToolpathName = "Hold Down Dimples"
 HoldDown.job = nil
 HoldDown.Cal = 1.0
 HoldDown.InMM = false
@@ -191,7 +193,7 @@ local IMPERIAL_DEFAULTS = {
     PerimeterSpacing = 16.0,
     FieldCount = 4,
     MaxSearch = 3.0,
-    DimpleDepth = 0.1,
+    CountersinkClearance = 0.02,
     MarkerDiameter = 0.125,
     SafeZGap = 0.25
 }
@@ -203,7 +205,7 @@ local METRIC_DEFAULTS = {
     PerimeterSpacing = 406.4,
     FieldCount = 4,
     MaxSearch = 76.2,
-    DimpleDepth = 2.5,
+    CountersinkClearance = 0.5,
     MarkerDiameter = 3.0,
     SafeZGap = 6.0
 }
@@ -223,7 +225,7 @@ function SettingsKey(name)
 end
 -- =====================================================]]
 function ToolRead()
-    -- The last V-bit chosen, restored as a plain table carrying the fields CreateDimpleToolpath copies
+    -- The last V-bit chosen, restored as a plain table carrying the fields CreateCountersinkToolpath copies
     local registry = Registry(HoldDown.RegName)
     local name = registry:GetString(SettingsKey("Tool.Name"), "Tool Not Selected")
     if name == "Tool Not Selected" then
@@ -274,7 +276,7 @@ function SettingsRead()
     HoldDown.PerimeterSpacing = registry:GetDouble(SettingsKey("PerimeterSpacing"), defaults.PerimeterSpacing)
     HoldDown.FieldCount = registry:GetInt(SettingsKey("FieldCount"), defaults.FieldCount)
     HoldDown.MaxSearch = registry:GetDouble(SettingsKey("MaxSearch"), defaults.MaxSearch)
-    HoldDown.DimpleDepth = registry:GetDouble(SettingsKey("DimpleDepth"), defaults.DimpleDepth)
+    HoldDown.CountersinkClearance = registry:GetDouble(SettingsKey("CountersinkClearance"), defaults.CountersinkClearance)
     HoldDown.MarkerDiameter = registry:GetDouble(SettingsKey("MarkerDiameter"), defaults.MarkerDiameter)
     HoldDown.SafeZGap = registry:GetDouble(SettingsKey("SafeZGap"), defaults.SafeZGap)
     ToolRead()
@@ -289,7 +291,7 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("PerimeterSpacing"), HoldDown.PerimeterSpacing)
     registry:SetInt(SettingsKey("FieldCount"), HoldDown.FieldCount)
     registry:SetDouble(SettingsKey("MaxSearch"), HoldDown.MaxSearch)
-    registry:SetDouble(SettingsKey("DimpleDepth"), HoldDown.DimpleDepth)
+    registry:SetDouble(SettingsKey("CountersinkClearance"), HoldDown.CountersinkClearance)
     registry:SetDouble(SettingsKey("MarkerDiameter"), HoldDown.MarkerDiameter)
     registry:SetDouble(SettingsKey("SafeZGap"), HoldDown.SafeZGap)
     ToolWrite()
@@ -300,6 +302,16 @@ function ClearanceRadius()
     -- center a half-diameter outside the vector, so its far edge reaches a FULL diameter beyond it; R
     -- must cover that, not half of it. At the imperial defaults this is 0.5".
     return HoldDown.ToolDiameter + (HoldDown.HeadDiameter * 0.5) + HoldDown.Margin
+end
+-- =====================================================]]
+function CountersinkDiameter()
+    return HoldDown.HeadDiameter + HoldDown.CountersinkClearance
+end
+-- =====================================================]]
+function CountersinkDepth()
+    -- A V-bit of included angle A is 2 d tan(A/2) wide at depth d, so the countersink opens to its full
+    -- diameter at half that diameter over tan(A/2): at 90 degrees, depth is half the diameter.
+    return (CountersinkDiameter() * 0.5) / math.tan(math.rad(HoldDown.Tool.VBit_Angle * 0.5))
 end
 -- =====================================================]]
 function SettingsHtml()
@@ -314,7 +326,7 @@ td.unit { color: #666666; }
 .buttons { text-align: right; margin-top: 8px; }
 </style></head><body>
 <table>
-<tr><td class="label"><label title="The V-bit that cuts the dimples">V-Bit:</label></td>
+<tr><td class="label"><label title="The V-bit that cuts the countersinks. Its angle sets how deep each one is cut">V-Bit:</label></td>
     <td bgcolor="#33FFFF"><span id="ToolNameLabel">-</span></td>
     <td><input id="ToolChooseButton" class="ToolPicker" type="button" value="Tool"></td></tr>
 <tr><td class="label"><label title="Largest cutter used anywhere in the job">Assumed tool diameter:</label></td>
@@ -331,11 +343,11 @@ td.unit { color: #666666; }
     <td><input type="text" id="FieldCount" size="10" maxlength="10" /></td><td class="unit">&nbsp;</td></tr>
 <tr><td class="label"><label title="How far a rejected position may move looking for a safe one">Max nudge search:</label></td>
     <td><input type="text" id="MaxSearch" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="How deep the V-bit cuts each dimple">Dimple depth:</label></td>
-    <td><input type="text" id="DimpleDepth" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="How much wider than the screw head each countersink is cut. The depth follows from this and the V-bit angle">Countersink clearance:</label></td>
+    <td><input type="text" id="CountersinkClearance" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="Size of the marker circle drawn per position">Marker diameter:</label></td>
     <td><input type="text" id="MarkerDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Height above the sheet for moves between dimples. An unfastened sheet may not lie flat, so leave room">Safe Z gap:</label></td>
+<tr><td class="label"><label title="Height above the sheet for moves between countersinks. An unfastened sheet may not lie flat, so leave room">Safe Z gap:</label></td>
     <td><input type="text" id="SafeZGap" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 </table>
 <div class="note"><b>Type values, do not paste them.</b> VCarve discards a pasted value unless you type it
@@ -358,7 +370,7 @@ function ShowSettingsDialog()
     dialog:AddDoubleField("PerimeterSpacing", HoldDown.PerimeterSpacing)
     dialog:AddIntegerField("FieldCount", HoldDown.FieldCount)
     dialog:AddDoubleField("MaxSearch", HoldDown.MaxSearch)
-    dialog:AddDoubleField("DimpleDepth", HoldDown.DimpleDepth)
+    dialog:AddDoubleField("CountersinkClearance", HoldDown.CountersinkClearance)
     dialog:AddDoubleField("MarkerDiameter", HoldDown.MarkerDiameter)
     dialog:AddDoubleField("SafeZGap", HoldDown.SafeZGap)
     if not dialog:ShowDialog() then
@@ -375,7 +387,7 @@ function ShowSettingsDialog()
     HoldDown.PerimeterSpacing = math.abs(dialog:GetDoubleField("PerimeterSpacing"))
     HoldDown.FieldCount = math.abs(dialog:GetIntegerField("FieldCount"))
     HoldDown.MaxSearch = math.abs(dialog:GetDoubleField("MaxSearch"))
-    HoldDown.DimpleDepth = math.abs(dialog:GetDoubleField("DimpleDepth"))
+    HoldDown.CountersinkClearance = math.abs(dialog:GetDoubleField("CountersinkClearance"))
     HoldDown.MarkerDiameter = math.abs(dialog:GetDoubleField("MarkerDiameter"))
     HoldDown.SafeZGap = math.abs(dialog:GetDoubleField("SafeZGap"))
     return true
@@ -397,7 +409,7 @@ function ValidateSettings()
     if HoldDown.MarkerDiameter <= 0.0 then
         return "Marker diameter must be greater than zero."
     end
-    -- The sheet is not fastened yet when the dimples are cut, so it may not lie flat. The cap keeps a
+    -- The sheet is not fastened yet when the countersinks are cut, so it may not lie flat. The cap keeps a
     -- typo from sending a rapid into the machine's Z soft limit.
     local max_safe_z = 1.0 * HoldDown.Cal
     if HoldDown.SafeZGap <= 0.0 or HoldDown.SafeZGap > max_safe_z then
@@ -421,9 +433,23 @@ function ValidateSettings()
             HoldDown.UnitLabel .. " (100 x R)."
     end
     local thickness = MaterialBlock().Thickness
-    if HoldDown.DimpleDepth <= 0.0 or HoldDown.DimpleDepth >= thickness then
-        return "Dimple depth must be greater than zero and less than the material thickness (" ..
-            string.format("%.4f", thickness) .. " " .. HoldDown.UnitLabel .. ")."
+    local angle = HoldDown.Tool.VBit_Angle
+    if angle == nil or angle <= 0.0 or angle >= 180.0 then
+        return "The V-bit's angle must be greater than 0 and less than 180 degrees."
+    end
+    if CountersinkDiameter() <= 0.0 then
+        return "Screw head diameter and countersink clearance cannot both be zero."
+    end
+    -- Past its diameter a V-bit cuts a straight-walled hole, not a cone, so the countersink cannot be wider.
+    if CountersinkDiameter() > HoldDown.Tool.ToolDia then
+        return "The countersink (screw head diameter + clearance, " .. string.format("%.4f", CountersinkDiameter()) ..
+            " " .. HoldDown.UnitLabel .. ") is wider than the V-bit (" ..
+            string.format("%.4f", HoldDown.Tool.ToolDia) .. " " .. HoldDown.UnitLabel .. ").\n\nChoose a wider V-bit."
+    end
+    if CountersinkDepth() >= thickness then
+        return "The countersink would be " .. string.format("%.4f", CountersinkDepth()) .. " " .. HoldDown.UnitLabel ..
+            " deep, which is not less than the material thickness (" .. string.format("%.4f", thickness) .. " " ..
+            HoldDown.UnitLabel .. ")."
     end
     return nil
 end
@@ -840,7 +866,7 @@ function RejectedList(rejected)
     return text
 end
 -- =====================================================]]
-function DeleteDimpleToolpath()
+function DeleteCountersinkToolpath()
     -- Re-running rebuilds rather than accumulates. Walks from the tail because the toolpath being
     -- looked for is the most recently created one; Find(UUID) fails overload resolution in V12.5.
     local toolpath_manager = ToolpathManager()
@@ -850,7 +876,8 @@ function DeleteDimpleToolpath()
     while pos ~= nil do
         local toolpath
         toolpath, pos = toolpath_manager:GetPrev(pos)
-        if toolpath ~= nil and toolpath.Name == HoldDown.ToolpathName and IdKey(toolpath.SheetId) == sheet_key then
+        if toolpath ~= nil and (toolpath.Name == HoldDown.ToolpathName or toolpath.Name == HoldDown.OldToolpathName) and
+            IdKey(toolpath.SheetId) == sheet_key then
             table.insert(doomed, toolpath)
         end
     end
@@ -893,7 +920,7 @@ function SelectHoldDownMarkers()
     return selected
 end
 -- =====================================================]]
-function CreateDimpleToolpath()
+function CreateCountersinkToolpath()
     if not SelectHoldDownMarkers() then
         return false
     end
@@ -926,7 +953,7 @@ function CreateDimpleToolpath()
 
     local drill_data = DrillParameterData()
     drill_data.StartDepth = 0.0
-    drill_data.CutDepth = HoldDown.DimpleDepth
+    drill_data.CutDepth = CountersinkDepth()
     drill_data.DoPeckDrill = false
     drill_data.PeckRetractGap = 0.0
     drill_data.ProjectToolpath = false
@@ -1040,8 +1067,8 @@ function main(script_path)
     for _, position in ipairs(placed) do
         DrawMarker(layer, position.x, position.y)
     end
-    local toolpath_deleted, toolpath_found = DeleteDimpleToolpath()
-    local toolpath_made = CreateDimpleToolpath()
+    local toolpath_deleted, toolpath_found = DeleteCountersinkToolpath()
+    local toolpath_made = CreateCountersinkToolpath()
     -- The toolpath needed the markers selected; left selected, VCarve draws a direction arrow larger than each marker
     HoldDown.job.Selection:Clear()
     RestoreActiveLayer(original_layer)
@@ -1054,7 +1081,9 @@ function main(script_path)
     local message = "Hold Down Helper\n\nMarked " .. #placed .. " position(s) on layer '" .. HoldDown.LayerName .. "'," ..
         " each at least " .. string.format("%.4f", radius) .. " " .. HoldDown.UnitLabel .. " (R) " .. vector_clause
     if toolpath_made then
-        message = message .. "\nCreated the '" .. HoldDown.ToolpathName .. "' toolpath."
+        message = message .. "\nCreated the '" .. HoldDown.ToolpathName .. "' toolpath: each countersink " ..
+            string.format("%.4f", CountersinkDiameter()) .. " " .. HoldDown.UnitLabel .. " wide and " ..
+            string.format("%.4f", CountersinkDepth()) .. " " .. HoldDown.UnitLabel .. " deep."
     end
     if toolpath_deleted < toolpath_found then
         message = message .. "\nAn earlier '" .. HoldDown.ToolpathName .. "' toolpath could not be deleted " ..
@@ -1070,16 +1099,16 @@ function main(script_path)
     message = message .. "\n\nLook at the marked positions before you drill. This gadget keeps every fastener " ..
         "clear of every vector, but it cannot tell whether the material under one comes free during the job. " ..
         "A screw in a piece that is cut loose is worse than no screw at all." ..
-        "\n\nDO NOT RE-ZERO between drilling the dimples and running the job. "
+        "\n\nDO NOT RE-ZERO between cutting the countersinks and running the job. "
     if toolpath_made then
         message = message .. "Zero X and Y, run only '" .. HoldDown.ToolpathName ..
-            "', drive the screws at the dimples, then run the job toolpaths WITHOUT re-zeroing."
+            "', drive the screws at the countersinks, then run the job toolpaths WITHOUT re-zeroing."
     else
         message = message .. "Zero X and Y, create a drilling toolpath over the '" .. HoldDown.LayerName ..
-            "' layer by hand, run only that toolpath, drive the screws at the dimples, then run the job " ..
+            "' layer by hand, run only that toolpath, drive the screws at the countersinks, then run the job " ..
             "toolpaths WITHOUT re-zeroing."
     end
-    message = message .. " The dimples are in job coordinates; re-zeroing invalidates every one of them."
+    message = message .. " The countersinks are in job coordinates; re-zeroing invalidates every one of them."
     MessageBox(message)
     return true
 end

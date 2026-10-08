@@ -6,7 +6,7 @@ Gadgets for use with Vectric CNC software, developed and tested against **VCarve
 |---|---|---|
 | Blum Drawer Maker | [`BlumDrawerMaker/`](BlumDrawerMaker/) | Designs drawer boxes for Blum under-mount slides: draws the parts and creates their toolpaths. |
 | Blum Nesting Repair | [`BlumNestingRepair/`](BlumNestingRepair/) | Run after nesting to fix toolpaths that nesting left behind on the wrong sheets. |
-| Hold Down Helper | [`HoldDownHelper/`](HoldDownHelper/) | Finds places to screw a sheet to the spoilboard where no cutter will reach, and dimples them with a V-bit. |
+| Hold Down Helper | [`HoldDownHelper/`](HoldDownHelper/) | Finds places to screw a sheet to the spoilboard where no cutter will reach, and countersinks them with a V-bit. |
 
 The two are meant to be used in sequence: build drawers with Blum Drawer Maker, nest the job, then run Blum Nesting Repair to put the toolpaths back in order.
 
@@ -46,18 +46,18 @@ Screwing a full sheet to the spoilboard means guessing where a fastener will not
 Getting it wrong destroys a bit, the part, or both, and nothing tells you until the cut reaches the screw.
 
 This gadget finds positions on the active sheet that are clear of everything being cut, marks each one with a
-circle on a `Hold Down` layer, and creates a single `Hold Down Dimples` drilling toolpath over those markers.
+circle on a `Hold Down` layer, and creates a single `Hold Down Countersinks` drilling toolpath over those markers.
 The **Help** button in its dialog covers every setting, how to read the result, and the gotchas below.
 
 The workflow it supports:
 
 1. Lay the sheet on the spoilboard and align it approximately.
 2. Zero X and Y.
-3. Run **only** the toolpath this gadget produces, with a V-bit. It marks shallow dimples.
-4. Drive screws at the dimples.
+3. Run **only** the toolpath this gadget produces, with a V-bit. It cuts a countersink, sized to the screw head, at each position.
+4. Drive screws at the countersinks.
 5. Load and run the real job toolpaths, **without re-zeroing**.
 
-> **Step 5 is load bearing.** The dimples are in job coordinates, so re-zeroing between steps 3 and 5
+> **Step 5 is load bearing.** The countersinks are in job coordinates, so re-zeroing between steps 3 and 5
 > invalidates every one of them.
 
 A position is rejected if it falls inside any closed vector, or if it comes within `R` of any vector, where
@@ -81,7 +81,7 @@ to curves, are listed in a warning rather than silently ignored.
 
 Re-running replaces the active sheet's markers and toolpath rather than adding to them.
 
-The dimples are cut before the sheet is fastened, so it may not lie flat. Moves between dimples travel at the
+The countersinks are cut before the sheet is fastened, so it may not lie flat. Moves between countersinks travel at the
 **Safe Z gap** setting (default 0.25") above the sheet; raise it if the V-bit drags on a bowed sheet.
 
 What it does not do:
@@ -96,7 +96,7 @@ What it does not do:
 - **It does not model toolpath extras.** Lead-ins, ramps, overcuts and machining allowances can reach beyond
   `R`; raise the margin to cover them.
 - **It works on the active sheet only.** Re-running removes only the active sheet's markers and
-  `Hold Down Dimples` toolpath; markers and toolpaths on other sheets are left alone.
+  `Hold Down Countersinks` toolpath; markers and toolpaths on other sheets are left alone.
 
 Do not draw on the `Hold Down` layer: re-running removes everything on it for the active sheet.
 

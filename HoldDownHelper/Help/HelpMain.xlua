@@ -36,116 +36,153 @@ th { background-color: #EEEEEE; }
 <div class="layout">
 
 <h1>Hold Down Helper</h1>
-<p>Screwing a full sheet to the spoilboard means guessing where a fastener will not be hit by a cutter later.
-This gadget finds positions on the <b>active sheet</b> that are clear of everything being cut, marks each one
-with a small circle on a <b>Hold Down</b> layer, and creates one <b>Hold Down Dimples</b> drilling toolpath
-that marks each position with a shallow V-bit dimple.</p>
-
-<h2>The workflow</h2>
-<ol>
-<li>Draw and nest the job as usual, then run Hold Down Helper on the sheet you are about to cut.</li>
-<li>Lay the sheet on the spoilboard and align it approximately.</li>
-<li>Zero X and Y.</li>
-<li>Run <b>only</b> the <b>Hold Down Dimples</b> toolpath, with the V-bit you chose.</li>
-<li>Drive a screw at each dimple.</li>
-<li>Load and run the real job toolpaths <b>without re-zeroing</b>.</li>
-</ol>
-<div class="danger"><b>Do not re-zero between steps 4 and 6.</b> The dimples are in job coordinates. Re-zeroing
-X or Y moves every cut relative to the screws, and a cutter can then run straight into one.</div>
-
-<h2>Before you run it</h2>
+<p>Hold Down Helper finds safe screw positions on the <b>active sheet</b>. At a safe position, no cutter touches
+the screw during the job.</p>
+<p>The gadget does these tasks:</p>
 <ul>
-<li>Have a <b>V-bit</b> in the tool database, defined in the <b>same units as the job</b>. The gadget refuses a
-bit whose units do not match.</li>
-<li>Show every layer that will be cut. <b>Hidden layers are not tested</b>. That is deliberate: it is how you
-exclude part labels or construction lines. The completion message lists any hidden layers so a parts layer
-hidden by accident is noticed.</li>
-<li>Do not draw on the <b>Hold Down</b> layer. Re-running removes everything on it for the active sheet.</li>
+<li>It draws a small circle (a marker) at each safe position, on the <b>Hold Down</b> layer.</li>
+<li>It makes one drilling toolpath, <b>Hold Down Countersinks</b>. This toolpath cuts a countersink at each marker
+with a V-bit.</li>
+</ul>
+<p>Each countersink is a little wider than the screw head. Thus, the top of the screw head is below the surface of
+the sheet.</p>
+
+<h2>Procedure</h2>
+<ol>
+<li>Draw and nest the job.</li>
+<li>Make the sheet that you will cut next the active sheet.</li>
+<li>Run Hold Down Helper.</li>
+<li>Put the sheet on the spoilboard.</li>
+<li>Set the X and Y zero.</li>
+<li>Run <b>only</b> the <b>Hold Down Countersinks</b> toolpath. Use the V-bit that you selected in the gadget.</li>
+<li>Put a screw in each countersink.</li>
+<li>Run the job toolpaths.</li>
+</ol>
+<div class="danger"><b>WARNING:</b> Do not set the X or Y zero again after step 5. The countersinks are in job
+coordinates. If you change the zero, all cuts move, but the screws do not move. A cutter can then hit a screw.</div>
+
+<h2>Before you start</h2>
+<ul>
+<li>Make sure that the tool database has a <b>V-bit</b>. The units of the V-bit must be the <b>same as the job
+units</b>. If the units are different, the gadget shows an error.</li>
+<li>Show all layers that the job cuts. The gadget <b>does not examine hidden layers</b>. Hide a layer when you
+want the gadget to ignore it, for example a layer with part labels or construction lines. The message at the end
+shows the names of the hidden layers. Make sure that you did not hide a layer with parts on it.</li>
+<li>Do not draw on the <b>Hold Down</b> layer. Each run deletes all objects on this layer on the active
+sheet.</li>
 </ul>
 
 <h2>Settings</h2>
-<p>All values are in the job's units. They are remembered between runs, separately for inch and metric jobs.
-<b>Type each value and tab out of the field</b>. VCarve discards a pasted value.</p>
+<p>All values are in the job units. The gadget keeps the values for the next run. It keeps one set of values for
+inch jobs and a different set for metric jobs.</p>
+<div class="warn"><b>CAUTION:</b> Type each value, then push the Tab key. VCarve does not keep a value that you
+paste.</div>
 <table>
-<tr><th>Setting</th><th>Inch default</th><th>mm default</th><th>What it does</th></tr>
-<tr><td>V-Bit</td><td colspan="2">none</td><td>The bit that cuts the dimples. Only V-bits are offered. The
-choice is remembered, as a snapshot: after editing the bit's feeds in the tool database, pick it again.</td></tr>
-<tr><td>Assumed tool diameter</td><td>0.25</td><td>6.0</td><td>The <b>largest</b> cutter used anywhere in the
-job. The whole sheet is tested as if that cutter ran everywhere.</td></tr>
-<tr><td>Screw head diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the fastener head.</td></tr>
-<tr><td>Margin</td><td>0.125</td><td>3.0</td><td>Extra clearance on top of the cutter and the head.</td></tr>
-<tr><td>Edge inset</td><td>1.25</td><td>32.0</td><td>How far in from the sheet edge the perimeter screws
-sit.</td></tr>
-<tr><td>Perimeter spacing target</td><td>16.0</td><td>406.4</td><td>The spacing aimed for along each edge. Each
-side gets at least 2 screws; a 48" side gets 3.</td></tr>
-<tr><td>Field count</td><td>4</td><td>4</td><td>Screws in the middle of the sheet, up to 36. Zero places
-perimeter screws only.</td></tr>
-<tr><td>Max nudge search</td><td>3.0</td><td>76.2</td><td>How far a rejected position may move looking for a
-safe spot.</td></tr>
-<tr><td>Dimple depth</td><td>0.1</td><td>2.5</td><td>How deep the V-bit cuts. Must be less than the sheet
-thickness. A 90 degree bit at 0.1" leaves a dimple about 0.2" wide.</td></tr>
-<tr><td>Marker diameter</td><td>0.125</td><td>3.0</td><td>The size of the circle drawn at each position. It
-only gives the drilling toolpath something to drill at; the V-bit drills at its center.</td></tr>
-<tr><td>Safe Z gap</td><td>0.25</td><td>6.0</td><td>The height above the sheet for moves between dimples, up to
-1" (25.4 mm). The sheet is not fastened yet, so it may bow or rock; raise this if the bit drags.</td></tr>
+<tr><th>Setting</th><th>Inch default</th><th>mm default</th><th>Description</th></tr>
+<tr><td>V-Bit</td><td colspan="2">none</td><td>The bit that cuts the countersinks. The tool list shows only
+V-bits. The angle of the bit sets the depth of the countersinks. The diameter of the bit must be equal to or more
+than the countersink diameter. The gadget keeps a copy of the bit data. If you change the bit in the tool
+database, select the bit again.</td></tr>
+<tr><td>Assumed tool diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the <b>largest</b> cutter in the
+job. The gadget examines all vectors as if this cutter cuts each of them.</td></tr>
+<tr><td>Screw head diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the screw head.</td></tr>
+<tr><td>Margin</td><td>0.125</td><td>3.0</td><td>An additional distance between the cutter and the screw
+head.</td></tr>
+<tr><td>Edge inset</td><td>1.25</td><td>32.0</td><td>The distance from the sheet edge to the perimeter
+screws.</td></tr>
+<tr><td>Perimeter spacing target</td><td>16.0</td><td>406.4</td><td>The approximate distance between the screws
+along an edge. Each edge gets a minimum of 2 screws. For example, a 48" edge gets 3 screws.</td></tr>
+<tr><td>Field count</td><td>4</td><td>4</td><td>The number of screws in the center area of the sheet. The maximum
+is 36. Type 0 to put screws only along the edges.</td></tr>
+<tr><td>Max nudge search</td><td>3.0</td><td>76.2</td><td>The maximum distance that the gadget can move a
+position that is not safe.</td></tr>
+<tr><td>Countersink clearance</td><td>0.02</td><td>0.5</td><td>The countersink diameter minus the screw head
+diameter. The gadget calculates the depth from the countersink diameter and the angle of the V-bit:<br>
+depth = (countersink diameter / 2) / tan(V-bit angle / 2)<br>
+For example, a 0.25" screw head and a 90 degree V-bit give a countersink 0.27" wide and 0.135" deep. The depth must
+be less than the sheet thickness.<br>
+<b>NOTE:</b> Most US wood screws have an 82 degree head. In a countersink cut by a 90 degree V-bit, only the outer
+edge of the head touches the sheet. This is satisfactory for a hold-down screw.</td></tr>
+<tr><td>Marker diameter</td><td>0.125</td><td>3.0</td><td>The diameter of the circle at each position. The drilling
+toolpath needs a vector at each position. The V-bit drills at the center of the circle. This value has no effect
+on the countersink.</td></tr>
+<tr><td>Safe Z gap</td><td>0.25</td><td>6.0</td><td>The height of the bit above the sheet when the bit moves from
+one countersink to the next. The maximum is 1" (25.4 mm). The screws are not in the sheet yet, so the sheet can
+bend or move. If the bit touches the sheet during these moves, increase this value.</td></tr>
 </table>
 
-<h2>How a position is judged safe</h2>
-<p>A position is rejected if it is <b>inside</b> any closed vector (never through a part), or closer than
-<b>R</b> to any vector, where</p>
-<p style="margin-left: 20px;"><b>R = assumed tool diameter + half the screw head diameter + margin</b>
-&nbsp;(0.5" at the inch defaults)</p>
-<p>The <b>full</b> tool diameter is used, not half of it, because an outside profile runs the cutter beside the
-vector: its far edge reaches a whole diameter beyond the line.</p>
-<p>Positions must also keep half a screw head away from the sheet edge.</p>
-
-<h2>Where it tries to put screws</h2>
+<h2>How the gadget finds a safe position</h2>
+<p>The gadget rejects a position if one of these conditions is true:</p>
 <ul>
-<li><b>Perimeter:</b> evenly spaced along each edge at the edge inset, never in a corner.</li>
-<li><b>Field:</b> a grid in the middle half of the sheet. 4 makes a 2 x 2 grid, 6 a 2 x 3.</li>
-<li><b>Nudging:</b> a rejected <b>perimeter</b> position slides along its own edge, a step at a time in either
-direction, and <b>never moves inward</b>: a screw that wandered into the field would no longer hold the edge
-down. A rejected <b>field</b> position searches outward in rings.</li>
-<li>A position with nowhere safe within the max nudge search is <b>reported, not placed</b>.</li>
+<li>The position is <b>inside</b> a closed vector. Thus, a screw never goes through a part.</li>
+<li>The distance from the position to a vector is less than <b>R</b>.</li>
+<li>The distance from the position to the sheet edge is less than half of the screw head diameter.</li>
+</ul>
+<p style="margin-left: 20px;"><b>R = assumed tool diameter + (screw head diameter / 2) + margin</b><br>
+With the inch defaults, R is 0.5".</p>
+<p>R uses the <b>full</b> tool diameter, not the radius. An outside profile moves the cutter beside the vector.
+Thus, the far edge of the cutter is one full diameter from the vector.</p>
+
+<h2>Where the gadget puts the screws</h2>
+<ul>
+<li><b>Perimeter screws:</b> The gadget divides each edge into equal lengths. It puts a screw at the center of each
+length, at the edge inset distance from the edge. It does not put a screw in a corner.</li>
+<li><b>Field screws:</b> The gadget puts these screws in a grid in the center area of the sheet. The center area
+is half of the sheet width and half of the sheet length. For example, 4 screws make a 2 x 2 grid, and 6 screws make
+a 2 x 3 grid.</li>
+<li>If a perimeter position is not safe, the gadget moves it along its edge. It moves the position in steps of
+R / 2, to one side and then to the other side. It <b>does not move the position toward the center</b> of the sheet,
+because a screw away from the edge does not hold the edge down.</li>
+<li>If a field position is not safe, the gadget moves it outward in rings until the position is safe.</li>
+<li>If the gadget cannot find a safe position within the max nudge search distance, it <b>does not put a screw
+there</b>. The message at the end shows that position.</li>
 </ul>
 
-<h2>Reading the result</h2>
+<h2>The message at the end</h2>
 <ul>
-<li>The message states the <b>R</b> in use. If far more positions are rejected than you expect, check R first.
-A test value left in the dialog, such as a large margin, is remembered and quietly shrinks the usable area.</li>
-<li>Each position it could not place is listed with the <b>layer and extent of the vector that blocked it</b>,
-or "too close to the sheet edge".</li>
-<li>A <b>NOTE</b> lists objects with no vector outline, such as text that has not been converted to curves.
-Positions are kept clear of each one's bounding box instead. Anything marked <b>NOT TESTED</b> could not even
-be bounded and was ignored, so look at those areas yourself.</li>
-<li>If every position is rejected, nothing is drawn and nothing is deleted. Markers and a toolpath from an
-earlier run stay in place and may no longer be safe: delete them before cutting.</li>
+<li>The message shows the value of <b>R</b>. If the gadget rejects more positions than you expect, examine R
+first. The gadget keeps the values from the last run. A large test value, for example a large margin, decreases
+the area for screws.</li>
+<li>For each position that the gadget rejects, the message shows the <b>layer and the extents of the vector</b>
+that is too near. Or, it shows "too close to the sheet edge".</li>
+<li>A <b>NOTE</b> shows the objects that have no vector outline, for example text that is not converted to curves.
+The gadget keeps the positions away from the bounding box of each of these objects. An object marked <b>NOT
+TESTED</b> has no bounding box, so the gadget ignores it. Examine these areas yourself.</li>
+<li>If the gadget rejects all positions, it does not draw or delete objects. The markers and the toolpath from the
+last run stay in the job, and they can be unsafe. Delete them before you cut.</li>
 </ul>
 
-<h2>Re-running</h2>
-<p>Each run that places at least one position removes the active sheet's markers and its Hold Down Dimples
-toolpath, then builds new ones, so changed settings replace the old dimples rather than adding to them.
-Pressing Cancel changes nothing. Other sheets are never touched. Dimples already cut into a sheet stay there, of
-course: drive screws only at the dimples from the latest run.</p>
+<h2>Run the gadget again</h2>
+<p>When the gadget finds one or more safe positions, it deletes the markers and the Hold Down Countersinks toolpath
+on the active sheet. Then it makes new markers and a new toolpath. Thus, new settings replace the old
+countersinks.</p>
+<p>The gadget does not change other sheets. If you click Cancel, the gadget makes no changes.</p>
+<p>Countersinks that you cut stay in the sheet. Put screws only in the countersinks from the last run.</p>
+<p>Earlier versions of the gadget made a toolpath with the name Hold Down Dimples. The gadget also deletes this
+toolpath on the active sheet.</p>
 
-<h2>Gotchas</h2>
+<h2>Limits</h2>
 <ul>
-<li><b>Edge inset versus your nesting margin.</b> If parts are nested close to the sheet edge, the perimeter
-positions land on or near them and are rejected all along that edge. Lower the edge inset so the screws sit in
-the strip between the parts and the sheet edge. With the defaults, that strip must be wider than the inset plus
+<li><b>Edge inset and parts near the edge.</b> If parts are near the sheet edge, the perimeter positions are near
+the parts. Then the gadget rejects all positions along that edge. Decrease the edge inset to put the screws between
+the parts and the sheet edge. The distance from the sheet edge to the parts must be more than the edge inset +
 R.</li>
-<li><b>Waste islands are not detected.</b> Clearance from every vector does not prove the material under a
-screw stays attached to the sheet. A region fully enclosed by cuts comes free during the job, and a screw in it
-releases a loose piece under a spinning cutter. <b>Look at the positions before you drill.</b></li>
-<li><b>One tool diameter for the whole sheet.</b> A job mixing a 1/8" and a 1/4" bit is tested as though the
-1/4" ran everywhere. That costs usable area but never errs toward danger.</li>
-<li><b>Toolpaths are not read.</b> The test uses vectors. A vector with no toolpath still blocks placement, and
-a toolpath whose vector was deleted does not.</li>
-<li><b>Toolpath extras are not modeled.</b> Lead-ins, ramps, overcuts and machining allowances can reach beyond
-R. Raise the margin to cover them.</li>
-<li><b>Active sheet only.</b> Run it once per sheet, on the sheet you are about to cut.</li>
-<li><b>Small sheets.</b> The gadget is meant for full sheets and warns below 24 x 24 inches (610 x 610 mm), but
-carries on.</li>
+<li><b>The gadget does not find loose waste.</b> A position can be far from all vectors but on a piece of waste
+that the job cuts free.</li>
+</ul>
+<div class="danger"><b>WARNING:</b> Examine all positions before you cut the countersinks. A screw in a piece that
+the job cuts free does not hold the sheet. The loose piece can turn around the screw and hit the cutter. The cutter
+can throw the piece.</div>
+<ul>
+<li><b>One tool diameter for all of the sheet.</b> If a job uses a 1/8" bit and a 1/4" bit, the gadget examines
+all vectors as if the 1/4" bit cuts them. This decreases the area for screws, but it is always safe.</li>
+<li><b>The gadget does not read toolpaths.</b> It examines only vectors. A vector without a toolpath blocks a
+position. A toolpath whose vector you deleted does not block a position.</li>
+<li><b>The gadget does not include toolpath extras.</b> Lead-ins, ramps, overcuts and machining allowances can go
+farther than R. Increase the margin to include them.</li>
+<li><b>Active sheet only.</b> Run the gadget one time for each sheet, before you cut that sheet.</li>
+<li><b>Small sheets.</b> The gadget is for full sheets. If the sheet is smaller than 24 x 24 inches (610 x 610 mm),
+the gadget shows a warning and then continues.</li>
 </ul>
 
 <h2>About</h2>
