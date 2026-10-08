@@ -25,23 +25,31 @@
     DialogWindow.Help05 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
     <body>
     <div class="layout">
-      <!-- Header -->
+    <div>
       <div class="helpframe">
         <div class="h3-lP"><label>Import Menu Help</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/Import.png"  alt="Import Job Setting Menu" width="600"></div>
-        <div class="h2-lP"><label>General Overview</label></div>
-        <div class="h1-help"><p>The import tool allows the user to select a previous job design criteria and reset the current
-        system to the previous jobs design. The export file is automatically created each time the gadget is ran and is located
-        in the project directory with the Bill of Material files</p>
+                              [[/Help/Images/Import.png"  alt="Import Menu" width="600"></div>
+        <div class="h2-lP"><label>Import</label></div>
+        <div class="h1-help">
+          <p>Use the Import menu to load the settings of an earlier job. Each time the gadget runs, it writes an export
+          file (.lua) to the project path folder. The cut list files are in the same folder.</p>
+          <ol>
+            <li>On the Main Menu, click <strong>Import</strong>.</li>
+            <li>Click <strong>File</strong>.</li>
+            <li>Select the export file of the earlier job.</li>
+            <li>Click <strong>Import</strong>.</li>
+          </ol>
+          <p>The gadget changes all settings to the values in the file.</p>
+        </div>
       </div>
       <div><hr /></div>
       <div class="helpframe">
         <div class="h2-lP"><label>Export File</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/Box-Settings.png"  alt="Project Setup" width="600"></div>
-        <div class="h2-lP"><label>Overview</label></div>
-        <p class="h1-help">The Export document contains all of the settings the gadget needs to replicate the box design.</p>
+                              [[/Help/Images/Box-Settings.png"  alt="Export File" width="600"></div>
+        <p class="h1-help">The export file contains all settings that the gadget needs to make the same drawer
+        again.</p>
       </div>
       <div><hr /></div>
       <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..

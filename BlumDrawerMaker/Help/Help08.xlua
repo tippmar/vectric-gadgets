@@ -27,27 +27,29 @@ function HTMLHelp08()
   <body>
     <div class="layout">
       <label class="h3-lP">General Overview</label>
-        <p class="h2-help-w">For success, it is imperative to become familiarized with all the different aspects of the Blum Drawer Maker gadget.
-                             Do not hesitate to experiment with the default settings, the gadget is equipped with a builtin factory reset
-                             function. The reset button is located on the About Page. Click the Restart Gadget button and all settings will be reset
-                             back to the original default settings.</p>
-        <p class="h2-help-w">Once familiarized with the gadget and the settings, proceed to creating a drawer design of your own.
-                             Having a particular drawer design style in mind helps with assigning tooling for toolpaths for the milling operation.
-                             A good place to start is in the <strong>Milling Settings</strong> dialogue where the Default Bits, Clearances, Drawer Slide (Yes/No),
-                             Joint and Bottom Styles for the Drawer are configured.</p>
-        <p class="h2-help-w">Next is assigning tooling for toolpaths for the milling operation. To select tooling from the tool database, begin by pressing the
-                             <strong>'Tool'</strong> button adjacent the tool name lable. <strong>Note:</strong> A toolpath will <strong>NOT</strong>
-                              be created if <strong>Tool Not Selected</strong> is displayed. To unselected a tool, use the <strong>'X'</strong> button to the right of
-                              the Tool button to clear the tool name label and/or select another tool.</p>
-        <p class="h2-help-w">Next, select Project Setup to Setup a Save Path for the gadget created files to be saved. Also add any contact information that
-                            may be required for the drawer creation. Now Select the <strong>Run</strong> button to create the drawer based on the inputed design. When the
-                            gadget has completed. The drawing will deplay the drawer parts in the Drawing Window.</p>
-        <p class="h2-help-w"><strong>Note:</strong> After the Drawer Design Vectors have been drawn, a popup menu will be display, it will provide guidance to correctly
-                                                    adjust for varying material thicknesses. On the <strong>'Sheets Tab'</strong> to match the drawing note on Material
-                                                    Thhickness to the Sheet Thickness.</p>
-       <p class="h2-help-w">"We hope you find value in using the Blum Drawer Maker gadget with the multiple design capabilities in the various Joint and Bottom Styles"</p>
-
-
+        <p class="h2-help-w">Learn all parts of the gadget before you make your first drawer. You can change the default
+                             settings to try them. To set all settings back to the factory defaults, click
+                             <strong>Gadget Reset</strong> on the About menu. Gadget Reset sets only the settings for the
+                             units of the current job.</p>
+        <p class="h2-help-w"><strong>Procedure</strong></p>
+        <ol class="h2-help-w">
+          <li>On the Main Menu, click <strong>Milling</strong>.</li>
+          <li>Set the default bit diameters, the joint fit values, the joint style and the bottom style.</li>
+          <li>Click <strong>OK</strong>.</li>
+          <li>On the Main Menu, click the <strong>Tool</strong> button next to each bit name. Select a bit from the
+              tool database.</li>
+          <li>Click <strong>Project</strong>.</li>
+          <li>Set the project path. The gadget saves its files in this folder.</li>
+          <li>Enter the project name and the contact data. Click <strong>OK</strong>.</li>
+          <li>Enter the drawer opening dimensions, the slide length and the material thicknesses.</li>
+          <li>Click <strong>Run</strong>.</li>
+        </ol>
+        <p class="h2-help-w"><strong>NOTE:</strong> The gadget does not make a toolpath for a bit that shows
+                             <strong>Tool Not Selected</strong>. To clear a bit, click the <strong>X</strong> button
+                             next to the bit name.</p>
+        <p class="h2-help-w"><strong>NOTE:</strong> After the gadget draws the parts, it shows a message. The message
+                             tells you how to set the thickness of each sheet on the <strong>Sheets</strong> tab. Make
+                             each sheet thickness the same as the material thickness in the drawing note.</p>
       <div><hr /></div>
       <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
                               [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>

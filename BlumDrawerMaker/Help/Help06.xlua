@@ -25,60 +25,52 @@
     DialogWindow.Help06 = [[<!DOCTYPE html><html lang="en"><head><title>Help</title></head> ]] .. Style03() .. [[
     <body>
     <div class="layout">
-      <!-- Header -->
+    <div>
       <div class="helpframe">
         <div class="h3-lP"><label>Bill of Materials Help</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
                               [[/Help/Images/BOM_Main.png"  alt="Bill of Materials" width="600"></div>
         <div class="h2-lP"><label>General Overview</label></div>
-        <p class="h1-help">The gadget produces three file format of the bill of material.</p>
-          <ul>
-            <li class="h1-help">CSV File Format</li>
-            <li class="h1-help">DAT File Format</li>
-            <li class="h1-help">HTML File Format</li>
-            <li class="h1-help">LUA File Format</li>
-          </ul>
-          <p class="h1-help">Each of the Bill of Materials contains information regarding to the number of parts and the
-                             dimensions to create a box based on the design inputs.</p>
-        </div>
-        <div><hr /></div>
-      <div class="helpframe">
-      <div class="h3-lP"><label>CSV File Format</label></div>
-        <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/csv_Spreadsheet_File.png"  alt="CSV Spreadsheet File" width="600"></div>
-        <div class="h1-help"><p>The CSV file format is used to import into an Excel style worksheet. This feature can be very beneficial
-                                when working with large numbers of different size parts and where the user may need to calculate total
-                                material usage.</p>
+        <p class="h1-help">Each time the gadget runs, it writes four files to the project path folder:</p>
+        <ul>
+          <li class="h1-help">A cut list in CSV format (.csv).</li>
+          <li class="h1-help">A cut list in DAT format (.dat).</li>
+          <li class="h1-help">A cut list in HTML format (.html).</li>
+          <li class="h1-help">An export file of your settings (.lua).</li>
+        </ul>
+        <p class="h1-help">Each cut list shows the number of parts and the dimensions of each part.</p>
       </div>
-        <div><hr /></div>
+      <div><hr /></div>
       <div class="helpframe">
-      <div class="h3-lP"><label>DAT File Format</label></div>
+        <div class="h3-lP"><label>CSV File</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/dat_File.png"  alt="DAT Format File" width="600"></div>
-        <p class="h1-help">As shown in the image above, the DAT file format is a plain (ascii) text document that is print ready
-                           and provides the user with a shop cut list.</p>
+                              [[/Help/Images/csv_Spreadsheet_File.png"  alt="CSV File" width="600"></div>
+        <p class="h1-help">Open the CSV file in a spreadsheet program. Use it when a job has many parts of different
+        sizes, for example to calculate the total material for the job.</p>
       </div>
-        <div><hr /></div>
+      <div><hr /></div>
       <div class="helpframe">
-        <div class="h3-lP"><label>HTML File Format</label></div>
+        <div class="h3-lP"><label>DAT File</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/HTML_Cut_List.png"  alt="HTML Cut List Format File" width="600"></div>
-
-
-        <p class="h1-help">The HTML file format is designed for viewing in a typical HTML web browser. This may be beneficial for shops
-                           with displays are connected to a centralize file server.</p>
+                              [[/Help/Images/dat_File.png"  alt="DAT File" width="600"></div>
+        <p class="h1-help">The DAT file is a plain text file. You can print it as a cut list for the shop.</p>
       </div>
-
-       <div><hr /></div>
+      <div><hr /></div>
       <div class="helpframe">
-        <div class="h3-lP"><label>LUA File Format</label></div>
+        <div class="h3-lP"><label>HTML File</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/lua_File.png"  alt="LUA Format File" width="600"></div>
-
-
-        <p class="h1-help">The LUA file format is designed for viewing in Lua file editor. This File Format is for Issue Problem Solving. This file format retains all the user settings for technician to problem solve a users problem issue.</p>
+                              [[/Help/Images/HTML_Cut_List.png"  alt="HTML File" width="600"></div>
+        <p class="h1-help">Open the HTML file in a web browser. Use it on a shop computer that can open files from
+        your file server.</p>
       </div>
-
+      <div><hr /></div>
+      <div class="helpframe">
+        <div class="h3-lP"><label>LUA File</label></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
+                              [[/Help/Images/lua_File.png"  alt="LUA File" width="600"></div>
+        <p class="h1-help">The LUA file is the export file. It contains all of your settings. Use it to load the
+        settings again with the Import menu. If you ask for help with a problem, send this file.</p>
+      </div>
         <div><hr /></div>
       <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..
                               [[/Help/Images/Footer.png" width="80" height="20" alt="Page Footer"></span>

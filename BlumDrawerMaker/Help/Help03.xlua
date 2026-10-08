@@ -30,16 +30,15 @@ function HTMLHelp03()
     </div>
     <div>
       <div class="helpLayersimage"><image src="]] .. Project.AppPath .. [[/Help/Images/Layers_Menu.png"></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
       <div class="h2-lP">
         <label>Layers Setup</label>
       </div>
       <div class="h1-help">
-        <p>The Layers Setup Menu is where the User can assign their own unique layer names or leave them as the Default Settings. Users Choice.</p>
-        <p>The Layers Setup Menu is where the User can assign their own unique layer colors or leave them as the Default Settings. Users Choice.</p>
+        <p>The gadget puts each type of vector on its own layer. Use the Layers Setup menu to change the name and the
+        color of each layer. You can also keep the default names and colors.</p>
+        <p>The gadget uses these layers: Blum Milling, Bottom Panel Profile, Side Panel Profile, Side Panel Pocket
+        (Dado), Side Panel Blind, Front Panel Profile, Front Panel Pocket (Dado), Front Panel Blind, Back Panel Profile,
+        Back Panel Pocket (Dado), Drawer Notes and Part Labels.</p>
       </div>
     </div>
     <div><hr /></div>

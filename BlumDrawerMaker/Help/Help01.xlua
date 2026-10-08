@@ -30,19 +30,17 @@ function HTMLHelp01()
     </div>
     <div>
       <div class="helpAboutimage"><img src="]] .. Project.AppPath .. [[/Help/Images/About.png" width="500"></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
       <div class="h2-lP">
         <label>About and Disclaimer</label>
       </div>
       <div class="h1-help">
-        <p>The About User Menu is where the Gadget Version is Noted, a Gadget Reset Button along with the Gadget Disclaimer</p>
+        <p>The About menu shows the version of the gadget and the disclaimer. It has these items:</p>
         <ul>
-          <li class="h1-help"><strong>Gadget Reset - </strong> This Button Returns the Gadget to the Factory Defaults Settings in both the Imperial and Metric Job Setups.</li>
-          <li class="h1-help"><strong>Disclaimer - </strong> Gadget Disclaimer Information</li>
-          <li class="h1-help"><strong>Vectric User Forum - </strong>A Link to the Vectric User Forum.</li>
+          <li class="h1-help"><strong>Gadget Reset - </strong>Sets all settings back to the factory defaults. The
+              gadget asks you to confirm first. Gadget Reset sets only the settings for the units of the current job
+              (inch or metric).</li>
+          <li class="h1-help"><strong>Disclaimer - </strong>The conditions of use of the gadget.</li>
+          <li class="h1-help"><strong>Vectric User Forum - </strong>A link to the Vectric User Forum.</li>
         </ul>
       </div>
     </div>
