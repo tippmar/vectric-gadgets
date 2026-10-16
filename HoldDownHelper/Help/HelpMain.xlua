@@ -136,6 +136,9 @@ because a screw away from the edge does not hold the edge down.</li>
 <li>If a field position is not safe, the gadget moves it outward in rings until the position is safe.</li>
 <li>If the gadget cannot find a safe position within the max nudge search distance, it <b>does not put a screw
 there</b>. The message at the end shows that position.</li>
+<li>The distance between two screws is a minimum of 4 x R. With the inch defaults, this distance is 2". The gadget
+puts the safe positions first. Then it moves the positions that are not safe. Thus, two screws are not put almost
+at the same position.</li>
 </ul>
 
 <h2>The message at the end</h2>

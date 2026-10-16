@@ -422,7 +422,8 @@ function ValidateSettings()
     if HoldDown.FieldCount > 36 then
         return "Field count must be 36 or less."
     end
-    local min_spacing = 1.0 * HoldDown.Cal
+    -- Below MinSpacing, every other perimeter position would be dropped as too close to its neighbor
+    local min_spacing = math.max(1.0 * HoldDown.Cal, MinSpacing())
     if HoldDown.PerimeterSpacing < min_spacing then
         return "Perimeter spacing target must be at least " .. string.format("%.4f", min_spacing) .. " " ..
             HoldDown.UnitLabel .. "."
@@ -775,7 +776,36 @@ function IsPointSafe(obstacles, x, y, radius)
     return true
 end
 -- =====================================================]]
-function NudgePerimeter(obstacles, target, radius)
+function MinSpacing()
+    -- Two screws closer than this are effectively one hold-down. 2" at the imperial defaults.
+    return 4.0 * ClearanceRadius()
+end
+-- =====================================================]]
+function IsClearOfPlaced(placed, x, y)
+    local min_spacing = MinSpacing()
+    for _, point in ipairs(placed) do
+        local dx = x - point.x
+        local dy = y - point.y
+        if (dx * dx) + (dy * dy) < (min_spacing * min_spacing) then
+            return false
+        end
+    end
+    return true
+end
+-- =====================================================]]
+function IsPlacementSafe(obstacles, placed, x, y, radius)
+    -- IsPointSafe, plus far enough from every countersink already placed. Same returns as IsPointSafe.
+    local safe, blocker, reason = IsPointSafe(obstacles, x, y, radius)
+    if not safe then
+        return false, blocker, reason
+    end
+    if not IsClearOfPlaced(placed, x, y) then
+        return false, nil, "too close to another hold-down"
+    end
+    return true
+end
+-- =====================================================]]
+function NudgePerimeter(obstacles, placed, target, radius)
     -- Slides along its own edge, alternating to either side in R/2 steps. Never moves inward.
     local step = radius * 0.5
     if step <= 0.0 then
@@ -790,7 +820,7 @@ function NudgePerimeter(obstacles, target, radius)
         for _, sign in ipairs({1.0, -1.0}) do
             local x = target.x + (along_x * distance * sign)
             local y = target.y + (along_y * distance * sign)
-            if IsPointSafe(obstacles, x, y, radius) then
+            if IsPlacementSafe(obstacles, placed, x, y, radius) then
                 return x, y
             end
         end
@@ -799,7 +829,7 @@ function NudgePerimeter(obstacles, target, radius)
     return nil
 end
 -- =====================================================]]
-function NudgeField(obstacles, target, radius)
+function NudgeField(obstacles, placed, target, radius)
     -- Spirals outward, testing rings at R/2 intervals, 8 angles per ring, first safe point wins.
     local step = radius * 0.5
     if step <= 0.0 then
@@ -811,7 +841,7 @@ function NudgeField(obstacles, target, radius)
             local angle = (math.pi * 2.0 * i) / 8.0
             local x = target.x + (distance * math.cos(angle))
             local y = target.y + (distance * math.sin(angle))
-            if IsPointSafe(obstacles, x, y, radius) then
+            if IsPlacementSafe(obstacles, placed, x, y, radius) then
                 return x, y
             end
         end
@@ -821,34 +851,42 @@ function NudgeField(obstacles, target, radius)
 end
 -- =====================================================]]
 function PlaceTargets(obstacles, targets, radius)
+    -- Two passes: every target that is safe where it is goes down first, so a nudged target cannot take a
+    -- spot that would push an unobstructed one off its position.
     local placed = {}
     local rejected = {}
+    local blocked = {}
     for _, target in ipairs(targets) do
-        local safe, blocker, reason = IsPointSafe(obstacles, target.x, target.y, radius)
+        local safe, blocker, reason = IsPlacementSafe(obstacles, placed, target.x, target.y, radius)
         if safe then
             table.insert(placed, {x = target.x, y = target.y})
         else
-            local x, y
-            if target.kind == "perimeter" then
-                x, y = NudgePerimeter(obstacles, target, radius)
+            table.insert(blocked, {target = target, blocker = blocker, reason = reason})
+        end
+    end
+    for _, entry in ipairs(blocked) do
+        local target = entry.target
+        local x, y
+        if target.kind == "perimeter" then
+            x, y = NudgePerimeter(obstacles, placed, target, radius)
+        else
+            x, y = NudgeField(obstacles, placed, target, radius)
+        end
+        if x ~= nil then
+            table.insert(placed, {x = x, y = y})
+        else
+            -- Name what blocked the original position, so the user knows which layer to look at.
+            -- A nil blocker means the sheet edge itself (M1) or another hold-down, neither with a layer to name.
+            local why
+            if entry.blocker == nil then
+                why = entry.reason
             else
-                x, y = NudgeField(obstacles, target, radius)
+                local blocker = entry.blocker
+                why = entry.reason .. " a vector on layer '" .. blocker.layer .. "' spanning " ..
+                    string.format("%.2f", blocker.min_x) .. "," .. string.format("%.2f", blocker.min_y) .. " to " ..
+                    string.format("%.2f", blocker.max_x) .. "," .. string.format("%.2f", blocker.max_y)
             end
-            if x ~= nil then
-                table.insert(placed, {x = x, y = y})
-            else
-                -- Name what blocked the original position, so the user knows which layer to look at.
-                -- A nil blocker means the sheet edge itself (M1), which has no layer to name.
-                local why
-                if blocker == nil then
-                    why = reason
-                else
-                    why = reason .. " a vector on layer '" .. blocker.layer .. "' spanning " ..
-                        string.format("%.2f", blocker.min_x) .. "," .. string.format("%.2f", blocker.min_y) .. " to " ..
-                        string.format("%.2f", blocker.max_x) .. "," .. string.format("%.2f", blocker.max_y)
-                end
-                table.insert(rejected, {x = target.x, y = target.y, kind = target.kind, why = why})
-            end
+            table.insert(rejected, {x = target.x, y = target.y, kind = target.kind, why = why})
         end
     end
     return placed, rejected
