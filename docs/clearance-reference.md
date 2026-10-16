@@ -59,10 +59,16 @@ measured thicknesses the allowance is panel-independent and one value serves eve
 
 `pitch = Drawer.Height / finger_count`. `MySideFingers` moves each notch edge out by
 `FingerClearance / 2`, so drawn finger is `pitch - C` and drawn notch is `pitch + C`.
+`MyFrontFingers` applies no clearance: the front's fingers and notches are drawn at `pitch`.
+Each finger therefore meets a notch C wider than itself, on the side's notches and the
+front's alike, so C appears once in the fit.
 
 ```
-fit = 2C - 2E - 4a          E = 0.0140, a negative
+fit = C - 2E - 4a          E = 0.0140, a negative
 ```
+
+Corrected 2026-10-07: this read `2C - 2E - 4a` until then, which counted C twice. Box Joint
+Runs applies C/4 per edge to both mating pieces and gives the same `fit = C`.
 
 Verified: opening height 7.75 -> `Drawer.Height` 6.9375 -> `AutoFingerCount` 7 -> pitch
 0.99107. Drawn finger `0.99107 - 0.005 = 0.9861`, matching the measured part exactly,
@@ -70,12 +76,12 @@ which confirms both the finger count and the symmetric application of C.
 
 | Setup | C | a | Fit |
 | --- | --- | --- | --- |
-| As cut (needed a hammer) | 0.005 | 0 | -0.018 |
-| Interim fix, no allowance | 0.016 | 0 | 0.004 |
-| Clean split | 0.002 | -0.0070 | 0.004 |
+| As cut (needed a hammer) | 0.005 | 0 | -0.023 |
+| No allowance | 0.032 | 0 | 0.004 |
+| Clean split | 0.004 | -0.0070 | 0.004 |
 
 `-0.0070` is exactly `E/2`, which cancels the machine error and reduces the relation to
-`fit = 2C`.
+`fit = C`.
 
 ## Profile deflection and the finishing pass
 
@@ -123,7 +129,7 @@ Back and bottom profiles have no fingers and stay single-pass.
 
 - Dado: 0.001 of allowance moves the fit 0.002.
 - Finger: 0.001 of allowance moves the fit 0.004, and 0.001 of `FingerClearance` moves it
-  0.002. Do not round casually.
+  0.001. Do not round casually.
 
 ## Standing principle
 

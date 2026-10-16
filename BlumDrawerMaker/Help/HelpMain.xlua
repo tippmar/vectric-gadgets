@@ -38,60 +38,64 @@ function HTMLHelpMain()
       <div><input id="InquiryHelp07" class="LuaButton" name="InquiryHelp07" type="button" value="Definitions"></div>
    </div>
      <div class="maininfo" id="MainInfoBox">
-       <div class="h2-lP">
-       <label>Blum Drawer Maker Help System</label>
+      <div class="h2-lP">
+        <label>Blum Drawer Maker Help</label>
       </div>
       <div class="h1-help">
-        <p>This Help system is designed to provide a Light-Level Overview of the Gadget Function and Capabilities. Each Sub-Menu will
-        provide additional details about the options and settings that will provide instruction to the gadget to produce the desired
-        Drawer Design and Milling.</p>
+        <p>This page gives a general description of the gadget. Each of the other pages gives the details of one menu.
+        Click a button on the left to open a page.</p>
       </div>
-    <div>
-      <div class="helpimagesTop"><]] .. Image1() .. [[ width="570" /></div>
-      <div class="h1-help">
-        <p>The Blum Drawer Maker Gadget is a plug-in solution for the Vectric Aspire, 2DCut Pro, or VCarve Pro products. The Gadget is
-        designed to work with exclusively Version 11 and above product releases. The Gadget is designed as a parametrically driven
-        solution. This design allows the user to have complete control of all Drawer Variables being defined by the user. The Gadget produces precisely
-        accurate Drawings, Bill of Materials and Toolpaths for the Milling of the Drawers. All of these features are available to the
-        user through the Main Menu. The user can select Joint and Bottom Style, Milling Tools, and Default Drawer Settings using the buttons that open
-        on additional Sub Menus.  The Gadget produces a Cut List File with several different extensions (.csv, .dat, .html) for use with other software.
-        The Gadget also creates an Export File (.lua) of all the User Settings.</p>
+      <div>
+        <div class="helpimagesTop"><]] .. Image1() .. [[ width="570" /></div>
+        <div class="h1-help">
+          <p>Blum Drawer Maker is a gadget for Vectric Aspire, VCarve Pro and Cut2D Pro, version 11 and later.</p>
+          <p>You enter the dimensions of the drawer opening and the thickness of the material. The gadget calculates
+          all drawer parts from these values. It makes these items:</p>
+          <ul>
+            <li>A drawing of each drawer part.</li>
+            <li>The toolpaths that cut the parts.</li>
+            <li>A cut list in three file formats: .csv, .dat and .html.</li>
+            <li>An export file (.lua) that contains all of your settings.</li>
+          </ul>
+          <p>Use the Main Menu to set the drawer dimensions and the bits. Use the other menus to set the joint style,
+          the bottom style and the default values.</p>
+        </div>
       </div>
-    </div>
-    <hr />
-    <div class="h2-lP">
-      <label>Joinery styles</label>
-    </div>
+      <hr />
+      <div class="h2-lP">
+        <label>Joint styles</label>
+      </div>
       <div class="h1-help">
-        <p>The gadget offers two styles of joinery for the attachment of the front panel to the side panels. Typically, box joints use through style joinery. Through style exposes
-        the ingrain on the front and side of the panels. the gadget offers a blind style of box joint which a thin amount of material is left on the panels to cover the end grain which
-        results in a modern style of joinery.</p>
+        <p>The gadget joins the front panel to the side panels with box joints. A box joint can be a through joint or
+        a blind joint.</p>
       </div>
       <div>
         <div class="helpimages"><]] .. Image2() ..
-                                [[ title="Through Joinery Style" alt="Through Joinery Style"  width="250" /></div>
+                                [[ title="Through Joint" alt="Through Joint"  width="250" /></div>
         <div class="h2-lP">
-          <label>Through Style Joinery</label>
+          <label>Through joints</label>
         </div>
         <div class="h1-help">
-          <p>By far one of the most common style of box joint produced is a through style. </p>
+          <p>In a through joint, the end grain of the fingers shows on the front panel and on the side panels. This is
+          the most usual type of box joint.</p>
         </div>
-      </div>
-    <div>
-      <div class="helpimages"><]] .. Image3() ..
-                                [[ title="Blind Joinery Style" alt="Blind Joinery Style" width="250" /></div>
-      <div class="h2-lP">
-        <label>Blind Style Joinery</label>
-      </div>
-      <div class="h1-help">
-        <p>For a modern design, the gadget can produce blind joint styles. This style covers the end grain from being exposed.</p>
       </div>
       <div>
+        <div class="helpimages"><]] .. Image3() ..
+                                [[ title="Blind Joint" alt="Blind Joint" width="250" /></div>
+        <div class="h2-lP">
+          <label>Blind joints</label>
+        </div>
         <div class="h1-help">
-          <p>There are a Total of Six (6) combinations of joinery designs. and Three(3) Bottom Style Designs with this Version of the Gadget.</p>
+          <p>In a blind joint, the gadget keeps a thin layer of material on the panel. This layer covers the end grain
+          of the fingers. Use a blind joint for a modern appearance.</p>
+        </div>
+        <div class="h1-help">
+          <p>There are three relief styles: Dog Bone, T-Bone and Sniglet. Each relief style is available as a through
+          joint or a blind joint. Thus, there are six joint styles. There is one bottom style: a captive bottom in a
+          dado.</p>
         </div>
       </div>
-    </div>
   </div>
   <div class="foot" id="FooterBox">
     <div> <hr /> </div>

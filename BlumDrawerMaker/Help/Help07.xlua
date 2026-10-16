@@ -25,79 +25,88 @@
     DialogWindow.Help07 = [[<head><title>Help</title></head> ]] .. Style7() .. [[
     <body>
     <div class="layout">
-      <!-- Header -->
       <div class="helpframe">
-        <div class="h3-lP"><label>Definitions and Terminology</label></div>
-         <p class="h1-help"><strong>This page will cover the folling items:</p>
-          <ul>
-            <li>Dado Height</li>
-            <li>Bottom Panel Connection</li>
-            <li>Dog Joint</li>
-            <li>T-Bone Joint</li>
-            <li>Sniglet Joint</li>
-            <li>Thought Joint</li>
-            <li>Blind Joint</li>
-          </ul>
+        <div class="h3-lP"><label>Definitions</label></div>
+        <p class="h1-help">This page defines these items:</p>
+        <ul>
+          <li>Dado Height</li>
+          <li>Bottom panel connection</li>
+          <li>Dog Bone joint</li>
+          <li>T-Bone joint</li>
+          <li>Sniglet joint</li>
+          <li>Through joint</li>
+          <li>Blind joint</li>
+        </ul>
         <div><hr /></div>
-        <div class="h3-lP"><label>Dado Height Definition</label></div>
+        <div class="h3-lP"><label>Dado Height</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/MillHeight02.png"  alt="Part Selection Menu" width="550"></div>
-        <div class="h2-lP"><label>General Overview</label></div>
-        <p class="h1-help">The gadget is designed to calculate depth of cut from top of table. Therefore the gadget utilizing dado height measurement (A,B,C) instead of dado depth (X,Y,Z). </p>
-        <p class="h1-help"><strong>Note:</strong> If the milling operation is configured where the z-axis is zeroed from top of material
-            and Dado Depth values X, Y, or Z are used, the cabinet produced will not match the overall size and specifications.</p>
+                              [[/Help/Images/MillHeight02.png"  alt="Dado Height" width="550"></div>
+        <p class="h1-help">Dado Height is the thickness of the material that stays under a dado. It is dimension A, B
+        or C in the image. It is not the depth of the dado (dimension X, Y or Z).</p>
+        <p class="h1-help">The gadget cuts each dado to a depth of panel thickness minus Dado Height.</p>
+        <p class="h1-help" style="background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px 8px;">
+        <strong>CAUTION:</strong> Do not enter a dado depth in the Dado Height field. If you do, the dadoes are at the
+        wrong depth, and the drawer is not the correct size.</p>
       </div>
       <div><hr /></div>
       <div class="helpframe">
-          <div class="h3-lP">
-            <label>Bottom Panel Connection</label></div>
-          <div class="helpimages"><img src="]] .. Project.AppPath ..
+        <div class="h3-lP"><label>Bottom Panel Connection</label></div>
+        <div class="helpimages"><img src="]] .. Project.AppPath ..
                               [[/Help/Images/BottomJoints02.png" alt="Bottom Styles" width="500"></div>
-          <div class="h1-help">
-            <p>The gadget is designed to support three (3) styles of bottom joinery (Rabbeted, Captured and On Top). </p>
-            <ul class="box">
-              <li><strong>Item 1:</strong> Rabbeted Connection. </li>
-              <li><strong>Item 2:</strong> Captured Connection. </li>
-              <li><strong>Item 3:</strong> On Top Connection. </li>
-              <li><strong>A Dimension:</strong> Is the dado height measurement. </li>
-              <li><strong>B Dimension:</strong> Is the captured amount. </li>
-            </ul>
-          </div>
+        <div class="h1-help">
+          <p>The image shows three types of bottom connection. The gadget makes only item 2, the captured
+          connection.</p>
+          <ul class="box">
+            <li><strong>Item 1:</strong> Rabbeted connection.</li>
+            <li><strong>Item 2:</strong> Captured connection. The bottom panel is in a dado in the side, front and back
+                panels.</li>
+            <li><strong>Item 3:</strong> On-top connection.</li>
+            <li><strong>Dimension A:</strong> The Dado Height.</li>
+            <li><strong>Dimension B:</strong> The depth of the bottom panel in the dado.</li>
+          </ul>
         </div>
+      </div>
       <div><hr /></div>
       <div class="helpframe">
         <div class="h3-lP"><label>Dog Bone Joint</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/DogBone.png"  alt="Project Setup" width="500"></div>
-        <div class="h1-help"><p>The Dog - Bone Joint design offers a 45° plunge cut and offers the smallest amount of clearance cut for easy filling.</p></div>
+                              [[/Help/Images/DogBone.png"  alt="Dog Bone Joint" width="500"></div>
+        <div class="h1-help"><p>A round bit cannot cut a square inside corner. A relief cut removes the material in
+        the corner, so the mating finger can go fully into the notch. The Dog Bone joint has its relief cut at 45
+        degrees into each inside corner. It removes the least material of the three relief styles.</p></div>
       </div>
       <div><hr /></div>
       <div class="helpframe">
-        <div class="h3-lP"><label>T - Bone Joint</label></div>
+        <div class="h3-lP"><label>T-Bone Joint</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/T-Bone.png"  alt="Project Setup" width="500"></div>
-        <div class="h1-help"><p>The T - Joint design offers a 90° plunge cut. This allows the base of the joining material to have a face glue joint.</p></div>
+                              [[/Help/Images/T-Bone.png"  alt="T-Bone Joint" width="500"></div>
+        <div class="h1-help"><p>The T-Bone joint has its relief cut at 90 degrees, along the bottom of the notch. Thus,
+        the face of the mating finger touches a flat surface for the glue.</p></div>
       </div>
       <div><hr /></div>
       <div class="helpframe">
         <div class="h3-lP"><label>Sniglet Joint</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/Singlet.png"  alt="Project Setup" width="500"></div>
-        <div class="h1-help"><p>The sniglet joint is similar to the T joint but has a softened turn into the material to ease be milling deceleration.</p></div>
+                              [[/Help/Images/Singlet.png"  alt="Sniglet Joint" width="500"></div>
+        <div class="h1-help"><p>The Sniglet joint is like the T-Bone joint, but its relief cut has a curved entry into
+        the material. The curve decreases the sudden change of direction of the bit.</p></div>
       </div>
       <div><hr /></div>
       <div class="helpframe">
-        <div class="h3-lP"><label>Standard Through Joints</label></div>
+        <div class="h3-lP"><label>Through Joint</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/Through.png"  alt="Project Setup" width="500"></div>
-        <div class="h1-help"><p>Standard through joint milling exposes the end grain of the joining materials.</p></div>
+                              [[/Help/Images/Through.png"  alt="Through Joint" width="500"></div>
+        <div class="h1-help"><p>In a through joint, the end grain of the fingers shows on the outside of both
+        panels.</p></div>
       </div>
       <div><hr /></div>
       <div class="helpframe">
-        <div class="h3-lP"><label>Blind Joints</label></div>
+        <div class="h3-lP"><label>Blind Joint</label></div>
         <div class="helpimages"><img src="]] .. Project.AppPath ..
-                              [[/Help/Images/Blind.png"  alt="Project Setup" width="500"></div>
-        <div class="h1-help"><p>Every joint in the Box Maker Gadget has an option for incorporating the blind joint option. Blind joints are milled so that a thin portion of material remains to cover the end grain of the opposing member. This joint design makes the joint almost disappear.</p></div>
+                              [[/Help/Images/Blind.png"  alt="Blind Joint" width="500"></div>
+        <div class="h1-help"><p>Each relief style has a blind version. In a blind joint, the gadget keeps a thin layer
+        of material on the panel. This layer covers the end grain of the mating fingers, so the joint is almost
+        invisible. Blind Tab Thickness on the Milling menu sets the thickness of this layer.</p></div>
       </div>
         <div><hr /></div>
       <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..

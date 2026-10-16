@@ -170,16 +170,22 @@ table { width: 100%; border: 0; }
     <td class="h1-l"><input type="checkbox" class="LuaButton" id="ProfileTabsCheck"/></td>
   </tr>
   <tr>
-    <td class="h1-rP"><label>Groove Width</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveWidth" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Measured thickness of the drawer bottom. The groove is cut this plus Groove Clearance wide.">Bottom Thickness</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.BottomThickness" size="10" maxlength="10"/></td>
     <td class="h1-rP"><label title="Roughs to this allowance, then a full-depth finishing pass takes it off.">Profile Finishing Pass</label></td>
     <td class="h1-l"><input type="checkbox" class="LuaButton" id="ProfileFinishCheck"/></td>
   </tr>
   <tr>
-    <td class="h1-rP"><label>Groove Depth</label></td>
-    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveDepth" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="How much wider than the bottom the groove is cut, so the bottom can float.">Groove Clearance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveClearance" size="10" maxlength="10"/></td>
     <td class="h1-rP"><label>Finish Allowance</label></td>
     <td class="h1-l"><input type="text" class="h1-l" id="Milling.ProfileFinishAllowance" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label>Groove Depth</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Run.GrooveDepth" size="10" maxlength="10"/></td>
+    <td class="h1-rP">&nbsp;</td>
+    <td class="h1-l">&nbsp;</td>
   </tr>
   <tr>
     <td class="h1-rP"><label title="Which way the grooves face once the pieces are folded together. Outside adds a groove-sized pocket through each finger at the bottom so the mating groove runs to the corner. Joints between pieces only; Start/End ends and the Existing modes never get it.">Groove Faces</label></td>
@@ -244,7 +250,8 @@ table { width: 100%; border: 0; }
     Run.dialog:AddDoubleField("Run.FingerClearance", Run.FingerClearance)
     Run.dialog:AddCheckBox("GrooveOnCheck", Run.GrooveOn)
     Run.dialog:AddDoubleField("Run.GrooveInset", Run.GrooveInset)
-    Run.dialog:AddDoubleField("Run.GrooveWidth", Run.GrooveWidth)
+    Run.dialog:AddDoubleField("Run.BottomThickness", Run.BottomThickness)
+    Run.dialog:AddDoubleField("Run.GrooveClearance", Run.GrooveClearance)
     Run.dialog:AddDoubleField("Run.GrooveDepth", Run.GrooveDepth)
     Run.dialog:AddDoubleField("Milling.FingerAllowance", Milling.FingerAllowance)
     Run.dialog:AddDoubleField("Milling.GrooveAllowance", Milling.GrooveAllowance)
@@ -299,7 +306,8 @@ function ShowSettingsDialog()
     Run.FingerClearance = math.abs(Run.dialog:GetDoubleField("Run.FingerClearance"))
     Run.GrooveOn = Run.dialog:GetCheckBox("GrooveOnCheck")
     Run.GrooveInset = math.abs(Run.dialog:GetDoubleField("Run.GrooveInset"))
-    Run.GrooveWidth = math.abs(Run.dialog:GetDoubleField("Run.GrooveWidth"))
+    Run.BottomThickness = math.abs(Run.dialog:GetDoubleField("Run.BottomThickness"))
+    Run.GrooveClearance = math.abs(Run.dialog:GetDoubleField("Run.GrooveClearance"))
     Run.GrooveDepth = math.abs(Run.dialog:GetDoubleField("Run.GrooveDepth"))
     Run.Mode = Run.dialog:GetDropDownListValue("Run.Mode")
     Run.EEToward = (Run.dialog:GetDropDownListValue("Run.EEToward") ~= "Away")

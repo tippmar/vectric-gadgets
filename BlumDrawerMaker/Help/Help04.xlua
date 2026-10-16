@@ -34,19 +34,65 @@ function HTMLHelp04()
         <label>Milling Defaults</label>
       </div>
       <div class="h1-help">
-        <p>The Milling Menu Settings is where the User can assign their own criteria for Bit Defaults, Clearances, and Drawer Joint and Bottom Styling. Users Choice.</p>
+        <p>Use the Milling menu to set the default bit diameters, the part layout, the joint fit and the drawer style.
+        The menu has four areas.</p>
+        <p><strong>Bit Defaults</strong></p>
         <ul>
-         <li class="h1-help"><strong>Bit Defaults - </strong>This is where the User inputs Bit Diameters for the Finger Joints and Profile Cuts.</li>
-         <li class="h1-help"><strong>Part Milling - </strong>This is where the User inputs various clearance settings for Part Gap, Dadoes, and the Drawer Slide.</li>
-         <li class="h1-help">*** Note: Dado Height is the amount of Material <strong>Remaining</strong> NOT the Material removed.</li>
-         <li class="h1-help"><strong>Joint Fit - </strong>A clearance and an allowance do different jobs. The clearance says how the joint should fit; the allowance corrects a bit that cuts narrow or wide, so it changes only when the bit does. The bottom dado and the back dado have their own clearances because the bottom is captive on four sides and wants to float, while the back is glued and wants to be snug.</li>
-         <li class="h1-help">*** Note: Allowances are signed and applied to each side of the pocket, so a dado width changes by twice the value and a finger joint fit by four times it. Delete and regenerate the toolpaths after changing them.</li>
-         <li class="h1-help"><strong>Profile Finish Allowance - </strong>Cuts each side and front out in two passes: a roughing profile that leaves this much on every edge, then a full-depth "Finish" profile that takes it off. Between the fingers the bit runs in air, then deflects as it bites into each finger end; the thin, even finishing cut barely loads it, so the edges land where they are drawn. Zero turns it off. Try 0.010 to 0.020 in (0.25 to 0.5 mm). Tune the finger allowance after turning this on, not before, since it removes the deflection that allowance may have been covering.</li>
-         <li class="h1-help"><strong>Drawer Styling - </strong>This is where the User chooses Joint and Bottom Styling for the Drawer(s).</li>
+          <li class="h1-help"><strong>Finger Bit Diameter, Profile Bit Diameter - </strong>The gadget uses these
+              diameters for its calculations only when no bit is selected on the Main Menu.</li>
         </ul>
-
+        <p><strong>Part Milling</strong></p>
+        <ul>
+          <li class="h1-help"><strong>Part Placement Gap - </strong>The distance between the parts on the sheet. It
+              cannot be zero. It must be more than the profile bit diameter.</li>
+          <li class="h1-help"><strong>Dado Height - </strong>The thickness of the material from the bottom of the dado
+              to the back face of the panel. It cannot be zero.</li>
+          <li class="h1-help"><strong>Profile Tabs - </strong>When you tick this box, tabs hold each part in the sheet
+              while the profile toolpath cuts it out. The tabs are on the two edges that have no finger joints.</li>
+          <li class="h1-help"><strong>Tab Length - </strong>The length of each tab along the edge of the part.</li>
+          <li class="h1-help"><strong>Tab Thickness - </strong>The height of each tab. The profile toolpath leaves this
+              much material under the part.</li>
+        </ul>
+        <p style="background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px 8px;"><strong>CAUTION:</strong>
+        Dado Height is the material that <strong>stays</strong> under the dado. It is not the material that the bit
+        removes. The gadget cuts each dado to a depth of panel thickness minus Dado Height.</p>
+        <p><strong>Joint Fit</strong></p>
+        <p>A clearance and an allowance are different. A clearance sets the fit of a joint. An allowance corrects a bit
+        that cuts too narrow or too wide. Change an allowance only when you change or sharpen a bit.</p>
+        <ul>
+          <li class="h1-help"><strong>Finger Clearance - </strong>The fit of the finger joints. The joint has this much
+              total clearance. A typical value is 0.004" (0.1 mm).</li>
+          <li class="h1-help"><strong>Finger Allowance - </strong>The allowance for the finger toolpaths.</li>
+          <li class="h1-help"><strong>Bottom Dado Clearance - </strong>The fit of the bottom panel in its dado. The
+              bottom must move freely in its dado, so this clearance is larger. A typical value is 0.012" (0.3
+              mm).</li>
+          <li class="h1-help"><strong>Dado Allowance - </strong>The allowance for all dado toolpaths. One bit cuts all
+              of the dadoes.</li>
+          <li class="h1-help"><strong>Back Dado Clearance - </strong>The fit of the back panel in its dado. The back is
+              glued, so this clearance is small. A typical value is 0.004" (0.1 mm).</li>
+          <li class="h1-help"><strong>Profile Finish Allowance - </strong>When this value is more than zero, the gadget
+              cuts each side panel and front panel in two passes. The first pass leaves this much material on each edge.
+              The second pass cuts to the line at full depth. The bit bends when it goes from the air between the
+              fingers into the material. The thin second pass decreases this error. Zero gives one pass. Try 0.010" to
+              0.020" (0.25 mm to 0.5 mm). Set this value before you adjust the finger allowance.</li>
+        </ul>
+        <p><strong>NOTE:</strong> An allowance applies to each side of a cut. A positive allowance leaves material. A
+        negative allowance removes more material. An allowance changes the width of a dado by two times its value. It
+        changes the fit of a finger joint by four times its value, because the notch and the finger both change.</p>
+        <p><strong>NOTE:</strong> The gadget does not change the toolpaths that it made before. After you change an
+        allowance, delete the toolpaths and run the gadget again.</p>
+        <p><strong>Drawer Styling</strong></p>
+        <ul>
+          <li class="h1-help"><strong>Joint Style - </strong>Dog Bone, Blind Dog Bone, T-Bone Joint, Blind T-Bone,
+              Sniglet Joint or Blind Sniglet. Refer to the Definitions page.</li>
+          <li class="h1-help"><strong>Blind Tab Thickness - </strong>For a blind joint style, the thickness of the
+              material that covers the end grain.</li>
+          <li class="h1-help"><strong>Bottom Style - </strong>Captive Bottom (Dado). This is the only bottom style.</li>
+          <li class="h1-help"><strong>Bottom Dado Inset (Fixed) - </strong>The distance from the bottom edge of the
+              panels to the bottom dado. The Blum specification sets this value: 13 mm (0.5"). You cannot change
+              it.</li>
+        </ul>
       </div>
-
     </div>
     <div><hr /></div>
       <span class="helpimagesFooter"><img src="]] .. Project.AppPath ..

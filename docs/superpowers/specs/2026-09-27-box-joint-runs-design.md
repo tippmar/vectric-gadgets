@@ -69,7 +69,11 @@ These apply to every mode.
 - **Joint style:** Through, Dog Bone, or T-Bone. Blind styles are excluded, so any piece can be flipped
   face for face.
 - **Finger clearance**, applied as Blum Drawer Maker applies it.
-- **Bottom groove:** on/off, inset from the bottom edge, width, depth, and which way it faces once folded (Inside or Outside).
+- **Bottom groove:** on/off, inset from the bottom edge, bottom thickness (measured), groove clearance, depth, and
+  which way it faces once folded (Inside or Outside). The groove is cut bottom thickness + groove clearance wide,
+  as Blum Drawer Maker adds its DadoClearance, so the user enters the thickness they measured and never adds the fit
+  by hand. Groove clearance is separate from finger clearance: a glued finger joint wants a snug fit, a bottom that
+  floats in its groove wants more.
 - **Tools:** profile bit, finger bit, finger clear bit, dado bit; the finger, dado and profile finish passes each take an allowance as in Blum
   Drawer Maker; part gap; profile tabs; optional profile finishing pass.
 - **Mode:** Chain, Existing back, Existing end, or Test cut.
@@ -152,8 +156,8 @@ the groove is on. Drawn and machined like Chain pieces.
   at each gap's inside corners exactly as Blum Drawer Maker draws them.
 - **Chain and Test cut pieces:** the profile outline is a plain L × W rectangle. The finger pockets clear
   the gaps; the profile trims the finger tips. Tabs go on the long edges, since the ends carry fingers.
-- **Groove:** a through dado on the top face at its inset from the bottom edge, running the full length
-  plus the dado bit radius at each end, as on a Blum back. New pieces only.
+- **Groove:** a through dado on the top face at its inset from the bottom edge, bottom thickness + groove clearance
+  wide, running the full length plus the dado bit radius at each end, as on a Blum back. New pieces only.
 - **Outside grooves:** when the grooves face outside, the finger that holds the bottom band would block the
   mating groove short of the corner. Every finger-at-bottom end at a joint between two new pieces
   (including the close-loop joint and Test cut) then gets a through pocket on the Fingers layer

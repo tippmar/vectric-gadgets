@@ -2,8 +2,8 @@
 
 This folder contains the Hold Down Helper gadget for Vectric CNC software products (VCarve Pro / Aspire). It finds
 places on the active sheet where a screw can be driven into the spoilboard without being hit by a cutter later,
-marks each one on a `Hold Down` layer, and creates a `Hold Down Dimples` drilling toolpath that dimples them with a
-V-bit.
+marks each one on a `Hold Down` layer, and creates a `Hold Down Countersinks` drilling toolpath that
+countersinks them with a V-bit, sized to the screw head.
 
 - Clearance tested against every visible vector on the active sheet, including grouped vectors
 - Perimeter and field positions, nudged along their edge or outward when a position is blocked
