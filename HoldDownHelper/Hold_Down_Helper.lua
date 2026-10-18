@@ -193,6 +193,7 @@ local IMPERIAL_DEFAULTS = {
     PerimeterSpacing = 16.0,
     FieldCount = 4,
     MaxSearch = 3.0,
+    Jitter = 0.5,
     CountersinkClearance = 0.02,
     MarkerDiameter = 0.125,
     SafeZGap = 0.25
@@ -205,6 +206,7 @@ local METRIC_DEFAULTS = {
     PerimeterSpacing = 406.4,
     FieldCount = 4,
     MaxSearch = 76.2,
+    Jitter = 12.0,
     CountersinkClearance = 0.5,
     MarkerDiameter = 3.0,
     SafeZGap = 6.0
@@ -276,6 +278,7 @@ function SettingsRead()
     HoldDown.PerimeterSpacing = registry:GetDouble(SettingsKey("PerimeterSpacing"), defaults.PerimeterSpacing)
     HoldDown.FieldCount = registry:GetInt(SettingsKey("FieldCount"), defaults.FieldCount)
     HoldDown.MaxSearch = registry:GetDouble(SettingsKey("MaxSearch"), defaults.MaxSearch)
+    HoldDown.Jitter = registry:GetDouble(SettingsKey("Jitter"), defaults.Jitter)
     HoldDown.CountersinkClearance = registry:GetDouble(SettingsKey("CountersinkClearance"), defaults.CountersinkClearance)
     HoldDown.MarkerDiameter = registry:GetDouble(SettingsKey("MarkerDiameter"), defaults.MarkerDiameter)
     HoldDown.SafeZGap = registry:GetDouble(SettingsKey("SafeZGap"), defaults.SafeZGap)
@@ -291,6 +294,7 @@ function SettingsWrite()
     registry:SetDouble(SettingsKey("PerimeterSpacing"), HoldDown.PerimeterSpacing)
     registry:SetInt(SettingsKey("FieldCount"), HoldDown.FieldCount)
     registry:SetDouble(SettingsKey("MaxSearch"), HoldDown.MaxSearch)
+    registry:SetDouble(SettingsKey("Jitter"), HoldDown.Jitter)
     registry:SetDouble(SettingsKey("CountersinkClearance"), HoldDown.CountersinkClearance)
     registry:SetDouble(SettingsKey("MarkerDiameter"), HoldDown.MarkerDiameter)
     registry:SetDouble(SettingsKey("SafeZGap"), HoldDown.SafeZGap)
@@ -343,6 +347,8 @@ td.unit { color: #666666; }
     <td><input type="text" id="FieldCount" size="10" maxlength="10" /></td><td class="unit">&nbsp;</td></tr>
 <tr><td class="label"><label title="How far a rejected position may move looking for a safe one">Max nudge search:</label></td>
     <td><input type="text" id="MaxSearch" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+<tr><td class="label"><label title="Each position moves a random distance up to this far along X and along Y, so screws do not go into the same spoilboard holes every run. Type 0 for no jitter">Jitter:</label></td>
+    <td><input type="text" id="Jitter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="How much wider than the screw head each countersink is cut. The depth follows from this and the V-bit angle">Countersink clearance:</label></td>
     <td><input type="text" id="CountersinkClearance" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="Size of the marker circle drawn per position">Marker diameter:</label></td>
@@ -359,7 +365,7 @@ and tab out of the field.</div>
 end
 -- =====================================================]]
 function ShowSettingsDialog()
-    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 460, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
+    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 490, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
     dialog:AddLabelField("ToolNameLabel", HoldDown.Tool.Name)
     dialog:AddToolPicker("ToolChooseButton", "ToolNameLabel", HoldDownToolId)
     dialog:AddToolPickerValidToolType("ToolChooseButton", Tool.VBIT)
@@ -370,6 +376,7 @@ function ShowSettingsDialog()
     dialog:AddDoubleField("PerimeterSpacing", HoldDown.PerimeterSpacing)
     dialog:AddIntegerField("FieldCount", HoldDown.FieldCount)
     dialog:AddDoubleField("MaxSearch", HoldDown.MaxSearch)
+    dialog:AddDoubleField("Jitter", HoldDown.Jitter)
     dialog:AddDoubleField("CountersinkClearance", HoldDown.CountersinkClearance)
     dialog:AddDoubleField("MarkerDiameter", HoldDown.MarkerDiameter)
     dialog:AddDoubleField("SafeZGap", HoldDown.SafeZGap)
@@ -387,6 +394,7 @@ function ShowSettingsDialog()
     HoldDown.PerimeterSpacing = math.abs(dialog:GetDoubleField("PerimeterSpacing"))
     HoldDown.FieldCount = math.abs(dialog:GetIntegerField("FieldCount"))
     HoldDown.MaxSearch = math.abs(dialog:GetDoubleField("MaxSearch"))
+    HoldDown.Jitter = math.abs(dialog:GetDoubleField("Jitter"))
     HoldDown.CountersinkClearance = math.abs(dialog:GetDoubleField("CountersinkClearance"))
     HoldDown.MarkerDiameter = math.abs(dialog:GetDoubleField("MarkerDiameter"))
     HoldDown.SafeZGap = math.abs(dialog:GetDoubleField("SafeZGap"))
@@ -883,6 +891,28 @@ function NudgeField(obstacles, placed, target, radius)
     return nil
 end
 -- =====================================================]]
+function JitteredPlacement(obstacles, placed, target, radius)
+    -- A random spot within Jitter of the target along X and Y, so the same spoilboard holes are not reused
+    -- run after run. Perimeter positions stay inside the edge inset. Returns nil when no try is safe, and
+    -- the caller then uses the exact target.
+    if HoldDown.Jitter <= 0.0 then
+        return nil
+    end
+    local inset = HoldDown.EdgeInset
+    for _ = 1, 12 do
+        local x = target.x + ((math.random() * 2.0) - 1.0) * HoldDown.Jitter
+        local y = target.y + ((math.random() * 2.0) - 1.0) * HoldDown.Jitter
+        if target.kind == "perimeter" then
+            x = math.max(HoldDown.SheetMinX + inset, math.min(HoldDown.SheetMaxX - inset, x))
+            y = math.max(HoldDown.SheetMinY + inset, math.min(HoldDown.SheetMaxY - inset, y))
+        end
+        if IsPlacementSafe(obstacles, placed, x, y, radius) then
+            return x, y
+        end
+    end
+    return nil
+end
+-- =====================================================]]
 function PlaceTargets(obstacles, targets, radius)
     -- Two passes: every target that is safe where it is goes down first, so a nudged target cannot take a
     -- spot that would push an unobstructed one off its position.
@@ -892,7 +922,11 @@ function PlaceTargets(obstacles, targets, radius)
     for _, target in ipairs(targets) do
         local safe, blocker, reason = IsPlacementSafe(obstacles, placed, target.x, target.y, radius)
         if safe then
-            table.insert(placed, {x = target.x, y = target.y})
+            local x, y = JitteredPlacement(obstacles, placed, target, radius)
+            if x == nil then
+                x, y = target.x, target.y
+            end
+            table.insert(placed, {x = x, y = y})
         else
             table.insert(blocked, {target = target, blocker = blocker, reason = reason})
         end
@@ -1107,6 +1141,9 @@ function main(script_path)
 
     local radius = ClearanceRadius()
     local obstacles, failed = PrepareObstacles(vectors, radius)
+    pcall(function()
+        math.randomseed(os.time())
+    end)
     for _, name in ipairs(failed) do
         table.insert(skipped, "unreadable vector on layer '" .. name .. "' -- NOT TESTED")
     end
