@@ -88,8 +88,8 @@ job. The gadget examines all vectors as if this cutter cuts each of them.</td></
 <tr><td>Screw head diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the screw head.</td></tr>
 <tr><td>Margin</td><td>0.125</td><td>3.0</td><td>An additional distance between the cutter and the screw
 head.</td></tr>
-<tr><td>Edge inset</td><td>1.25</td><td>32.0</td><td>The distance from the sheet edge to the perimeter
-screws.</td></tr>
+<tr><td>Edge inset</td><td>1.25</td><td>32.0</td><td>The minimum distance from the sheet edge to the perimeter
+screws. The screws are around the vectors, so they are only this near the edge if the vectors are near the edge.</td></tr>
 <tr><td>Perimeter spacing target</td><td>16.0</td><td>406.4</td><td>The approximate distance between the screws
 along an edge. Each edge gets a minimum of 2 screws. For example, a 48" edge gets 3 screws.</td></tr>
 <tr><td>Field count</td><td>4</td><td>4</td><td>The number of screws in the center area of the sheet. The maximum
@@ -125,10 +125,14 @@ Thus, the far edge of the cutter is one full diameter from the vector.</p>
 
 <h2>Where the gadget puts the screws</h2>
 <ul>
-<li><b>Perimeter screws:</b> The gadget divides each edge into equal lengths. It puts a screw at the center of each
-length, at the edge inset distance from the edge. It does not put a screw in a corner.</li>
-<li><b>Field screws:</b> The gadget puts these screws in a grid in the center area of the sheet. The center area
-is half of the sheet width and half of the sheet length. For example, 4 screws make a 2 x 2 grid, and 6 screws make
+<li><b>Perimeter screws:</b> The gadget finds the bounding box of all visible vectors on the sheet. It makes a
+rectangle that is a little more than R larger than the bounding box on each side. The rectangle cannot be nearer than
+the edge inset to the sheet edge. The gadget divides each side of the rectangle into equal lengths. It puts a screw at
+the center of each length. It does not put a screw in a corner. The gadget puts no screws in the empty area of the
+sheet away from the vectors.</li>
+<li><b>Field screws:</b> The gadget puts these screws in a grid in the center area of the bounding box of the vectors.
+The center area is half of the width and half of the length of the bounding box. If the bounding box is smaller than
+the perimeter spacing target in width or in length, the gadget puts no field screws. For example, 4 screws make a 2 x 2 grid, and 6 screws make
 a 2 x 3 grid.</li>
 <li>If a perimeter position is not safe, the gadget moves it along its edge. It moves the position in steps of
 R / 2, to one side and then to the other side. It <b>does not move the position toward the center</b> of the sheet,

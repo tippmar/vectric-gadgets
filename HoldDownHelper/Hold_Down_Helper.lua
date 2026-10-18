@@ -335,7 +335,7 @@ td.unit { color: #666666; }
     <td><input type="text" id="HeadDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="Extra clearance added on top of the cutter and head">Margin:</label></td>
     <td><input type="text" id="Margin" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="How far in from the sheet edge perimeter fasteners sit">Edge inset:</label></td>
+<tr><td class="label"><label title="Closest a perimeter fastener may sit to the sheet edge. Perimeter fasteners ring the bounding box of the vectors">Edge inset:</label></td>
     <td><input type="text" id="EdgeInset" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
 <tr><td class="label"><label title="Target spacing between perimeter fasteners">Perimeter spacing target:</label></td>
     <td><input type="text" id="PerimeterSpacing" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
@@ -469,7 +469,7 @@ function PerimeterCount(side_length)
 end
 -- =====================================================]]
 function PerimeterTargets(min_x, min_y, max_x, max_y)
-    local inset = HoldDown.EdgeInset
+    -- The rectangle given is the ring the fasteners sit on, so it is already inset from the sheet edge
     local width = max_x - min_x
     local height = max_y - min_y
     local targets = {}
@@ -478,16 +478,16 @@ function PerimeterTargets(min_x, min_y, max_x, max_y)
     for i = 1, across do
         local fraction = (i - 0.5) / across
         local x = min_x + (width * fraction)
-        table.insert(targets, {x = x, y = min_y + inset, kind = "perimeter", edge = "bottom"})
-        table.insert(targets, {x = x, y = max_y - inset, kind = "perimeter", edge = "top"})
+        table.insert(targets, {x = x, y = min_y, kind = "perimeter", edge = "bottom"})
+        table.insert(targets, {x = x, y = max_y, kind = "perimeter", edge = "top"})
     end
 
     local up = PerimeterCount(height)
     for i = 1, up do
         local fraction = (i - 0.5) / up
         local y = min_y + (height * fraction)
-        table.insert(targets, {x = min_x + inset, y = y, kind = "perimeter", edge = "left"})
-        table.insert(targets, {x = max_x - inset, y = y, kind = "perimeter", edge = "right"})
+        table.insert(targets, {x = min_x, y = y, kind = "perimeter", edge = "left"})
+        table.insert(targets, {x = max_x, y = y, kind = "perimeter", edge = "right"})
     end
     return targets
 end
@@ -497,7 +497,7 @@ function FieldTargets(min_x, min_y, max_x, max_y)
     if count < 1 then
         return {}
     end
-    -- Center 50% of the sheet
+    -- Center 50% of the rectangle given (the bounding box of the vectors)
     local width = (max_x - min_x) * 0.5
     local height = (max_y - min_y) * 0.5
     local region_x = min_x + ((max_x - min_x) * 0.25)
@@ -520,6 +520,39 @@ function FieldTargets(min_x, min_y, max_x, max_y)
         end
     end
     return targets
+end
+-- =====================================================]]
+function ObstacleBounds(obstacles)
+    -- Bounding box of every obstacle: the area the job actually uses
+    local min_x, min_y = obstacles[1].min_x, obstacles[1].min_y
+    local max_x, max_y = obstacles[1].max_x, obstacles[1].max_y
+    for _, obstacle in ipairs(obstacles) do
+        min_x = math.min(min_x, obstacle.min_x)
+        min_y = math.min(min_y, obstacle.min_y)
+        max_x = math.max(max_x, obstacle.max_x)
+        max_y = math.max(max_y, obstacle.max_y)
+    end
+    return min_x, min_y, max_x, max_y
+end
+-- =====================================================]]
+function PerimeterRing(vec_min_x, vec_min_y, vec_max_x, vec_max_y, radius)
+    -- The vectors' bounding box grown by a little over R, so perimeter positions start just clear of the
+    -- outermost vectors, then held at least EdgeInset inside the sheet edge. Where the vectors reach the
+    -- sheet edge on a side, that side of the ring sits at the inset line, as it did before.
+    local grow = radius * 1.1
+    local inset = HoldDown.EdgeInset
+    local min_x = math.max(vec_min_x - grow, HoldDown.SheetMinX + inset)
+    local min_y = math.max(vec_min_y - grow, HoldDown.SheetMinY + inset)
+    local max_x = math.min(vec_max_x + grow, HoldDown.SheetMaxX - inset)
+    local max_y = math.min(vec_max_y + grow, HoldDown.SheetMaxY - inset)
+    -- Vectors outside the inset sheet (or an inset larger than the sheet) leave no ring: use the sheet's
+    if min_x >= max_x then
+        min_x, max_x = HoldDown.SheetMinX + inset, HoldDown.SheetMaxX - inset
+    end
+    if min_y >= max_y then
+        min_y, max_y = HoldDown.SheetMinY + inset, HoldDown.SheetMaxY - inset
+    end
+    return min_x, min_y, max_x, max_y
 end
 -- =====================================================]]
 function DrawMarker(layer, x, y)
@@ -1071,10 +1104,6 @@ function main(script_path)
 
     local min_x, min_y, max_x, max_y = SheetBounds()
     HoldDown.SheetMinX, HoldDown.SheetMinY, HoldDown.SheetMaxX, HoldDown.SheetMaxY = min_x, min_y, max_x, max_y
-    local targets = PerimeterTargets(min_x, min_y, max_x, max_y)
-    for _, target in ipairs(FieldTargets(min_x, min_y, max_x, max_y)) do
-        table.insert(targets, target)
-    end
 
     local radius = ClearanceRadius()
     local obstacles, failed = PrepareObstacles(vectors, radius)
@@ -1085,6 +1114,19 @@ function main(script_path)
         DisplayMessageBox("No vector on the active sheet could be read, so nothing can be checked for clearance.\n\n" ..
             "Hold Down Helper made no changes." .. SkippedWarning(skipped))
         return false
+    end
+
+    -- Fasteners cluster around the vectors, not the whole sheet: a few parts on a full sheet need no
+    -- countersinks out in the empty field.
+    local vec_min_x, vec_min_y, vec_max_x, vec_max_y = ObstacleBounds(obstacles)
+    local ring_min_x, ring_min_y, ring_max_x, ring_max_y = PerimeterRing(vec_min_x, vec_min_y, vec_max_x, vec_max_y, radius)
+    local targets = PerimeterTargets(ring_min_x, ring_min_y, ring_max_x, ring_max_y)
+    -- A cluster of parts smaller than the perimeter spacing has no field to hold down: the ring already
+    -- surrounds it, and field positions would only be nudged into the gaps around the parts.
+    if (vec_max_x - vec_min_x) >= HoldDown.PerimeterSpacing and (vec_max_y - vec_min_y) >= HoldDown.PerimeterSpacing then
+        for _, target in ipairs(FieldTargets(vec_min_x, vec_min_y, vec_max_x, vec_max_y)) do
+            table.insert(targets, target)
+        end
     end
     local placed, rejected = PlaceTargets(obstacles, targets, radius)
 
