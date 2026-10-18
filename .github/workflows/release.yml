@@ -1,0 +1,79 @@
+# Publishes one gadget as a GitHub release. Push a tag named <gadget>-v<version>, for example
+# hold-down-helper-v1.0.0, and this packages that gadget's folder with deploy.ps1 and attaches the .vgadget
+# archive. Each gadget is versioned on its own by its own tag prefix.
+name: Release gadget
+
+on:
+  push:
+    tags:
+      - 'blum-drawer-maker-v*'
+      - 'blum-nesting-repair-v*'
+      - 'box-joint-runs-v*'
+      - 'hold-down-helper-v*'
+      - 'shaker-maker-v*'
+      - 'stock-sizer-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Work out the gadget from the tag
+        id: gadget
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          slug="${tag%-v*}"
+          version="${tag##*-v}"
+          case "$slug" in
+            blum-drawer-maker)  folder=BlumDrawerMaker;   title="Blum Drawer Maker" ;;
+            blum-nesting-repair) folder=BlumNestingRepair; title="Blum Nesting Repair" ;;
+            box-joint-runs)     folder=BoxJointRuns;      title="Box Joint Runs" ;;
+            hold-down-helper)   folder=HoldDownHelper;    title="Hold Down Helper" ;;
+            shaker-maker)       folder=ShakerMaker;       title="Shaker Maker" ;;
+            stock-sizer)        folder=StockSizer;        title="Stock Sizer" ;;
+            *) echo "Unknown gadget tag: $tag"; exit 1 ;;
+          esac
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag version must look like 1.2.3: $tag"; exit 1
+          fi
+          # The tag must match the version the gadget itself shows, so a release never says one thing and About another
+          lua_version=$(grep -h -o -E 'ProgramVersion *= *"[0-9]+\.[0-9]+\.[0-9]+"' "$folder"/*.lua | head -n 1 | grep -o -E '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          if [ "$lua_version" != "$version" ]; then
+            echo "Tag says $version but $folder declares '$lua_version' (ProgramVersion in its main .lua)"; exit 1
+          fi
+          echo "slug=$slug" >> "$GITHUB_OUTPUT"
+          echo "folder=$folder" >> "$GITHUB_OUTPUT"
+          echo "title=$title $version" >> "$GITHUB_OUTPUT"
+
+      - name: Package the gadget
+        shell: pwsh
+        run: ./deploy.ps1 -SourceFolder '${{ steps.gadget.outputs.folder }}' -Force
+
+      - name: Release notes from this gadget's commits
+        run: |
+          # Commits that touched this gadget's folder since this gadget's previous release
+          previous=$(git tag --list "${{ steps.gadget.outputs.slug }}-v*" --sort=-v:refname | grep -v -x "${GITHUB_REF_NAME}" | head -n 1 || true)
+          range="HEAD"
+          if [ -n "$previous" ]; then range="${previous}..HEAD"; fi
+          { echo "Changes to ${{ steps.gadget.outputs.title }}:"; echo
+            git log --no-merges --pretty='- %s' "$range" -- "${{ steps.gadget.outputs.folder }}"
+          } > notes.md
+          cat notes.md
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive=$(ls *.vgadget)
+          test "$(echo "$archive" | wc -l)" -eq 1
+          gh release create "${GITHUB_REF_NAME}" "$archive" \
+            --title "${{ steps.gadget.outputs.title }}" --notes-file notes.md

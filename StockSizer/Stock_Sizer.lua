@@ -26,8 +26,9 @@ require "strict"
 --   The sheet keeps its lower-left corner (it stays at the origin) and the vectors do not move
 
 StockSizer = {}
-StockSizer.ProgramVersion = "1.0"
-StockSizer.RegName = "StockSizer" .. StockSizer.ProgramVersion
+StockSizer.ProgramVersion = "1.0.0"
+-- Fixed, not built from the version: a release must not reset users' saved settings
+StockSizer.RegName = "StockSizer"
 StockSizer.job = nil
 StockSizer.InMM = false
 StockSizer.UnitLabel = "inches"
@@ -129,37 +130,75 @@ function RoundUpOptions()
     return options
 end
 -- =====================================================]]
+function StockSizerStyle()
+    -- The dialog look shared with the other gadgets, copied from Shaker Maker's dialog
+    return [[
+html { overflow: hidden }
+body { background-color: #3a4660; overflow: hidden; font-family: arial, helvetica, sans-serif; font-size: 12px;
+    color: #FFFFFF; }
+table { width: 100%; border: 0; }
+.FormButton { font-weight: bold; width: 75px; font-size: 12px; white-space: nowrap; background-color: #630;
+    color: #FFFFFF; }
+.LuaButton { font-weight: bold; font-size: 12px; background-color: #663300; color: #FFFFFF; }
+.h1-l { font-size: 12px; font-weight: bold; text-align: left; white-space: nowrap; }
+.h1-r { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
+.h1-rP { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; padding-right: 4px;
+    padding-left: 4px; }
+.h2-c { font-size: 14px; font-weight: bold; text-align: center; white-space: nowrap; text-shadow: 2px 2px white; }
+.note { font-size: 12px; font-weight: bold; text-align: center; color: #FFFF33; }
+]]
+end
+-- =====================================================]]
 function SettingsHtml()
-    local unit = StockSizer.UnitLabel
-    return [[<html><head><style>
-html { overflow: hidden; }
-body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F0; overflow: hidden; }
-table { border-collapse: collapse; }
-td { padding: 2px 6px; }
-td.label { text-align: right; }
-td.unit { color: #666666; }
-.buttons { text-align: right; margin-top: 8px; }
+    -- Look and feel copied from Shaker Maker's dialog (ShakerDialog.xlua), trimmed to the classes this dialog
+    -- uses. The units are in the dialog title.
+    return [[<!DOCTYPE html><html><head><title>Stock Sizer</title>
+<style>
+]] .. StockSizerStyle() .. [[
+#InquiryHelp, #InquiryAbout { width: 80px; }
 </style></head><body>
 <table>
-<tr><td class="label"><label title="Largest cutter that cuts outside a vector">Largest tool diameter:</label></td>
-    <td><input type="text" id="ToolDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Extra stock beyond the cutter, on every side">Extra allowance:</label></td>
-    <td><input type="text" id="Allowance" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Round width and length up to a multiple of this. None leaves them as measured">Round up to:</label></td>
-    <td><select id="RoundUp">]] .. RoundUpOptions() .. [[</select></td><td>&nbsp;</td></tr>
-<tr><td class="label"><label title="Show the size only; do not change the sheet">Report only:</label></td>
-    <td><input type="checkbox" id="ReportOnly" /></td><td>&nbsp;</td></tr>
+  <tr>
+    <td colspan="2" class="h2-c">Margin</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Largest cutter that cuts outside a vector">Largest tool diameter</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="ToolDiameter" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Extra stock beyond the cutter, on every side">Extra allowance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Allowance" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="h2-c">Size</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Round width and length up to a multiple of this. None leaves them as measured">Round up to</label></td>
+    <td class="h1-l"><select id="RoundUp" size="1">]] .. RoundUpOptions() .. [[</select></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Show the size only; do not change the sheet">Report only</label></td>
+    <td class="h1-l"><input type="checkbox" class="LuaButton" id="ReportOnly"/></td>
+  </tr>
 </table>
-<p class="buttons"><input id="InquiryHelp" class="LuaButton" type="button" value="Help">
-<input id="InquiryAbout" class="LuaButton" type="button" value="About">
-<input id="ButtonOK" class="FormButton" type="button" value="Size Stock">
-<input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
+<table>
+  <tr>
+    <td colspan="3"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id="InquiryHelp" class="LuaButton" type="button" value="Help"/>
+                     <input id="InquiryAbout" class="LuaButton" type="button" value="About"/></td>
+    <td>&nbsp;</td>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Size Stock" style="width: 90px"/>
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+  </tr>
+</table>
 </body></html>]]
 end
 -- =====================================================]]
 function ShowSettingsDialog()
     local width, height = DialogSize(StockSizer.DialogSize)
-    local dialog = HTML_Dialog(true, SettingsHtml(), width, height, "Stock Sizer (" .. StockSizer.UnitLabel .. ")")
+    local dialog = HTML_Dialog(true, SettingsHtml(), width, height, "Stock Sizer " .. StockSizer.ProgramVersion .. " (" .. StockSizer.UnitLabel .. ")")
     dialog:AddDoubleField("ToolDiameter", StockSizer.ToolDiameter)
     dialog:AddDoubleField("Allowance", StockSizer.Allowance)
     dialog:AddDropDownList("RoundUp", StockSizer.RoundUp)
@@ -275,27 +314,50 @@ function NotesHtml(notes)
     if notes == nil or notes == "" then
         return ""
     end
-    return '<div class="note">' .. string.gsub(notes, "\n", "<br>") .. "</div>"
+    return '<tr><td colspan="2" class="warn">' .. string.gsub(notes, "\n", "<br>") .. "</td></tr>"
 end
 -- =====================================================]]
 function ConfirmResize(current_width, current_height, width, height, margin, notes)
     -- VCarve has no undo for a sheet size change, so nothing is resized until this returns true
-    local html = [[<html><head><style>
-html { overflow: hidden; }
-body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F0; overflow: hidden; }
-td { padding: 2px 6px; }
-td.label { text-align: right; }
-.note { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px; margin-top: 8px; }
-.buttons { text-align: right; margin-top: 8px; }
+    local html = [[<!DOCTYPE html><html><head><title>Resize Sheet</title>
+<style>
+]] .. StockSizerStyle() .. [[
+.warn { font-size: 12px; font-weight: bold; text-align: left; color: #FFFF33; white-space: normal; }
 </style></head><body>
 <table>
-<tr><td class="label">Current size:</td><td><b>]] .. SizeText(current_width) .. " x " .. SizeText(current_height) .. [[</b></td></tr>
-<tr><td class="label">Proposed size:</td><td><b>]] .. SizeText(width) .. " x " .. SizeText(height) .. [[</b></td></tr>
-<tr><td class="label">Margin:</td><td>]] .. SizeText(margin) .. [[</td></tr>
+  <tr>
+    <td colspan="2" class="h2-c">Resize the sheet?</td>
+  </tr>
+  <tr>
+    <td class="h1-rP">Current size</td>
+    <td class="h1-l">]] .. SizeText(current_width) .. " x " .. SizeText(current_height) .. [[</td>
+  </tr>
+  <tr>
+    <td class="h1-rP">Proposed size</td>
+    <td class="h1-l">]] .. SizeText(width) .. " x " .. SizeText(height) .. [[</td>
+  </tr>
+  <tr>
+    <td class="h1-rP">Margin</td>
+    <td class="h1-l">]] .. SizeText(margin) .. [[</td>
+  </tr>
+  <tr>
+    <td colspan="2"><hr></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="warn">VCarve cannot undo a sheet size change.</td>
+  </tr>
+  ]] .. NotesHtml(notes) .. [[
 </table>
-<div class="note"><b>VCarve cannot undo a sheet size change.</b> Resize the sheet?</div>]] .. NotesHtml(notes) .. [[
-<p class="buttons"><input id="ButtonOK" class="FormButton" type="button" value="Resize Sheet">
-<input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
+<table>
+  <tr>
+    <td colspan="2"><hr></td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Resize Sheet" style="width: 100px"/>
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+  </tr>
+</table>
 </body></html>]]
     local dialog = HTML_Dialog(true, html, 520, 360, "Resize Sheet?")
     return dialog:ShowDialog()
@@ -333,21 +395,31 @@ function OnLuaButton_InquiryHelp(dialog)
 end
 -- =====================================================]]
 function OnLuaButton_InquiryAbout(dialog)
-    local html = [[<html><head><style>
-html { overflow: hidden; }
-body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F0; overflow: hidden; }
-h2 { margin: 4px 0; }
-.buttons { text-align: right; margin-top: 12px; }
+    local html = [[<!DOCTYPE html><html><head><title>About Stock Sizer</title>
+<style>
+]] .. StockSizerStyle() .. [[
+.text { font-size: 12px; text-align: left; white-space: normal; }
 </style></head><body>
-<h2>Stock Sizer</h2>
-<p>Version ]] .. StockSizer.ProgramVersion .. [[<br>
-Finds the size of stock that a job needs and resizes the sheet to it.</p>
-<p>An original gadget from the vectric-gadgets repository:<br>
-https://github.com/tippmar/vectric-gadgets</p>
-<p>Gadgets are an entirely optional add-in to Vectric's core software products. They are provided 'as-is',
-without any express or implied warranty, and you make use of them entirely at your own risk. See the Help page
-for the full terms.</p>
-<p class="buttons"><input id="ButtonOK" class="FormButton" type="button" value="Close"></p>
+<table>
+  <tr>
+    <td class="h2-c">Stock Sizer</td>
+  </tr>
+  <tr>
+    <td class="text">Version ]] .. StockSizer.ProgramVersion .. [[<br>
+      Finds the size of stock that a job needs and resizes the sheet to it.<br><br>
+      An original gadget from the vectric-gadgets repository:<br>
+      https://github.com/tippmar/vectric-gadgets<br><br>
+      Gadgets are an entirely optional add-in to Vectric's core software products. They are provided 'as-is',
+      without any express or implied warranty, and you make use of them entirely at your own risk. See the Help
+      page for the full terms.</td>
+  </tr>
+  <tr>
+    <td><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Close"/></td>
+  </tr>
+</table>
 </body></html>]]
     local about = HTML_Dialog(true, html, 460, 320, "About Stock Sizer")
     about:ShowDialog()

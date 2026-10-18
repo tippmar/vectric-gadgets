@@ -485,7 +485,7 @@ function RegistryRead() -- Read from Registry values
     Project.CabinetName = RegistryRead:GetString("Project.CabinetName", "C1")
     Project.ProgramContact = RegistryRead:GetString("Project.ProgramContact", "Who")
     Project.ProgramName = RegistryRead:GetString("Project.ProgramName", "Blum Drawer Maker")
-    Project.ProgramVersion = RegistryRead:GetString("Project.ProgramVersion", string.format(Project.ProgramVersion))
+    -- The version always comes from the code, never from a saved value, so a release shows its own number
     Project.ProgramYear = RegistryRead:GetString("Project.ProgramYear", "2020")
     Project.ContactEmail = RegistryRead:GetString("Project.ContactEmail", "Default@Email.com")
     Project.ContactName = RegistryRead:GetString("Project.ContactName", "WHO")

@@ -134,7 +134,7 @@ table { width: 100%; border: 0; }
   </tr>
 </table>
 </body></html>]]
-    Shaker.dialog = HTML_Dialog(true, html, Shaker.DialogWidth, Shaker.DialogHeight, "Shaker Maker " .. Shaker.UnitLabel)
+    Shaker.dialog = HTML_Dialog(true, html, Shaker.DialogWidth, Shaker.DialogHeight, "Shaker Maker " .. Shaker.ProgramVersion .. " " .. Shaker.UnitLabel)
     Shaker.dialog:AddTextField("Shaker.PartName", Shaker.PartName)
     Shaker.dialog:AddIntegerField("Shaker.Quantity", Shaker.Quantity)
     Shaker.dialog:AddDoubleField("Shaker.Width", Shaker.Width)

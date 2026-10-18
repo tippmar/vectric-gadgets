@@ -75,8 +75,6 @@ sheet.</li>
 <h2>Settings</h2>
 <p>All values are in the job units. The gadget keeps the values for the next run. It keeps one set of values for
 inch jobs and a different set for metric jobs.</p>
-<div class="warn"><b>CAUTION:</b> Type each value, then push the Tab key. VCarve does not keep a value that you
-paste.</div>
 <table>
 <tr><th>Setting</th><th>Inch default</th><th>mm default</th><th>Description</th></tr>
 <tr><td>V-Bit</td><td colspan="2">none</td><td>The bit that cuts the countersinks. The tool list shows only

@@ -18,6 +18,7 @@ require "strict"
 Run = {}
 Milling = {}
 Run.RegName = "BoxJointRuns"
+Run.ProgramVersion = "1.0.0" -- a release tag must match it
 lead_in_out_data = LeadInOutData()
 -- =====================================================]]
 function GetMaterialSettings()

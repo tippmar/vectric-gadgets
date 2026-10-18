@@ -13,6 +13,7 @@
 -- Then toolpaths are re-sequenced by tool, as Blum Drawer Maker does.
 ]] -- =====================================================]]
 require "strict"
+NestingRepair = {ProgramVersion = "1.0.0"} -- a release tag must match it
 -- =====================================================]]
 function IdKey(raw_id) -- String form of a UUID, usable as a table key
     return luaUUID(raw_id):AsString()
@@ -249,7 +250,7 @@ body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F
 <p class="buttons"><input id="ButtonOK" class="FormButton" type="button" value="Repair">
 <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
 </body></html>]]
-    local dialog = HTML_Dialog(true, html, 560, 470, "Blum Nesting Repair")
+    local dialog = HTML_Dialog(true, html, 560, 470, "Blum Nesting Repair " .. NestingRepair.ProgramVersion)
     return dialog:ShowDialog()
 end
 -- =====================================================]]

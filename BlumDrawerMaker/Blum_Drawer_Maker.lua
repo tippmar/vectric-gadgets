@@ -41,7 +41,7 @@ Tool_ID4 = ToolDBId()
 Tool_ID5 = ToolDBId()
 Tool_ID6 = ToolDBId()
 lead_in_out_data = LeadInOutData() -- Create object used to control lead in/out
-Project.ProgramVersion = 0.2 -- Version Number
+Project.ProgramVersion = "1.0.0" -- Version Number; a release tag must match it
 Milling.myRecord = 1.0
 Drawer.RSide = 1
 Drawer.LSide = 1
@@ -59,7 +59,8 @@ MillTool3 = {}
 MillTool4 = {}
 MillTool5 = {}
 MillTool6 = {}
-Project.RegName = "BlumDrawerMaker" .. string.format(Project.ProgramVersion)
+-- Fixed, not built from the version: a release must not reset users' saved settings
+Project.RegName = "BlumDrawerMaker"
 -- ====================================================]]
 function main(script_path) -- Gadget Start Point, Error and Alert Messages
     local Tools

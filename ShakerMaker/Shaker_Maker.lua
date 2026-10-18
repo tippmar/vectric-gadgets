@@ -21,6 +21,7 @@ require "strict"
 Shaker = {}
 Milling = {}
 Shaker.RegName = "ShakerMaker"
+Shaker.ProgramVersion = "1.0.0" -- a release tag must match it
 Shaker.AppPath = "" -- the installed gadget folder, set from main's script_path; the Help page lives under it
 lead_in_out_data = LeadInOutData()
 -- =====================================================]]

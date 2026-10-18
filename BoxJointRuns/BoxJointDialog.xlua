@@ -241,7 +241,7 @@ table { width: 100%; border: 0; }
   </tr>
 </table>
 </body></html>]]
-    Run.dialog = HTML_Dialog(true, html, Run.DialogWidth, Run.DialogHeight, "Box Joint Runs " .. Run.UnitLabel)
+    Run.dialog = HTML_Dialog(true, html, Run.DialogWidth, Run.DialogHeight, "Box Joint Runs " .. Run.ProgramVersion .. " " .. Run.UnitLabel)
     Run.dialog:AddDoubleField("Run.StockT", Run.StockT)
     Run.dialog:AddDoubleField("Run.StockW", Run.StockW)
     Run.dialog:AddCheckBox("FingerAutoCheck", Run.FingerAuto)

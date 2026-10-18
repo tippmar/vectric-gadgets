@@ -129,6 +129,31 @@ pwsh ./deploy.ps1 -SourceFolder BlumNestingRepair    # Blum_Nesting_Repair.vgadg
 
 Add `-Force` to overwrite an existing archive without being asked. `*.vgadget` is gitignored.
 
+## Releasing
+
+Each gadget is released and versioned on its own. Push a tag named `<gadget>-v<major>.<minor>.<patch>` from `main`
+and the `Release gadget` workflow packages that gadget's folder with `deploy.ps1` and publishes a GitHub release
+with the `.vgadget` attached. The release notes list the commits that touched that gadget's folder since its
+previous release.
+
+| Tag prefix | Gadget |
+|---|---|
+| `blum-drawer-maker-v` | Blum Drawer Maker |
+| `blum-nesting-repair-v` | Blum Nesting Repair |
+| `box-joint-runs-v` | Box Joint Runs |
+| `hold-down-helper-v` | Hold Down Helper |
+| `shaker-maker-v` | Shaker Maker |
+| `stock-sizer-v` | Stock Sizer |
+
+```powershell
+git tag hold-down-helper-v1.0.0
+git push origin hold-down-helper-v1.0.0
+```
+
+The archive name is fixed (`Hold_Down_Helper.vgadget`), so every release of a gadget has the same file name.
+
+The tag version must equal `ProgramVersion` in the gadget's main `.lua`, which the gadget shows in its dialog title or About box; the workflow fails when they differ. Bump `ProgramVersion` in a commit first, then tag that commit. Saved settings do not depend on the version.
+
 ## Writing gadgets
 
 - A gadget script **must** start with the line `-- VECTRIC LUA SCRIPT`, or VCarve refuses to run it.

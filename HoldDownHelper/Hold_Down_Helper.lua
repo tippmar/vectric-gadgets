@@ -43,8 +43,10 @@ require "strict"
 --   Safe Z from the material block        -> Z0.5335 = top + thickness * 0.1; cut at Z0.385
 
 HoldDown = {}
-HoldDown.ProgramVersion = "1.0"
-HoldDown.RegName = "HoldDownHelper" .. HoldDown.ProgramVersion
+HoldDown.ProgramVersion = "1.0.0"
+-- Fixed, not built from the version: a release must not reset users' saved settings. The key keeps the name
+-- it had when the version was 1.0.
+HoldDown.RegName = "HoldDownHelper1.0"
 HoldDown.LayerName = "Hold Down"
 HoldDown.ToolpathName = "Hold Down Countersinks"
 -- The name before countersinks. A re-run deletes it too, so an older job never keeps both.
@@ -319,53 +321,95 @@ function CountersinkDepth()
 end
 -- =====================================================]]
 function SettingsHtml()
-    local unit = HoldDown.UnitLabel
-    return [[<html><head><style>
-body { font-family: Arial, sans-serif; font-size: 12px; background-color: #F0F0F0; }
-table { border-collapse: collapse; }
-td { padding: 2px 6px; }
-td.label { text-align: right; }
-td.unit { color: #666666; }
-.note { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px; margin-top: 8px; }
-.buttons { text-align: right; margin-top: 8px; }
+    -- Look and feel copied from Shaker Maker's dialog (ShakerDialog.xlua), which took it from Blum Drawer Maker's
+    -- DialogWindow.Style, trimmed to the classes this dialog uses. The units are in the dialog title.
+    return [[<!DOCTYPE html><html><head><title>Hold Down Helper</title>
+<style>
+html { overflow: hidden }
+body { background-color: #3a4660; overflow: hidden; font-family: arial, helvetica, sans-serif; font-size: 12px;
+    color: #FFFFFF; }
+table { width: 100%; border: 0; }
+.FormButton { font-weight: bold; width: 75px; font-size: 12px; white-space: nowrap; background-color: #630;
+    color: #FFFFFF; }
+.LuaButton { font-weight: bold; font-size: 12px; background-color: #663300; color: #FFFFFF; }
+.ToolNameLabel { font-weight: bolder; font-size: 12px; text-align: left; color: #000; width: 70%; }
+.ToolPicker { font-weight: bold; text-align: center; font-size: 12px; width: 50px; background-color: #663300;
+    color: #FFFFFF; }
+.h1-l { font-size: 12px; font-weight: bold; text-align: left; white-space: nowrap; }
+.h1-r { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; }
+.h1-rP { font-size: 12px; font-weight: bold; text-align: right; white-space: nowrap; padding-right: 4px;
+    padding-left: 4px; }
+.h2-c { font-size: 14px; font-weight: bold; text-align: center; white-space: nowrap; text-shadow: 2px 2px white; }
+#InquiryHelp { width: 80px; }
 </style></head><body>
 <table>
-<tr><td class="label"><label title="The V-bit that cuts the countersinks. Its angle sets how deep each one is cut">V-Bit:</label></td>
-    <td bgcolor="#33FFFF"><span id="ToolNameLabel">-</span></td>
-    <td><input id="ToolChooseButton" class="ToolPicker" type="button" value="Tool"></td></tr>
-<tr><td class="label"><label title="Largest cutter used anywhere in the job">Assumed tool diameter:</label></td>
-    <td><input type="text" id="ToolDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Diameter of the fastener head">Screw head diameter:</label></td>
-    <td><input type="text" id="HeadDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Extra clearance added on top of the cutter and head">Margin:</label></td>
-    <td><input type="text" id="Margin" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Closest a perimeter fastener may sit to the sheet edge. Perimeter fasteners ring the bounding box of the vectors">Edge inset:</label></td>
-    <td><input type="text" id="EdgeInset" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Target spacing between perimeter fasteners">Perimeter spacing target:</label></td>
-    <td><input type="text" id="PerimeterSpacing" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Fasteners placed in the middle of the sheet">Field count:</label></td>
-    <td><input type="text" id="FieldCount" size="10" maxlength="10" /></td><td class="unit">&nbsp;</td></tr>
-<tr><td class="label"><label title="How far a rejected position may move looking for a safe one">Max nudge search:</label></td>
-    <td><input type="text" id="MaxSearch" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Each position moves a random distance up to this far along X and along Y, so screws do not go into the same spoilboard holes every run. Type 0 for no jitter">Jitter:</label></td>
-    <td><input type="text" id="Jitter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="How much wider than the screw head each countersink is cut. The depth follows from this and the V-bit angle">Countersink clearance:</label></td>
-    <td><input type="text" id="CountersinkClearance" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Size of the marker circle drawn per position">Marker diameter:</label></td>
-    <td><input type="text" id="MarkerDiameter" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
-<tr><td class="label"><label title="Height above the sheet for moves between countersinks. An unfastened sheet may not lie flat, so leave room">Safe Z gap:</label></td>
-    <td><input type="text" id="SafeZGap" size="10" maxlength="10" /></td><td class="unit">]] .. unit .. [[</td></tr>
+  <tr>
+    <td colspan="4" class="h2-c">Countersink</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="The V-bit that cuts the countersinks. Its angle sets how deep each one is cut">V-Bit:</label></td>
+    <td bgcolor="#33FFFF" class="ToolNameLabel"><span id="ToolNameLabel">-</span></td>
+    <td class="h1-l"><input id="ToolChooseButton" class="ToolPicker" type="button" value="Tool"/></td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Diameter of the fastener head">Screw head diameter</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="HeadDiameter" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="How much wider than the screw head each countersink is cut. The depth follows from this and the V-bit angle">Countersink clearance</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="CountersinkClearance" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Size of the marker circle drawn per position">Marker diameter</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="MarkerDiameter" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Height above the sheet for moves between countersinks. An unfastened sheet may not lie flat, so leave room">Safe Z gap</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="SafeZGap" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="4" class="h2-c">Clearance</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Largest cutter used anywhere in the job">Assumed tool diameter</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="ToolDiameter" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Extra clearance added on top of the cutter and head">Margin</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Margin" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="How far a rejected position may move looking for a safe one">Max nudge search</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="MaxSearch" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Each position moves a random distance up to this far along X and along Y, so screws do not go into the same spoilboard holes every run. Type 0 for no jitter">Jitter</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="Jitter" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td colspan="4" class="h2-c">Placement</td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Closest a perimeter fastener may sit to the sheet edge. Perimeter fasteners ring the bounding box of the vectors">Edge inset</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="EdgeInset" size="10" maxlength="10"/></td>
+    <td class="h1-rP"><label title="Target spacing between perimeter fasteners">Perimeter spacing target</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="PerimeterSpacing" size="10" maxlength="10"/></td>
+  </tr>
+  <tr>
+    <td class="h1-rP"><label title="Fasteners placed in the middle of the vectors">Field count</label></td>
+    <td class="h1-l"><input type="text" class="h1-l" id="FieldCount" size="10" maxlength="10"/></td>
+    <td colspan="2">&nbsp;</td>
+  </tr>
 </table>
-<div class="note"><b>Type values, do not paste them.</b> VCarve discards a pasted value unless you type it
-and tab out of the field.</div>
-<p class="buttons"><input id="InquiryHelp" class="LuaButton" type="button" value="Help">
-<input id="ButtonOK" class="FormButton" type="button" value="Mark Positions">
-<input id="ButtonCancel" class="FormButton" type="button" value="Cancel"></p>
+<table>
+  <tr>
+    <td colspan="3"><hr></td>
+  </tr>
+  <tr>
+    <td class="h1-l"><input id="InquiryHelp" class="LuaButton" type="button" value="Help"/></td>
+    <td>&nbsp;</td>
+    <td class="h1-r"><input id="ButtonOK" class="FormButton" type="button" value="Mark Positions" style="width: 130px"/>
+                     <input id="ButtonCancel" class="FormButton" type="button" value="Cancel"/></td>
+  </tr>
+</table>
 </body></html>]]
 end
 -- =====================================================]]
 function ShowSettingsDialog()
-    local dialog = HTML_Dialog(true, SettingsHtml(), 470, 490, "Hold Down Helper (" .. HoldDown.UnitLabel .. ")")
+    local dialog = HTML_Dialog(true, SettingsHtml(), 600, 440, "Hold Down Helper " .. HoldDown.ProgramVersion .. " (" .. HoldDown.UnitLabel .. ")")
     dialog:AddLabelField("ToolNameLabel", HoldDown.Tool.Name)
     dialog:AddToolPicker("ToolChooseButton", "ToolNameLabel", HoldDownToolId)
     dialog:AddToolPickerValidToolType("ToolChooseButton", Tool.VBIT)
