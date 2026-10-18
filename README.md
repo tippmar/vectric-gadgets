@@ -8,6 +8,7 @@ Gadgets for use with Vectric CNC software, developed and tested against **VCarve
 | Blum Nesting Repair | [`BlumNestingRepair/`](BlumNestingRepair/) | Run after nesting to fix toolpaths that nesting left behind on the wrong sheets. |
 | Hold Down Helper | [`HoldDownHelper/`](HoldDownHelper/) | Finds places to screw a sheet to the spoilboard where no cutter will reach, and countersinks them with a V-bit. |
 | Shaker Maker | [`ShakerMaker/`](ShakerMaker/) | Carves a shaker look into a solid slab: a recessed panel, straight or V-bit edged, cleared by one or more bits. |
+| Stock Sizer | [`StockSizer/`](StockSizer/) | Finds the stock size a job needs from the bounding box of its vectors, and resizes the sheet to it. |
 
 The two are meant to be used in sequence: build drawers with Blum Drawer Maker, nest the job, then run Blum Nesting Repair to put the toolpaths back in order.
 

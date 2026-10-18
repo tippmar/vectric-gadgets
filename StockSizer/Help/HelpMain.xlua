@@ -1,0 +1,137 @@
+-- =====================================================]]
+--[[
+-- Gadgets are an entirely optional add-in to Vectric's core software products.
+-- They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own risk.
+-- In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.
+-- Permission is granted to anyone to use this software for any purpose,
+-- including commercial applications, and to alter it and redistribute it freely,
+-- subject to the following restrictions:
+-- 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software.
+--    If you use this software in a product, an acknowledgement in the product documentation would be appreciated but is not required.
+-- 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+-- 3. This notice may not be removed or altered from any source distribution.
+-- ====================================================================================================================================
+-- Stock Sizer is an original gadget from the vectric-gadgets repository, https://github.com/tippmar/vectric-gadgets
+-- ====================================================================================================================================
+-- Stock Sizer help page. Loaded on demand by OnLuaButton_InquiryHelp in Stock_Sizer.lua, the same way
+-- Hold Down Helper loads its Help page, and shown in an HTML_Dialog. ButtonOK is the dialog's Close button.
+]] -- =====================================================]]
+function StockSizerHelpHtml()
+    return [==[<!DOCTYPE html><html lang="en"><head><title>Stock Sizer Help</title>
+<style>
+html { overflow: hidden; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background-color: #FFFFFF; color: #000000; margin: 0; overflow: hidden; }
+.layout { overflow: auto; height: 540px; padding: 4px 14px 4px 10px; }
+h1 { font-size: 20px; margin: 10px 0 4px 0; }
+h2 { font-size: 16px; margin: 16px 0 4px 0; border-bottom: 1px solid #999999; }
+p, li { line-height: 1.35; }
+table { border-collapse: collapse; margin: 4px 0; }
+th, td { border: 1px solid #BBBBBB; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background-color: #EEEEEE; }
+.warn { background-color: #FFF4CE; border: 1px solid #D9A400; padding: 6px 8px; margin: 8px 0; }
+.danger { background-color: #FDE2E1; border: 1px solid #C0392B; padding: 6px 8px; margin: 8px 0; }
+.foot { text-align: center; padding: 8px; border-top: 1px solid #999999; }
+.FormButton { font-weight: bold; font-size: 12px; }
+</style></head>
+<body>
+<div class="layout">
+
+<h1>Stock Sizer</h1>
+<p>Stock Sizer finds the size of stock that a job needs, then it can change the sheet to that size. Thus you can
+draw a job on a full 48 x 48 sheet and learn the stock size afterward. You do not have to change the sheet size
+for each new job.</p>
+
+<h2>Procedure</h2>
+<ol>
+<li>Draw the job on the <b>active sheet</b>.</li>
+<li>Run Stock Sizer.</li>
+<li>Set the values and push <b>Size Stock</b>.</li>
+<li>If <b>Report only</b> is on, a message shows the sizes. The gadget does not change the sheet.</li>
+<li>If <b>Report only</b> is off, a dialog shows the current size, the proposed size and the margin. Push
+<b>Resize Sheet</b> to change the sheet. Push <b>Cancel</b> to keep the sheet as it is.</li>
+</ol>
+<div class="danger"><b>WARNING:</b> VCarve cannot undo a sheet size change. Save the job before you resize the
+sheet.</div>
+
+<h2>How the gadget finds the size</h2>
+<ul>
+<li>The gadget finds the bounding box of all visible vectors on the active sheet. The bounding box is the smallest
+rectangle that holds all of the vectors. Grouped vectors are included.</li>
+<li>Text and bitmaps have no vector outline. The gadget uses the bounding box of each one. The message tells you
+when this happens.</li>
+<li>The margin is the tool diameter plus the extra allowance. An outside profile puts the edge of the cutter a
+full tool diameter outside the vector. The margin keeps the cutter on the stock.</li>
+<li>The sheet keeps its <b>lower-left corner</b>. The new width and length go from this corner to the far edges
+of the vectors, plus the margin. The gadget <b>does not move the vectors</b>.</li>
+<li>If you select a value for <b>Round up to</b>, the width and the length each go up to the next multiple of
+that value.</li>
+</ul>
+
+<h2>Settings</h2>
+<p>All values are in the job units. The gadget keeps the values and the size of the dialog for the next run. It
+keeps one set of values for inch jobs and a different set for metric jobs.</p>
+<div class="warn"><b>CAUTION:</b> Type each value, then push the Tab key. VCarve does not keep a value that you
+paste.</div>
+<table>
+<tr><th>Setting</th><th>Inch default</th><th>Metric default</th><th>Description</th></tr>
+<tr><td>Largest tool diameter</td><td>0.25</td><td>6.0</td><td>The diameter of the largest cutter that cuts outside a
+vector.</td></tr>
+<tr><td>Extra allowance</td><td>0.125</td><td>3.0</td><td>An additional distance beyond the cutter, on each
+side.</td></tr>
+<tr><td>Round up to</td><td>None</td><td>None</td><td>None, 1/8, 1/4, 1/2 or 1 inch for an inch job. None, 1, 5,
+10, 25 or 50 mm for a metric job. The width and the length go up to the next multiple of this value.</td></tr>
+<tr><td>Report only</td><td>On</td><td>On</td><td>When it is on, the gadget shows the sizes and does not change the
+sheet.</td></tr>
+</table>
+
+<h2>The messages</h2>
+<ul>
+<li><b>Report:</b> The report shows the size of the vectors, the margin, the current sheet size and the stock that
+the job needs where the vectors are now. If the stock is smaller when the vectors are at the lower-left corner,
+the report also shows that size.</li>
+<li><b>Confirmation:</b> This dialog shows the current size, the proposed size and the margin. It also shows any
+warning.</li>
+<li><b>Result:</b> After the resize, a message shows the new size.</li>
+</ul>
+
+<h2>Limits</h2>
+<ul>
+<li><b>Vectors near the lower-left corner.</b> The gadget does not move the vectors. If the vectors are closer
+than the margin to the left edge or to the bottom edge, the gadget shows a warning. Move the vectors away from the
+corner before you resize the sheet.</li>
+<li><b>Vectors away from the lower-left corner.</b> Space between the corner and the vectors stays in the sheet.
+The report shows the smaller size of stock that you need if you move the vectors to the corner.</li>
+<li><b>Hidden layers.</b> The gadget does not count hidden layers. Show all layers that the job cuts.</li>
+<li><b>Active sheet only.</b> The gadget examines and changes only the active sheet.</li>
+<li><b>Thickness.</b> The material thickness does not change.</li>
+<li><b>Toolpaths.</b> The gadget does not change toolpaths. Calculate the toolpaths again after you resize the
+sheet.</li>
+</ul>
+
+<h2>About</h2>
+<p>Stock Sizer is an original gadget from the vectric-gadgets repository:<br>
+<a href="https://github.com/tippmar/vectric-gadgets">https://github.com/tippmar/vectric-gadgets</a><br>
+Questions and discussion: <a href="https://forum.vectric.com">Vectric User Forum</a></p>
+<p><b>Disclaimer</b><br>
+The Stock Sizer gadget is a plugin for Vectric software, VCarve Pro and Aspire.
+Gadgets are an entirely optional add-in to Vectric's core software products.
+They are provided 'as-is', without any express or implied warranty, and you make use of them entirely at your own
+risk. In no event will the author(s) or Vectric Ltd. be held liable for any damages arising from their use.</p>
+<p>Permission is granted to anyone to use this software for any purpose, including commercial applications, and to
+alter it and redistribute it freely, subject to the following restrictions:</p>
+<ol>
+<li>The origin of this software must not be misrepresented; you must not claim that you wrote the original
+software. If you use this software in a product, an acknowledgement in the product documentation would be
+appreciated but is not required.</li>
+<li>Altered source versions must be plainly marked as such, and must not be misrepresented as being the original
+software.</li>
+<li>This notice may not be removed or altered from any source distribution.</li>
+</ol>
+
+</div>
+<div class="foot">
+<input id="ButtonOK" class="FormButton" name="ButtonOK" type="button" value="Close">
+</div>
+</body></html>]==]
+end
+-- =============== End of File =========================]]
