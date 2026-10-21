@@ -380,6 +380,12 @@ function ResizeActiveSheet(job, width, height)
     return false, tostring(result)
 end
 -- =====================================================]]
+function OnLuaButton_ReportOnly()
+    -- The check box carries the LuaButton class, so HTML_Dialog calls this on every click. It has to exist even
+    -- though ticking the box changes nothing until OK is pressed.
+    return true
+end
+-- =====================================================]]
 function OnLuaButton_InquiryHelp(dialog)
     -- The page is loaded on demand, the way Hold Down Helper loads its Help page
     local ok, loader = pcall(loadfile, StockSizer.AppPath .. "/Help/HelpMain.xlua")
